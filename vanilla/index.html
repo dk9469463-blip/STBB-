@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STBB Books by Ajeet Kumar Oad</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <!-- PDF.js for in-browser canvas rendering -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="header-inner">
+      <div class="brand" onclick="switchTab('home')">
+        <div class="brand-icon">📚</div>
+        <div class="brand-text">
+          <h1>STBB BOOKS</h1>
+          <p>Every Class, Every Book, One Library</p>
+        </div>
+      </div>
+      <nav>
+        <button class="nav-link active" data-tab="home">Home</button>
+        <button class="nav-link" data-tab="classes">Classes</button>
+        <button class="nav-link" data-tab="search">Search</button>
+        <button class="nav-link" data-tab="about">About</button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main View Area -->
+  <main>
+    <!-- 1. Home View -->
+    <div id="home-view" class="view-section">
+      <section class="hero">
+        <div class="hero-tag">Official Sindh Textbook Board Repository</div>
+        <h2>Welcome to <span>STBB Books</span></h2>
+        <div class="hero-tagline">Every Class, Every Book, One Library.</div>
+        <p>
+          Access verified digital textbooks from Class 1 through Class 12. Designed for students,
+          teachers, and parents across Sindh, Pakistan.
+        </p>
+        <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+          <button id="explore-classes-btn" class="btn-primary">Explore Classes →</button>
+          <button id="resume-class-btn" class="btn-primary" style="display: none; background: #0f172a; border-color: #f59e0b; color: #fde047;">Resume Class</button>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-header">
+          <h2>Popular Textbooks (Class 1 to 12)</h2>
+          <p>Verified according to the official Sindh Textbook Board Jamshoro syllabus.</p>
+        </div>
+        <div class="classes-grid">
+          <div class="class-card" onclick="selectClass(9)">
+            <div class="class-card-header">
+              <div class="class-badge">9</div>
+              <span class="tier-tag">Secondary</span>
+            </div>
+            <h3>Class 9 (SSC-I)</h3>
+            <p>Mathematics, Biology, Physics, Chemistry, Computer Science, and English.</p>
+            <div class="class-card-footer"><span>Explore Subjects</span><span>→</span></div>
+          </div>
+          <div class="class-card" onclick="selectClass(10)">
+            <div class="class-card-header">
+              <div class="class-badge">10</div>
+              <span class="tier-tag">Secondary</span>
+            </div>
+            <h3>Class 10 (SSC-II)</h3>
+            <p>Matriculation examination subjects with full STBB revised curriculum.</p>
+            <div class="class-card-footer"><span>Explore Subjects</span><span>→</span></div>
+          </div>
+          <div class="class-card" onclick="selectClass(11)">
+            <div class="class-card-header">
+              <div class="class-badge">11</div>
+              <span class="tier-tag">Intermediate</span>
+            </div>
+            <h3>Class 11 (HSSC-I)</h3>
+            <p>Pre-Engineering, Pre-Medical, ICS, and Commerce textbooks.</p>
+            <div class="class-card-footer"><span>Explore Subjects</span><span>→</span></div>
+          </div>
+          <div class="class-card" onclick="selectClass(1)">
+            <div class="class-card-header">
+              <div class="class-badge">1</div>
+              <span class="tier-tag">Primary</span>
+            </div>
+            <h3>Class 1</h3>
+            <p>English, Mathematics, General Knowledge, Sindhi, and Urdu.</p>
+            <div class="class-card-footer"><span>Explore Subjects</span><span>→</span></div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- 2. Classes View (1 to 12) -->
+    <div id="classes-view" class="view-section" style="display: none;">
+      <div class="section-header">
+        <h2>All Classes (Class 1 to 12)</h2>
+        <p>Choose your class to view the full list of official textbooks.</p>
+      </div>
+      <div id="classes-container" class="classes-grid"></div>
+    </div>
+
+    <!-- 3. Subject / Class Detail View -->
+    <div id="subjects-view" class="view-section" style="display: none;">
+      <div style="margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between;">
+        <button onclick="switchTab('classes')" style="background: none; border: none; color: #1e40af; font-weight: 700; cursor: pointer; font-size: 0.9rem;">
+          ← Back to All Classes
+        </button>
+        <span style="font-size: 0.8rem; color: #64748b;">Sindh Textbook Board, Jamshoro</span>
+      </div>
+      <div class="section-header">
+        <h2 id="selected-class-title">Class Textbooks</h2>
+        <p>Verified syllabus books in English, Sindhi, and Urdu mediums.</p>
+      </div>
+      <div id="class-books-container" class="books-grid"></div>
+    </div>
+
+    <!-- 4. Search View -->
+    <div id="search-view" class="view-section" style="display: none;">
+      <div class="section-header">
+        <h2>Search STBB Library</h2>
+        <p>Search by class number, subject name, or book title.</p>
+      </div>
+      <div class="search-container">
+        <input type="text" id="search-input" class="search-input" placeholder="Type a subject or class (e.g. 'Class 9 Physics', 'Maths', 'Sindhi')...">
+      </div>
+      <div id="search-results-container" class="books-grid"></div>
+    </div>
+
+    <!-- 5. About View -->
+    <div id="about-view" class="view-section" style="display: none;">
+      <div class="hero" style="background: #0f172a;">
+        <div class="hero-tag">Educational Project</div>
+        <h2>About STBB Books</h2>
+        <p style="font-size: 1.15rem; font-style: italic; color: #fde047; margin-bottom: 1.5rem;">
+          "STBB Books is an educational library project designed to help students organize and access their textbooks in one convenient place."
+        </p>
+        <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1.25rem;">
+          <p style="font-size: 0.85rem; color: #94a3b8; margin: 0;">Curriculum Authority:</p>
+          <h3 style="font-size: 1.5rem; font-weight: 800; color: #ffffff;">Sindh Textbook Board, Jamshoro</h3>
+        </div>
+      </div>
+
+      <div style="background: #ffffff; padding: 2rem; border-radius: 1rem; border: 1px solid #e2e8f0; margin-top: 2rem;">
+        <h3 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 0.75rem;">Official Curriculum Disclaimer</h3>
+        <p style="color: #475569; font-size: 0.9rem; line-height: 1.6;">
+          All textbooks and syllabi are the intellectual property of the <strong>Sindh Textbook Board (STBB), Jamshoro, Sindh, Pakistan</strong>.
+          This web application provides students with a fast, easy, and organized way to view and download their educational resources.
+        </p>
+      </div>
+    </div>
+  </main>
+
+  <!-- PDF Reader Modal -->
+  <div id="pdf-modal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modal-book-title" style="font-size: 1rem; font-weight: 700; color: #ffffff;">Book Viewer</h3>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+          <button id="modal-download-btn" class="btn-download" style="padding: 0.35rem 0.75rem; font-size: 0.8rem; cursor: pointer;">Download PDF</button>
+          <a id="modal-official-link" href="https://ebooks.stbb.edu.pk/" target="_blank" rel="noopener noreferrer" class="btn-view" style="padding: 0.35rem 0.75rem; text-decoration: none; font-size: 0.8rem;">STBB Portal</a>
+          <button id="modal-close-btn" class="close-btn">&times;</button>
+        </div>
+      </div>
+      <!-- Reader Controls Toolbar -->
+      <div style="background: #1e293b; padding: 0.5rem 1rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #334155; font-size: 0.85rem; color: #cbd5e1;">
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+          <button id="modal-prev-btn" class="btn-view" style="padding: 0.25rem 0.6rem; font-size: 0.8rem;">‹ Prev</button>
+          <span>Page <strong id="modal-current-page" style="color: #ffffff;">1</strong> of <span id="modal-total-pages">--</span></span>
+          <button id="modal-next-btn" class="btn-view" style="padding: 0.25rem 0.6rem; font-size: 0.8rem;">Next ›</button>
+        </div>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+          <button id="modal-zoom-out" class="btn-view" style="padding: 0.25rem 0.6rem; font-size: 0.8rem;">−</button>
+          <span id="modal-zoom-level" style="font-size: 0.75rem; color: #fde047;">100%</span>
+          <button id="modal-zoom-in" class="btn-view" style="padding: 0.25rem 0.6rem; font-size: 0.8rem;">+</button>
+        </div>
+      </div>
+      <div class="modal-body" style="overflow: auto; display: flex; justify-content: center; align-items: flex-start; padding: 1rem; background: #0b1329;">
+        <div id="modal-loading-msg" style="color: #fde047; padding: 2rem; font-weight: 700;">Loading textbook with PDF.js...</div>
+        <canvas id="pdf-canvas" style="display: none; max-width: 100%; box-shadow: 0 4px 20px rgba(0,0,0,0.5);"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <p><strong>STBB BOOKS</strong></p>
+    <p>Every Class, Every Book, One Library.</p>
+    <p style="font-size: 0.75rem; color: #64748b; margin-top: 0.5rem;">
+      © 2026 STBB Books. Non-commercial educational resource for Sindh students.
+    </p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

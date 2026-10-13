@@ -1,0 +1,6 @@
+{
+  "name": "STBB Books by Ajeet Kumar Oad",
+  "description": "Sindh Textbook Board (STBB) digital textbook library for Class 1 to 12. Access verified textbooks, syllabus guides, PDF viewer, and search. Every Class, Every Book, One Library.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
