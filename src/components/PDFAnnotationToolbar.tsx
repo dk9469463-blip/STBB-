@@ -9,10 +9,9 @@ import {
   Trash2,
   Eye,
   EyeOff,
-  Palette,
   Check,
   AlertTriangle,
-  Sparkles,
+  Sliders,
 } from 'lucide-react';
 import { AnnotationToolType } from '../types/annotations';
 
@@ -35,13 +34,21 @@ interface PDFAnnotationToolbarProps {
   currentPageNumber: number;
 }
 
-const COLOR_PRESETS = [
+const PEN_COLORS = [
   { name: 'Black', hex: '#0f172a' },
   { name: 'Royal Blue', hex: '#2563eb' },
   { name: 'Crimson Red', hex: '#dc2626' },
-  { name: 'Study Yellow', hex: '#facc15' },
   { name: 'Emerald Green', hex: '#16a34a' },
-  { name: 'Purple', hex: '#9333ea' },
+  { name: 'Violet', hex: '#7c3aed' },
+];
+
+const HIGHLIGHTER_COLORS = [
+  { name: 'Neon Yellow', hex: '#fde047' },
+  { name: 'Mint Green', hex: '#86efac' },
+  { name: 'Sky Cyan', hex: '#7dd3fc' },
+  { name: 'Rose Pink', hex: '#f9a8d4' },
+  { name: 'Peach Orange', hex: '#fdba74' },
+  { name: 'Lavender', hex: '#d8b4fe' },
 ];
 
 const PEN_WIDTHS = [
@@ -51,9 +58,15 @@ const PEN_WIDTHS = [
 ];
 
 const HIGHLIGHTER_WIDTHS = [
-  { label: 'Slim', value: 14 },
-  { label: 'Medium', value: 22 },
-  { label: 'Wide', value: 32 },
+  { label: 'Slim', value: 16 },
+  { label: 'Medium', value: 24 },
+  { label: 'Wide', value: 36 },
+];
+
+const OPACITY_PRESETS = [
+  { label: '25%', value: 0.25 },
+  { label: '35%', value: 0.35 },
+  { label: '50%', value: 0.50 },
 ];
 
 export const PDFAnnotationToolbar: React.FC<PDFAnnotationToolbarProps> = ({
@@ -74,8 +87,10 @@ export const PDFAnnotationToolbar: React.FC<PDFAnnotationToolbarProps> = ({
   onToggleShowAnnotations,
   currentPageNumber,
 }) => {
-  const [showColorPicker, setShowColorPicker] = useState(false);
   const [showConfirmClear, setShowConfirmClear] = useState(false);
+  const [showOpacityMenu, setShowOpacityMenu] = useState(false);
+
+  const colors = activeTool === 'highlighter' ? HIGHLIGHTER_COLORS : PEN_COLORS;
 
   const handleClearConfirm = () => {
     onClearCurrentPage();
@@ -85,38 +100,43 @@ export const PDFAnnotationToolbar: React.FC<PDFAnnotationToolbarProps> = ({
   return (
     <>
       {/* Floating Study Tools Dock */}
-      <div className="flex flex-wrap items-center justify-between gap-2 px-3 sm:px-6 py-2 bg-slate-900 border-b border-slate-800 text-xs text-slate-200 select-none shadow-md shrink-0">
+      <div className="flex items-center justify-between gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 bg-slate-900 border-b border-slate-800 text-xs text-slate-200 select-none shadow-md shrink-0 overflow-x-auto scrollbar-none">
         {/* Tool Mode Buttons */}
-        <div className="flex items-center gap-1 sm:gap-1.5">
-          {/* Navigate / Scroll (Hand / Pointer) */}
+        <div className="flex items-center gap-1 shrink-0">
+          {/* Navigate / Scroll Mode */}
           <button
             onClick={() => onSelectTool('cursor')}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg font-medium transition cursor-pointer ${
+            className={`flex items-center gap-1 px-2 sm:px-2.5 py-1.5 rounded-lg font-medium transition cursor-pointer text-xs ${
               activeTool === 'cursor'
                 ? 'bg-blue-600 text-white font-bold shadow-xs'
                 : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
             }`}
-            title="Scroll & Navigation Mode (Mouse wheel, trackpad & touch scroll freely)"
+            title="Scroll & Navigation Mode"
           >
             <MousePointer className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Scroll Mode</span>
+            <span className="hidden sm:inline">Scroll</span>
           </button>
 
           {/* Pen Tool */}
           <button
-            onClick={() => onSelectTool('pen')}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg font-medium transition cursor-pointer ${
+            onClick={() => {
+              onSelectTool('pen');
+              if (!PEN_COLORS.some((c) => c.hex === currentColor)) {
+                onSelectColor(PEN_COLORS[1].hex);
+              }
+            }}
+            className={`flex items-center gap-1 px-2 sm:px-2.5 py-1.5 rounded-lg font-medium transition cursor-pointer text-xs ${
               activeTool === 'pen'
                 ? 'bg-amber-500 text-slate-950 font-bold shadow-xs'
                 : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
             }`}
-            title="Pen Tool (Freehand notes & diagrams)"
+            title="Pen Tool (Freehand notes)"
           >
             <Pen className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Pen</span>
             {activeTool === 'pen' && (
               <span
-                className="w-2 h-2 rounded-full border border-slate-900 shadow-xs"
+                className="w-2 h-2 rounded-full border border-slate-900 shadow-xs ml-0.5"
                 style={{ backgroundColor: currentColor }}
               />
             )}
@@ -124,19 +144,24 @@ export const PDFAnnotationToolbar: React.FC<PDFAnnotationToolbarProps> = ({
 
           {/* Highlighter Tool */}
           <button
-            onClick={() => onSelectTool('highlighter')}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg font-medium transition cursor-pointer ${
+            onClick={() => {
+              onSelectTool('highlighter');
+              if (!HIGHLIGHTER_COLORS.some((c) => c.hex === currentColor)) {
+                onSelectColor(HIGHLIGHTER_COLORS[0].hex);
+              }
+            }}
+            className={`flex items-center gap-1 px-2 sm:px-2.5 py-1.5 rounded-lg font-medium transition cursor-pointer text-xs ${
               activeTool === 'highlighter'
                 ? 'bg-yellow-400 text-slate-950 font-bold shadow-xs'
                 : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
             }`}
-            title="Highlighter Tool (Semi-transparent highlighting)"
+            title="Highlighter Tool (Translucent study marking)"
           >
             <Highlighter className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Highlighter</span>
             {activeTool === 'highlighter' && (
               <span
-                className="w-2 h-2 rounded-full border border-slate-900 shadow-xs"
+                className="w-2 h-2 rounded-full border border-slate-900 shadow-xs ml-0.5"
                 style={{ backgroundColor: currentColor }}
               />
             )}
@@ -145,30 +170,30 @@ export const PDFAnnotationToolbar: React.FC<PDFAnnotationToolbarProps> = ({
           {/* Eraser Tool */}
           <button
             onClick={() => onSelectTool('eraser')}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg font-medium transition cursor-pointer ${
+            className={`flex items-center gap-1 px-2 sm:px-2.5 py-1.5 rounded-lg font-medium transition cursor-pointer text-xs ${
               activeTool === 'eraser'
                 ? 'bg-rose-600 text-white font-bold shadow-xs'
                 : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
             }`}
-            title="Eraser Tool (Remove strokes without touching textbook text)"
+            title="Eraser Tool (Delete strokes on current page)"
           >
             <Eraser className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Eraser</span>
           </button>
         </div>
 
-        {/* Color and Stroke Controls (visible when pen or highlighter is active) */}
+        {/* Color and Thickness Palette (when pen or highlighter is active) */}
         {(activeTool === 'pen' || activeTool === 'highlighter') && (
-          <div className="flex items-center gap-2 relative">
-            {/* Quick Color Palette */}
-            <div className="flex items-center gap-1 bg-slate-800/80 p-1 rounded-lg border border-slate-700">
-              {COLOR_PRESETS.map((c) => (
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+            {/* Color Swatches */}
+            <div className="flex items-center gap-1 bg-slate-800/80 p-0.5 sm:p-1 rounded-lg border border-slate-700">
+              {colors.map((c) => (
                 <button
                   key={c.hex}
                   onClick={() => onSelectColor(c.hex)}
-                  className={`w-5 h-5 rounded-md transition-all cursor-pointer flex items-center justify-center ${
+                  className={`w-4 h-4 sm:w-5 sm:h-5 rounded-md transition-all cursor-pointer flex items-center justify-center ${
                     currentColor === c.hex
-                      ? 'scale-115 ring-2 ring-white ring-offset-1 ring-offset-slate-900'
+                      ? 'scale-110 ring-2 ring-white ring-offset-1 ring-offset-slate-900'
                       : 'hover:scale-105 opacity-80 hover:opacity-100'
                   }`}
                   style={{ backgroundColor: c.hex }}
@@ -176,8 +201,10 @@ export const PDFAnnotationToolbar: React.FC<PDFAnnotationToolbarProps> = ({
                 >
                   {currentColor === c.hex && (
                     <Check
-                      className={`w-3 h-3 ${
-                        c.hex === '#facc15' || c.hex === '#ffffff' ? 'text-slate-900' : 'text-white'
+                      className={`w-2.5 h-2.5 sm:w-3 sm:h-3 ${
+                        c.hex === '#fde047' || c.hex === '#86efac' || c.hex === '#f9a8d4'
+                          ? 'text-slate-950'
+                          : 'text-white'
                       }`}
                     />
                   )}
@@ -185,47 +212,67 @@ export const PDFAnnotationToolbar: React.FC<PDFAnnotationToolbarProps> = ({
               ))}
             </div>
 
-            {/* Stroke Thickness Selector */}
-            <div className="hidden md:flex items-center gap-1 bg-slate-800/80 p-1 rounded-lg border border-slate-700">
+            {/* Thickness Selector */}
+            <div className="hidden md:flex items-center gap-1 bg-slate-800/80 p-0.5 rounded-lg border border-slate-700">
               {(activeTool === 'pen' ? PEN_WIDTHS : HIGHLIGHTER_WIDTHS).map((item) => (
                 <button
                   key={item.label}
                   onClick={() => onSelectStrokeWidth(item.value)}
-                  className={`px-2 py-0.5 rounded text-[11px] font-semibold transition cursor-pointer ${
+                  className={`px-1.5 py-0.5 rounded text-[10px] font-semibold transition cursor-pointer ${
                     strokeWidth === item.value
                       ? 'bg-slate-700 text-amber-300 shadow-xs'
                       : 'text-slate-400 hover:text-white'
                   }`}
-                  title={`${item.label} thickness (${item.value}px)`}
                 >
                   {item.label}
                 </button>
               ))}
             </div>
+
+            {/* Highlighter Opacity Selector */}
+            {activeTool === 'highlighter' && (
+              <div className="relative">
+                <button
+                  onClick={() => setShowOpacityMenu(!showOpacityMenu)}
+                  className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-[10px] font-semibold text-slate-300 hover:text-white flex items-center gap-1 cursor-pointer"
+                  title="Adjust Highlighter Opacity"
+                >
+                  <Sliders className="w-2.5 h-2.5 text-amber-400" />
+                  <span>{Math.round(highlighterOpacity * 100)}%</span>
+                </button>
+
+                {showOpacityMenu && (
+                  <div className="absolute top-7 left-0 z-30 bg-slate-950 border border-slate-700 rounded-lg p-1.5 shadow-xl flex gap-1">
+                    {OPACITY_PRESETS.map((op) => (
+                      <button
+                        key={op.label}
+                        onClick={() => {
+                          onSelectHighlighterOpacity(op.value);
+                          setShowOpacityMenu(false);
+                        }}
+                        className={`px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer ${
+                          highlighterOpacity === op.value
+                            ? 'bg-amber-500 text-slate-950'
+                            : 'bg-slate-800 text-slate-300 hover:text-white'
+                        }`}
+                      >
+                        {op.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 
-        {/* Undo, Redo, Visibility, Clear Actions */}
-        <div className="flex items-center gap-1 sm:gap-1.5 ml-auto">
-          {/* Active Tool Badge Indicator */}
-          <div className="hidden lg:flex items-center gap-1 px-2 py-1 rounded-md bg-slate-800/70 border border-slate-700/60 text-[11px] text-slate-300">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span>
-              {activeTool === 'cursor'
-                ? 'Scrolling Active'
-                : activeTool === 'pen'
-                ? 'Writing Active'
-                : activeTool === 'highlighter'
-                ? 'Highlight Active'
-                : 'Eraser Active'}
-            </span>
-          </div>
-
+        {/* Action Controls: Undo, Redo, Eye, Clear */}
+        <div className="flex items-center gap-1 shrink-0 ml-auto">
           {/* Undo */}
           <button
             onClick={onUndo}
             disabled={!canUndo}
-            className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed text-slate-200 transition cursor-pointer"
+            className="p-1 sm:p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed text-slate-200 transition cursor-pointer"
             title="Undo stroke (Ctrl+Z)"
           >
             <RotateCcw className="w-3.5 h-3.5" />
@@ -235,16 +282,16 @@ export const PDFAnnotationToolbar: React.FC<PDFAnnotationToolbarProps> = ({
           <button
             onClick={onRedo}
             disabled={!canRedo}
-            className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed text-slate-200 transition cursor-pointer"
+            className="p-1 sm:p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed text-slate-200 transition cursor-pointer"
             title="Redo stroke (Ctrl+Y)"
           >
             <RotateCw className="w-3.5 h-3.5" />
           </button>
 
-          {/* Toggle Annotation Visibility */}
+          {/* Toggle Visibility */}
           <button
             onClick={onToggleShowAnnotations}
-            className={`p-1.5 rounded-lg transition cursor-pointer ${
+            className={`p-1 sm:p-1.5 rounded-lg transition cursor-pointer ${
               showAnnotations
                 ? 'bg-slate-800 hover:bg-slate-700 text-slate-200'
                 : 'bg-amber-900/40 text-amber-300 border border-amber-600/50'
@@ -254,11 +301,11 @@ export const PDFAnnotationToolbar: React.FC<PDFAnnotationToolbarProps> = ({
             {showAnnotations ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
           </button>
 
-          {/* Clear Page Annotations with confirmation */}
+          {/* Clear Page Annotations */}
           <button
             onClick={() => setShowConfirmClear(true)}
-            className="p-1.5 rounded-lg bg-slate-800 hover:bg-rose-950/60 hover:text-rose-300 text-slate-300 transition cursor-pointer"
-            title="Clear annotations on current page"
+            className="p-1 sm:p-1.5 rounded-lg bg-slate-800 hover:bg-rose-950/60 hover:text-rose-300 text-slate-300 transition cursor-pointer"
+            title={`Clear annotations on Page ${currentPageNumber}`}
           >
             <Trash2 className="w-3.5 h-3.5" />
           </button>
@@ -278,9 +325,9 @@ export const PDFAnnotationToolbar: React.FC<PDFAnnotationToolbarProps> = ({
                 <AlertTriangle className="w-5 h-5" />
               </div>
               <div>
-                <h4 className="text-sm font-bold text-white">Clear Page Annotations?</h4>
+                <h4 className="text-sm font-bold text-white">Clear Page {currentPageNumber} Annotations?</h4>
                 <p className="text-xs text-slate-400">
-                  This will remove all pen and highlighter markings on Page {currentPageNumber}.
+                  This will remove your pen and highlighter markings on Page {currentPageNumber} only. Other pages will not be affected.
                 </p>
               </div>
             </div>

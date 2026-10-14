@@ -4,19 +4,15 @@ import {
   Send,
   Languages,
   BookOpen,
-  HelpCircle,
   Copy,
   Check,
-  RotateCcw,
+  Plus,
   Volume2,
-  VolumeX,
   Mic,
   MicOff,
   Image as ImageIcon,
   X,
-  FileQuestion,
   ChevronDown,
-  Layers,
   GraduationCap,
   Calculator,
   MessageSquare,
@@ -26,38 +22,36 @@ import {
   Play,
   Pause,
   Square,
-  CheckCircle2,
   AlertCircle,
-  Upload,
+  History,
+  Trash2,
 } from 'lucide-react';
 import { ALL_VERIFIED_BOOKS, CLASSES_LIST } from '../data/stbbData';
 import { Book } from '../types';
-
-export type AssistantLanguage = 'english' | 'urdu' | 'sindhi';
-
-export interface ChatMessage {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: string;
-  language: AssistantLanguage;
-  bookContext?: {
-    classNumber?: number;
-    subjectName?: string;
-    bookTitle?: string;
-    chapter?: string;
-    exercise?: string;
-    pageNumber?: number;
-    questionNumber?: string;
-    selectedText?: string;
-  };
-  imageBase64?: string;
-  followUps?: string[];
-  batchInfo?: {
-    currentBatch: number;
-    hasMore: boolean;
-  };
-}
+import {
+  AssistantLanguage,
+  ChatMessage,
+  Conversation,
+  getStoredConversations,
+  saveConversations,
+  getActiveConversationId,
+  setActiveConversationId,
+  createNewConversation,
+  getOrCreateActiveConversation,
+  updateConversation,
+  deleteConversation,
+} from '../utils/chatStorage';
+import {
+  isSpeechRecognitionSupported,
+  isSpeechSynthesisSupported,
+  requestMicrophonePermission,
+  createSpeechRecognizer,
+  SpeechRecognizerHandle,
+  speakText,
+  pauseSpeech,
+  resumeSpeech,
+  stopSpeech,
+} from '../utils/speechHelper';
 
 interface AIAssistantViewProps {
   initialBook?: Book | null;
@@ -72,7 +66,12 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
   initialPageNumber,
   onOpenBookReader,
 }) => {
-  // Chat Language
+  // Conversation List & Active Conversation
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [activeConvId, setActiveConvId] = useState<string>('');
+  const [showHistoryDrawer, setShowHistoryDrawer] = useState<boolean>(false);
+
+  // Active Chat Language
   const [selectedLanguage, setSelectedLanguage] = useState<AssistantLanguage>('english');
 
   // Active Context Fields
@@ -95,11 +94,11 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
   const [attachedImage, setAttachedImage] = useState<string | null>(null);
   const [imageFileName, setImageFileName] = useState<string | null>(null);
 
-  // Conversation State
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  // Loading & State
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
   const [errorNotice, setErrorNotice] = useState<string | null>(null);
+  const [failedPrompt, setFailedPrompt] = useState<string | null>(null);
 
   // Voice Speech-to-Text State
   const [isRecording, setIsRecording] = useState<boolean>(false);
@@ -112,6 +111,27 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+  // Load conversations from localStorage on mount
+  useEffect(() => {
+    const loaded = getStoredConversations();
+    setConversations(loaded);
+
+    const initialConv = getOrCreateActiveConversation('english', {
+      classNumber: initialBook?.classNumber,
+      subjectName: initialBook?.subjectName,
+      bookTitle: initialBook?.title,
+      pageNumber: initialPageNumber,
+      selectedText: initialSelectedText,
+    });
+
+    setActiveConvId(initialConv.id);
+    setSelectedLanguage(initialConv.language || 'english');
+  }, []);
+
+  // Synchronize active conversation
+  const activeConversation = conversations.find((c) => c.id === activeConvId) || null;
+  const messages = activeConversation?.messages || [];
 
   // Available books for the selected class
   const availableBooks = selectedClass
@@ -157,7 +177,7 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
     };
   }, []);
 
-  // Sync initial props from reader or external navigation
+  // Sync initial props from reader
   useEffect(() => {
     if (initialBook) {
       setSelectedClass(initialBook.classNumber);
@@ -172,150 +192,152 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
     }
   }, [initialBook, initialSelectedText, initialPageNumber]);
 
-  // Set initial greeting
-  useEffect(() => {
-    if (messages.length === 0) {
-      const greetingMap = {
-        english:
-          'Welcome to the official STBB AI Study Assistant! I can help you solve textbook exercises, explain difficult scientific formulas, translate vocabulary in English, Urdu, or Sindhi, solve step-by-step mathematical problems, and answer review questions across all 12 classes.',
-        urdu:
-          'سندھ ٹیکسٹ بک بورڈ (STBB) کے اے آئی اسٹڈی اسسٹنٹ میں خوش آمدید! میں کلاس 1 تا 12 کے تمام درسی کتب، مشقی سوالات کے مرحلہ وار حل، سائنسی و ریاضیاتی فارمولوں اور مشکل الفاظ کے اردو معانی و وضاحت میں آپ کی رہنمائی کر سکتا ہوں۔',
-        sindhi:
-          'سنڌ ٽيڪسٽ بوڪ بورڊ (STBB) جي AI اسٽڊي اسسٽنٽ ۾ ڀليڪار! مان ڪلاس 1 کان 12 تائين سمورن درسي ڪتابن، مشقن جي مرحليوار حل، سائنسي ۽ رياضياتي فارمولن جي سمجهاڻي، ۽ سنڌي، اردو ۽ انگريزي ۾ درسي سوالن جا تفصيلي جواب ڏئي سگهان ٿو.',
-      };
-
-      setMessages([
-        {
-          id: 'welcome-1',
-          role: 'assistant',
-          content: greetingMap[selectedLanguage],
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          language: selectedLanguage,
-          followUps:
-            selectedLanguage === 'urdu'
-              ? [
-                  'کلاس 9 حیاتیات (Biology) کے مشقی سوالات حل کریں',
-                  'کلاس 11 ریاضی (Mathematics) سیٹ اور فنکشنز',
-                  'مشکل لفظ کا معنی اور جملہ معلوم کریں',
-                ]
-              : selectedLanguage === 'sindhi'
-              ? [
-                  'ڪلاس 8 سنڌي درسي ڪتاب جي مشق حل ڪريو',
-                  'ڪلاس 10 فزڪس جا نيوميريڪل سمجهايو',
-                  'هن لفظ جي سنڌي معنيٰ ۽ سمجهاڻي ٻڌايو',
-                ]
-              : [
-                  'Class 11 Mathematics: Exercise 9.1 Sets and Functions',
-                  'Class 9 Biology: Cell structure and review questions',
-                  'Class 10 Physics: Motion and Newton laws numericals',
-                ],
-        },
-      ]);
-    }
-  }, [selectedLanguage]);
-
-  // Scroll to bottom on new message
+  // Scroll to bottom on new message or loading change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isLoading]);
+  }, [messages.length, isLoading]);
 
-  // Handle Speech Recognition Toggle
-  const toggleSpeechRecognition = () => {
-    if (!speechSupported || !recognitionRef.current) {
-      setErrorNotice('Speech recognition is not supported in this browser. Please type your query.');
-      return;
+  // Language Change: updates conversation language without wiping messages
+  const handleLanguageChange = (newLang: AssistantLanguage) => {
+    setSelectedLanguage(newLang);
+    if (activeConvId) {
+      const updated = updateConversation(activeConvId, (conv) => ({
+        ...conv,
+        language: newLang,
+      }));
+      setConversations(updated);
     }
+  };
 
-    if (isRecording) {
-      recognitionRef.current.stop();
-      setIsRecording(false);
-    } else {
-      setErrorNotice(null);
-      // Map language
-      let langCode = 'en-US';
-      if (selectedLanguage === 'urdu') langCode = 'ur-PK';
-      else if (selectedLanguage === 'sindhi') langCode = 'sd-PK';
+  // Start New Chat: creates a new conversation and switches to it
+  const handleNewChat = () => {
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    setSpeakingMessageId(null);
+    setErrorNotice(null);
+    setFailedPrompt(null);
+    setUserInput('');
+    setAttachedImage(null);
 
-      try {
-        recognitionRef.current.lang = langCode;
-        recognitionRef.current.start();
-        setIsRecording(true);
-      } catch (err) {
-        console.warn('Speech start error:', err);
-        setIsRecording(false);
+    const bookContext = {
+      classNumber: selectedClass || undefined,
+      subjectName: currentSelectedBook?.subjectName,
+      bookTitle: currentSelectedBook?.title,
+      chapter: chapterInput.trim() || undefined,
+      exercise: exerciseInput.trim() || undefined,
+      pageNumber: pageInput ? parseInt(pageInput, 10) : undefined,
+      questionNumber: questionInput.trim() || undefined,
+    };
+
+    const newConv = createNewConversation(selectedLanguage, bookContext);
+    setConversations(getStoredConversations());
+    setActiveConvId(newConv.id);
+    setShowHistoryDrawer(false);
+  };
+
+  // Switch Conversation
+  const handleSelectConversation = (convId: string) => {
+    setActiveConvId(convId);
+    setActiveConversationId(convId);
+    const target = conversations.find((c) => c.id === convId);
+    if (target) {
+      setSelectedLanguage(target.language || 'english');
+    }
+    setShowHistoryDrawer(false);
+    setErrorNotice(null);
+  };
+
+  // Delete Conversation
+  const handleDeleteConversation = (e: React.MouseEvent, convId: string) => {
+    e.stopPropagation();
+    const updated = deleteConversation(convId);
+    setConversations(updated);
+    if (activeConvId === convId) {
+      const nextId = updated[0]?.id || '';
+      setActiveConvId(nextId);
+      if (!nextId) {
+        handleNewChat();
       }
     }
   };
 
-  // Handle Text-to-Speech Read Aloud
+  // Handle Speech Recognition Toggle with Permission Checks and Editable Text
+  const toggleSpeechRecognition = async () => {
+    if (isRecording) {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+      setIsRecording(false);
+      return;
+    }
+
+    setErrorNotice(null);
+
+    // Explicit microphone permission check
+    const perm = await requestMicrophonePermission();
+    if (!perm.granted) {
+      setErrorNotice(perm.error || 'Microphone access is not permitted.');
+      return;
+    }
+
+    const rec = createSpeechRecognizer({
+      language: selectedLanguage,
+      onResult: (transcript) => {
+        setUserInput((prev) => (prev ? `${prev} ${transcript}` : transcript));
+      },
+      onError: (err) => {
+        setErrorNotice(err);
+        setIsRecording(false);
+      },
+      onEnd: () => {
+        setIsRecording(false);
+      },
+    });
+
+    if (rec) {
+      recognitionRef.current = rec;
+      rec.start();
+      setIsRecording(true);
+    }
+  };
+
+  // Handle Text-to-Speech Read Aloud with Play/Pause/Stop
   const handleToggleSpeak = (msgId: string, text: string, lang: AssistantLanguage) => {
-    if (!('speechSynthesis' in window)) {
+    if (!isSpeechSynthesisSupported()) {
       setErrorNotice('Text-to-speech audio playback is not supported in this browser.');
       return;
     }
 
     if (speakingMessageId === msgId) {
       if (isSpeechPaused) {
-        window.speechSynthesis.resume();
+        resumeSpeech();
         setIsSpeechPaused(false);
       } else {
-        window.speechSynthesis.pause();
+        pauseSpeech();
         setIsSpeechPaused(true);
       }
       return;
     }
 
-    window.speechSynthesis.cancel();
-
-    // Clean markdown symbols for natural reading
-    const cleanSpeechText = text
-      .replace(/[*_#`$]/g, '')
-      .replace(/\n+/g, '. ')
-      .slice(0, 800);
-
-    const utterance = new SpeechSynthesisUtterance(cleanSpeechText);
-    utterance.rate = 0.95;
-    utterance.pitch = 1.0;
-
-    const voices = window.speechSynthesis.getVoices();
-    if (lang === 'urdu') {
-      const urduVoice = voices.find((v) => v.lang.startsWith('ur'));
-      if (urduVoice) utterance.voice = urduVoice;
-      else utterance.lang = 'ur-PK';
-    } else if (lang === 'sindhi') {
-      const sindhiVoice = voices.find((v) => v.lang.startsWith('sd'));
-      if (sindhiVoice) utterance.voice = sindhiVoice;
-      else {
-        // Fallback to Urdu/Hindi voice if Sindhi TTS engine is uninstalled on device OS
-        const fallbackVoice = voices.find((v) => v.lang.startsWith('ur') || v.lang.startsWith('hi'));
-        if (fallbackVoice) utterance.voice = fallbackVoice;
-        utterance.lang = 'sd-PK';
-      }
-    } else {
-      const enVoice = voices.find((v) => v.lang.startsWith('en'));
-      if (enVoice) utterance.voice = enVoice;
-      else utterance.lang = 'en-US';
-    }
-
-    utterance.onend = () => {
-      setSpeakingMessageId(null);
-      setIsSpeechPaused(false);
-    };
-
-    utterance.onerror = () => {
-      setSpeakingMessageId(null);
-      setIsSpeechPaused(false);
-    };
-
-    setSpeakingMessageId(msgId);
+    stopSpeech();
     setIsSpeechPaused(false);
-    window.speechSynthesis.speak(utterance);
+    setSpeakingMessageId(msgId);
+
+    speakText(
+      text,
+      lang,
+      () => {
+        setSpeakingMessageId(null);
+        setIsSpeechPaused(false);
+      },
+      () => {
+        setSpeakingMessageId(null);
+        setIsSpeechPaused(false);
+      }
+    );
   };
 
   const handleStopSpeech = () => {
-    if (window.speechSynthesis) {
-      window.speechSynthesis.cancel();
-    }
+    stopSpeech();
     setSpeakingMessageId(null);
     setIsSpeechPaused(false);
   };
@@ -344,37 +366,72 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
     reader.readAsDataURL(file);
   };
 
-  // Send Question to Backend AI
+  // Send Message: Appends user message and AI response, preserves history
   const handleSendMessage = async (customPrompt?: string) => {
     const promptToSend = (customPrompt || userInput).trim();
     if (!promptToSend && !attachedImage) return;
 
     setErrorNotice(null);
+    setFailedPrompt(null);
     setIsLoading(true);
+
+    const bookContext = {
+      classNumber: selectedClass || undefined,
+      subjectName: currentSelectedBook?.subjectName,
+      bookTitle: currentSelectedBook?.title,
+      chapter: chapterInput.trim() || undefined,
+      exercise: exerciseInput.trim() || undefined,
+      pageNumber: pageInput ? parseInt(pageInput, 10) : undefined,
+      questionNumber: questionInput.trim() || undefined,
+    };
 
     const userMsg: ChatMessage = {
       id: `user-${Date.now()}`,
       role: 'user',
-      content: promptToSend || 'Explain the questions on this textbook page image.',
+      content: promptToSend || 'Solve and explain the questions on this textbook page image.',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       language: selectedLanguage,
       imageBase64: attachedImage || undefined,
-      bookContext: {
-        classNumber: selectedClass || undefined,
-        subjectName: currentSelectedBook?.subjectName,
-        bookTitle: currentSelectedBook?.title,
-        chapter: chapterInput.trim() || undefined,
-        exercise: exerciseInput.trim() || undefined,
-        pageNumber: pageInput ? parseInt(pageInput, 10) : undefined,
-        questionNumber: questionInput.trim() || undefined,
-      },
+      bookContext,
     };
 
-    setMessages((prev) => [...prev, userMsg]);
+    // Append user message to active conversation immediately
+    let targetConvId = activeConvId;
+    if (!targetConvId) {
+      const newConv = createNewConversation(selectedLanguage, bookContext);
+      targetConvId = newConv.id;
+      setActiveConvId(newConv.id);
+    }
+
+    const updatedWithUser = updateConversation(targetConvId, (conv) => {
+      // Auto-update conversation title if it's the first user question
+      const newTitle =
+        conv.messages.filter((m) => m.role === 'user').length === 0
+          ? promptToSend.slice(0, 36)
+          : conv.title;
+
+      return {
+        ...conv,
+        title: newTitle,
+        messages: [...conv.messages, userMsg],
+      };
+    });
+    setConversations(updatedWithUser);
+
     setUserInput('');
     const currentAttachment = attachedImage;
     setAttachedImage(null);
     setImageFileName(null);
+
+    // Prepare previous history turns for multi-turn context
+    const currentConv = updatedWithUser.find((c) => c.id === targetConvId);
+    const previousHistory = (currentConv?.messages || [])
+      .slice(0, -1) // exclude the message we just added
+      .filter((m) => !m.isError)
+      .map((m) => ({
+        role: m.role,
+        content: m.content,
+      }));
 
     try {
       const response = await fetch('/api/ai/study-assist', {
@@ -386,8 +443,9 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
           prompt: promptToSend,
           language: selectedLanguage,
           mode: exerciseInput ? 'solve-exercise' : 'general',
-          bookContext: userMsg.bookContext,
+          bookContext,
           imageBase64: currentAttachment,
+          history: previousHistory,
         }),
       });
 
@@ -407,10 +465,33 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
         followUps: data.followUps || [],
       };
 
-      setMessages((prev) => [...prev, assistantMsg]);
+      // Append assistant message in chronological order
+      const updatedWithAI = updateConversation(targetConvId, (conv) => ({
+        ...conv,
+        messages: [...conv.messages, assistantMsg],
+      }));
+      setConversations(updatedWithAI);
     } catch (err: any) {
       console.error('AI Request Failed:', err);
-      setErrorNotice(err.message || 'Unable to connect to AI Study Assistant. Please try again.');
+      const errMsg = err.message || 'Unable to connect to AI Study Assistant.';
+      setErrorNotice(errMsg);
+      setFailedPrompt(promptToSend);
+
+      // Append an error notice as a response so user history is never lost
+      const errorMsg: ChatMessage = {
+        id: `err-${Date.now()}`,
+        role: 'assistant',
+        content: `Could not complete response: ${errMsg}. Click Retry below to run your question again.`,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        language: selectedLanguage,
+        isError: true,
+      };
+
+      const updatedWithError = updateConversation(targetConvId, (conv) => ({
+        ...conv,
+        messages: [...conv.messages, errorMsg],
+      }));
+      setConversations(updatedWithError);
     } finally {
       setIsLoading(false);
     }
@@ -422,17 +503,8 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
     setTimeout(() => setCopiedMessageId(null), 2000);
   };
 
-  const handleNewChat = () => {
-    if (window.speechSynthesis) window.speechSynthesis.cancel();
-    setSpeakingMessageId(null);
-    setMessages([]);
-    setUserInput('');
-    setAttachedImage(null);
-    setErrorNotice(null);
-  };
-
   return (
-    <div className="flex flex-col h-[calc(100vh-8.5rem)] min-h-[550px] max-w-5xl mx-auto bg-slate-900 rounded-3xl border border-slate-800 shadow-2xl overflow-hidden mb-8">
+    <div className="flex flex-col h-[calc(100vh-8.5rem)] min-h-[550px] max-w-5xl mx-auto bg-slate-900 rounded-3xl border border-slate-800 shadow-2xl overflow-hidden mb-8 relative">
       {/* Top Header & Study Workspace Bar */}
       <div className="bg-slate-950/90 border-b border-slate-800 p-3 sm:p-4 shrink-0 flex flex-wrap items-center justify-between gap-3">
         {/* Left: Branding & Universal Bot Badge */}
@@ -446,22 +518,39 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
                 AI Study Assistant
               </h2>
               <span className="px-2 py-0.5 rounded-full bg-blue-500/20 border border-blue-400/30 text-[11px] font-bold text-blue-300 hidden sm:inline">
-                Universal STBB Tutor
+                Curriculum Grounded
               </span>
             </div>
             <p className="text-xs text-slate-400">
-              Classes 1–12 • Every Subject • Math, Science, Languages & Exercises
+              Classes 1–12 • Every Subject • Plain text explanations & step-by-step solutions
             </p>
           </div>
         </div>
 
-        {/* Right: Language Selector & New Chat */}
+        {/* Right: History, Language Selector & New Chat */}
         <div className="flex items-center gap-2">
+          {/* Saved Chats History Drawer Button */}
+          <button
+            onClick={() => setShowHistoryDrawer(!showHistoryDrawer)}
+            className={`px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer ${
+              showHistoryDrawer
+                ? 'bg-blue-600 border-blue-500 text-white'
+                : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white hover:bg-slate-800'
+            }`}
+            title="Saved Chat History"
+          >
+            <History className="w-3.5 h-3.5 text-amber-400" />
+            <span className="hidden sm:inline">Saved Chats</span>
+            <span className="px-1.5 py-0.2 rounded-full bg-slate-800 text-[10px] text-slate-400">
+              {conversations.length}
+            </span>
+          </button>
+
           {/* Trilingual Language Selector */}
           <div className="flex items-center bg-slate-900 p-1 rounded-xl border border-slate-800 text-xs font-semibold">
             <Languages className="w-3.5 h-3.5 text-amber-400 ml-1 mr-1.5" />
             <button
-              onClick={() => setSelectedLanguage('english')}
+              onClick={() => handleLanguageChange('english')}
               className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${
                 selectedLanguage === 'english'
                   ? 'bg-blue-600 text-white font-bold'
@@ -471,7 +560,7 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
               English
             </button>
             <button
-              onClick={() => setSelectedLanguage('urdu')}
+              onClick={() => handleLanguageChange('urdu')}
               className={`px-2.5 py-1 rounded-lg transition font-sans cursor-pointer ${
                 selectedLanguage === 'urdu'
                   ? 'bg-blue-600 text-white font-bold'
@@ -481,7 +570,7 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
               اردو
             </button>
             <button
-              onClick={() => setSelectedLanguage('sindhi')}
+              onClick={() => handleLanguageChange('sindhi')}
               className={`px-2.5 py-1 rounded-lg transition font-sans cursor-pointer ${
                 selectedLanguage === 'sindhi'
                   ? 'bg-blue-600 text-white font-bold'
@@ -492,15 +581,86 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
             </button>
           </div>
 
+          {/* New Chat Button */}
           <button
             onClick={handleNewChat}
-            className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition cursor-pointer"
-            title="Start New Chat"
+            className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition cursor-pointer shadow-sm"
+            title="Start a New Conversation"
           >
-            <RotateCcw className="w-4 h-4" />
+            <Plus className="w-3.5 h-3.5" />
+            <span>New Chat</span>
           </button>
         </div>
       </div>
+
+      {/* Saved Conversations Dropdown / Drawer */}
+      {showHistoryDrawer && (
+        <div className="absolute top-16 right-4 z-30 w-80 max-h-96 bg-slate-950 border border-slate-700 rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in-50 duration-150">
+          <div className="p-3 bg-slate-900 border-b border-slate-800 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-xs font-bold text-white">
+              <History className="w-4 h-4 text-amber-400" />
+              <span>Past Conversations</span>
+            </div>
+            <button
+              onClick={() => setShowHistoryDrawer(false)}
+              className="p-1 text-slate-400 hover:text-white rounded-lg"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="overflow-y-auto p-2 space-y-1 flex-1">
+            {conversations.length === 0 ? (
+              <p className="text-xs text-slate-400 text-center py-6">No saved conversations yet.</p>
+            ) : (
+              conversations.map((conv) => {
+                const isActive = conv.id === activeConvId;
+                const userMsgCount = conv.messages.filter((m) => m.role === 'user').length;
+
+                return (
+                  <div
+                    key={conv.id}
+                    onClick={() => handleSelectConversation(conv.id)}
+                    className={`flex items-center justify-between p-2.5 rounded-xl cursor-pointer text-xs transition group ${
+                      isActive
+                        ? 'bg-blue-600 text-white font-semibold'
+                        : 'text-slate-300 hover:bg-slate-900 hover:text-white'
+                    }`}
+                  >
+                    <div className="min-w-0 pr-2">
+                      <p className="truncate text-xs font-medium">{conv.title}</p>
+                      <p className={`text-[10px] ${isActive ? 'text-blue-200' : 'text-slate-500'}`}>
+                        {new Date(conv.updatedAt).toLocaleDateString()} • {userMsgCount} questions
+                      </p>
+                    </div>
+                    <button
+                      onClick={(e) => handleDeleteConversation(e, conv.id)}
+                      className={`p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition ${
+                        isActive
+                          ? 'hover:bg-blue-700 text-blue-200 hover:text-white'
+                          : 'hover:bg-slate-800 text-slate-400 hover:text-rose-400'
+                      }`}
+                      title="Delete Conversation"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          <div className="p-2 border-t border-slate-800 bg-slate-900">
+            <button
+              onClick={handleNewChat}
+              className="w-full py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5 text-amber-400" />
+              <span>Start Fresh Conversation</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Textbook Context Bar (Class, Subject, Exercise Locator) */}
       <div className="bg-slate-900/90 border-b border-slate-800 px-4 py-2.5 text-xs text-slate-300 flex flex-wrap items-center justify-between gap-2 shrink-0">
@@ -554,7 +714,7 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
             }`}
           >
             <Calculator className="w-3.5 h-3.5" />
-            <span>{showAdvancedLocator ? 'Hide Chapter / Exercise' : 'Specify Exercise & Page'}</span>
+            <span>{showAdvancedLocator ? 'Hide Locator' : 'Specify Exercise & Page'}</span>
             <ChevronDown className={`w-3 h-3 transition-transform ${showAdvancedLocator ? 'rotate-180' : ''}`} />
           </button>
         </div>
@@ -624,7 +784,7 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
         </div>
       )}
 
-      {/* Main Conversation Messages Scroll Area */}
+      {/* Main Conversation Messages Scroll Area (Chronological Order) */}
       <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 scrollbar-thin">
         {messages.map((msg) => {
           const isAssistant = msg.role === 'assistant';
@@ -638,7 +798,9 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
               <div
                 className={`max-w-[90%] sm:max-w-[82%] rounded-2xl p-4 sm:p-5 shadow-lg space-y-3 leading-relaxed text-sm ${
                   isAssistant
-                    ? 'bg-slate-800 text-slate-100 border border-slate-700/80 rounded-tl-sm'
+                    ? msg.isError
+                      ? 'bg-rose-950/80 text-rose-100 border border-rose-800/80 rounded-tl-sm'
+                      : 'bg-slate-800 text-slate-100 border border-slate-700/80 rounded-tl-sm'
                     : 'bg-blue-600 text-white rounded-tr-sm'
                 }`}
               >
@@ -665,9 +827,9 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
                   </div>
                 )}
 
-                {/* Message Body with Markdown-Friendly Whitespace */}
+                {/* Plain-Text Content Display */}
                 <div
-                  className={`whitespace-pre-wrap break-words leading-relaxed ${
+                  className={`whitespace-pre-wrap break-words leading-relaxed font-normal text-slate-100 ${
                     msg.language === 'urdu' || msg.language === 'sindhi'
                       ? 'text-right font-sans text-base leading-loose'
                       : ''
@@ -677,8 +839,19 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
                   {msg.content}
                 </div>
 
+                {/* Retry Button if message was an error */}
+                {msg.isError && failedPrompt && (
+                  <button
+                    onClick={() => handleSendMessage(failedPrompt)}
+                    className="mt-2 px-3 py-1.5 rounded-lg bg-rose-800 hover:bg-rose-700 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    <span>Retry Question</span>
+                  </button>
+                )}
+
                 {/* Assistant Controls Bar: Read Aloud, Copy, Timestamp */}
-                {isAssistant && (
+                {isAssistant && !msg.isError && (
                   <div className="pt-2 border-t border-slate-700/60 flex items-center justify-between text-xs text-slate-400">
                     <div className="flex items-center gap-2">
                       <button
@@ -734,7 +907,7 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
                 )}
               </div>
 
-              {/* Follow-up Chips for Easy Learning */}
+              {/* Follow-up Chips for Continuous Learning */}
               {isAssistant && msg.followUps && msg.followUps.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-1.5 max-w-[85%]">
                   {msg.followUps.map((chip, idx) => (
@@ -752,14 +925,14 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
           );
         })}
 
-        {/* Loading Indicator */}
+        {/* Loading Indicator — earlier messages remain fully visible */}
         {isLoading && (
           <div className="flex items-start">
-            <div className="max-w-[75%] rounded-2xl rounded-tl-sm p-4 bg-slate-800 border border-slate-700 text-slate-300 text-sm flex items-center gap-3">
-              <RefreshCw className="w-5 h-5 text-amber-400 animate-spin" />
+            <div className="max-w-[75%] rounded-2xl rounded-tl-sm p-4 bg-slate-800 border border-slate-700 text-slate-300 text-sm flex items-center gap-3 shadow-md">
+              <RefreshCw className="w-5 h-5 text-amber-400 animate-spin shrink-0" />
               <div>
-                <p className="font-bold text-white text-xs">Analyzing Sindh Textbook Board Curriculum...</p>
-                <p className="text-[11px] text-slate-400">Solving with step-by-step verified explanations</p>
+                <p className="font-bold text-white text-xs">Generating verified STBB response...</p>
+                <p className="text-[11px] text-slate-400">Grounding steps in official syllabus</p>
               </div>
             </div>
           </div>

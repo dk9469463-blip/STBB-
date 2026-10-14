@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
 import { Bookmark, Loader2, Sparkles } from 'lucide-react';
 import { AnnotationStroke, AnnotationToolType } from '../types/annotations';
+import { getStoredPageAnnotations } from '../utils/annotationStorage';
 
 interface TextItemData {
   str: string;
@@ -15,6 +16,7 @@ interface TextItemData {
 interface PDFPageItemProps {
   pdfDoc: pdfjsLib.PDFDocumentProxy;
   pageNumber: number;
+  bookId: string;
   scale: number;
   rotation: number;
   activeTool: AnnotationToolType;
@@ -22,18 +24,21 @@ interface PDFPageItemProps {
   strokeWidth: number;
   highlighterOpacity: number;
   showAnnotations: boolean;
-  strokes: AnnotationStroke[];
+  strokes?: AnnotationStroke[];
   onSaveStrokes: (pageNumber: number, strokes: AnnotationStroke[]) => void;
   isBookmarked: boolean;
   onToggleBookmark: (pageNumber: number) => void;
   isDarkMode: boolean;
   onAskAiPage?: (pageNumber: number) => void;
-  onSelectText?: (text: string) => void;
+  onSelectionChange?: (
+    selection: { text: string; pageNumber: number; clientX: number; clientY: number } | null
+  ) => void;
 }
 
 export const PDFPageItem: React.FC<PDFPageItemProps> = ({
   pdfDoc,
   pageNumber,
+  bookId,
   scale,
   rotation,
   activeTool,
@@ -41,13 +46,13 @@ export const PDFPageItem: React.FC<PDFPageItemProps> = ({
   strokeWidth,
   highlighterOpacity,
   showAnnotations,
-  strokes,
+  strokes: propStrokes,
   onSaveStrokes,
   isBookmarked,
   onToggleBookmark,
   isDarkMode,
   onAskAiPage,
-  onSelectText,
+  onSelectionChange,
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const pdfCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -60,6 +65,9 @@ export const PDFPageItem: React.FC<PDFPageItemProps> = ({
     width: 600 * scale,
     height: 850 * scale,
   });
+
+  // Effective strokes: use props if provided, otherwise restore from persistent storage
+  const strokes = propStrokes !== undefined ? propStrokes : getStoredPageAnnotations(bookId, pageNumber);
 
   const renderTaskRef = useRef<pdfjsLib.RenderTask | null>(null);
   const isDrawingRef = useRef<boolean>(false);
@@ -76,7 +84,7 @@ export const PDFPageItem: React.FC<PDFPageItemProps> = ({
           if (entry.isIntersecting) {
             setIsInViewport(true);
           } else {
-            // Keep buffer of near pages, but unmount far pages to preserve RAM
+            // Keep buffer of near pages, but unmount far pages to save memory
             if (Math.abs(entry.boundingClientRect.top) > window.innerHeight * 2.5) {
               setIsInViewport(false);
             }
@@ -85,7 +93,7 @@ export const PDFPageItem: React.FC<PDFPageItemProps> = ({
       },
       {
         root: null,
-        rootMargin: '600px 0px 600px 0px', // Pre-render 600px ahead of scroll
+        rootMargin: '600px 0px 600px 0px',
         threshold: 0.01,
       }
     );
@@ -107,7 +115,7 @@ export const PDFPageItem: React.FC<PDFPageItemProps> = ({
         setPageDimensions({ width: viewport.width, height: viewport.height });
       })
       .catch(() => {
-        // Fallback default aspect ratio
+        // Fallback default
       });
 
     return () => {
@@ -163,21 +171,21 @@ export const PDFPageItem: React.FC<PDFPageItemProps> = ({
         const extracted: TextItemData[] = [];
         for (const item of textContent.items as any[]) {
           if (!item.str || !item.transform) continue;
-          // Transform coordinates using PDF.js viewport
           const [vx, vy] = viewport.convertToViewportPoint(item.transform[4], item.transform[5]);
-          const fontSize = Math.sqrt(item.transform[0] * item.transform[0] + item.transform[1] * item.transform[1]) * scale;
+          const fontSize =
+            Math.sqrt(item.transform[0] * item.transform[0] + item.transform[1] * item.transform[1]) * scale;
           extracted.push({
             str: item.str,
             left: vx,
             top: vy - (item.height * scale || fontSize),
             width: item.width * scale,
-            height: (item.height * scale) || fontSize,
+            height: item.height * scale || fontSize,
             fontSize,
           });
         }
         setTextItems(extracted);
       } catch {
-        // Non-selectable or scanned page
+        // Scanned page without text layer
       }
     } catch (err: unknown) {
       if ((err as { name?: string })?.name !== 'RenderingCancelledException') {
@@ -205,7 +213,7 @@ export const PDFPageItem: React.FC<PDFPageItemProps> = ({
     };
   }, [isInViewport, renderPdfCanvas]);
 
-  // 4. Redraw Annotations Canvas whenever strokes, dimensions, or visibility change
+  // 4. Redraw Annotations Canvas with high-readability highlighter blending
   const redrawAnnotations = useCallback(() => {
     const canvas = annotationCanvasRef.current;
     if (!canvas) return;
@@ -234,15 +242,18 @@ export const PDFPageItem: React.FC<PDFPageItemProps> = ({
       ctx.beginPath();
 
       if (stroke.tool === 'highlighter') {
+        // Translucent multiply blend mode keeps the underlying black text perfectly readable
+        ctx.globalCompositeOperation = 'multiply';
         ctx.strokeStyle = stroke.color;
-        ctx.globalAlpha = stroke.opacity || 0.35;
-        ctx.lineWidth = Math.max(8, stroke.width * (scale / 1.0));
-        ctx.lineCap = 'square';
+        ctx.globalAlpha = stroke.opacity || highlighterOpacity || 0.35;
+        ctx.lineWidth = Math.max(10, stroke.width * (scale / 1.0));
+        ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
       } else {
+        ctx.globalCompositeOperation = 'source-over';
         ctx.strokeStyle = stroke.color;
         ctx.globalAlpha = 1.0;
-        ctx.lineWidth = Math.max(1, stroke.width * (scale / 1.0));
+        ctx.lineWidth = Math.max(1.5, stroke.width * (scale / 1.0));
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
       }
@@ -258,7 +269,7 @@ export const PDFPageItem: React.FC<PDFPageItemProps> = ({
       ctx.stroke();
       ctx.restore();
     });
-  }, [strokes, pageDimensions, scale, showAnnotations]);
+  }, [strokes, pageDimensions, scale, showAnnotations, highlighterOpacity]);
 
   useEffect(() => {
     redrawAnnotations();
@@ -318,15 +329,17 @@ export const PDFPageItem: React.FC<PDFPageItemProps> = ({
     ctx.save();
     ctx.beginPath();
     if (activeTool === 'highlighter') {
+      ctx.globalCompositeOperation = 'multiply';
       ctx.strokeStyle = currentColor;
       ctx.globalAlpha = highlighterOpacity;
-      ctx.lineWidth = Math.max(8, strokeWidth * (scale / 1.0));
-      ctx.lineCap = 'square';
+      ctx.lineWidth = Math.max(10, strokeWidth * (scale / 1.0));
+      ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
     } else {
+      ctx.globalCompositeOperation = 'source-over';
       ctx.strokeStyle = currentColor;
       ctx.globalAlpha = 1.0;
-      ctx.lineWidth = Math.max(1, strokeWidth * (scale / 1.0));
+      ctx.lineWidth = Math.max(1.5, strokeWidth * (scale / 1.0));
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
     }
@@ -366,8 +379,9 @@ export const PDFPageItem: React.FC<PDFPageItemProps> = ({
     }
   };
 
+  // Erase only strokes on this page
   const eraseStrokeNear = (pt: { x: number; y: number }) => {
-    const threshold = 0.035; // 3.5% radius
+    const threshold = 0.04; // 4% radius
     let found = false;
 
     const filtered = strokes.filter((stroke) => {
@@ -388,13 +402,29 @@ export const PDFPageItem: React.FC<PDFPageItemProps> = ({
     }
   };
 
-  const handleTextMouseUp = () => {
-    if (onSelectText) {
-      const selection = window.getSelection()?.toString().trim();
-      if (selection && selection.length > 1) {
-        onSelectText(selection);
+  // 6. Handle Selection and trigger floating contextual menu without automatic submission
+  const handleCheckSelection = () => {
+    if (activeTool !== 'cursor' || !onSelectionChange) return;
+
+    setTimeout(() => {
+      const sel = window.getSelection();
+      const text = sel?.toString().trim();
+      if (text && text.length >= 2 && sel && sel.rangeCount > 0) {
+        const range = sel.getRangeAt(0);
+        const rect = range.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) {
+          onSelectionChange({
+            text,
+            pageNumber,
+            clientX: rect.left + rect.width / 2,
+            clientY: rect.top - 8,
+          });
+          return;
+        }
       }
-    }
+      // If no valid selection, dismiss
+      onSelectionChange(null);
+    }, 50);
   };
 
   return (
@@ -402,8 +432,8 @@ export const PDFPageItem: React.FC<PDFPageItemProps> = ({
       ref={containerRef}
       id={`pdf-page-${pageNumber}`}
       data-page-number={pageNumber}
-      onMouseUp={handleTextMouseUp}
-      onTouchEnd={handleTextMouseUp}
+      onMouseUp={handleCheckSelection}
+      onTouchEnd={handleCheckSelection}
       className="relative mb-6 rounded-md shadow-xl transition-all duration-150 mx-auto select-none group"
       style={{
         width: `${Math.floor(pageDimensions.width)}px`,
@@ -442,7 +472,7 @@ export const PDFPageItem: React.FC<PDFPageItemProps> = ({
         Page {pageNumber}
       </div>
 
-      {/* Lightweight Loading Skeleton when page is approaching viewport */}
+      {/* Lightweight Loading Skeleton */}
       {!isRendered && isInViewport && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/10 text-slate-400 gap-2">
           <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
@@ -459,11 +489,14 @@ export const PDFPageItem: React.FC<PDFPageItemProps> = ({
         }}
       />
 
-      {/* Selectable Text Overlay Spans for Instant Reader Text Highlighting */}
+      {/* Selectable Text Layer: Clearly visible blue highlight, perfectly positioned over canvas */}
       {textItems.length > 0 && activeTool === 'cursor' && (
         <div
           className="absolute inset-0 z-12 overflow-hidden pointer-events-auto select-text cursor-text"
-          style={{ opacity: 0.01 }}
+          style={{
+            userSelect: 'text',
+            WebkitUserSelect: 'text',
+          }}
         >
           {textItems.map((item, idx) => (
             <span
@@ -476,7 +509,10 @@ export const PDFPageItem: React.FC<PDFPageItemProps> = ({
                 height: `${item.height}px`,
                 fontSize: `${item.fontSize}px`,
                 lineHeight: `${item.height}px`,
+                color: 'transparent',
+                backgroundColor: 'transparent',
               }}
+              className="selection:bg-blue-500/40 selection:text-transparent"
             >
               {item.str}{' '}
             </span>
@@ -484,7 +520,7 @@ export const PDFPageItem: React.FC<PDFPageItemProps> = ({
         </div>
       )}
 
-      {/* Drawing / Annotation Canvas Overlay */}
+      {/* Drawing & Annotation Canvas Overlay */}
       <canvas
         ref={annotationCanvasRef}
         onPointerDown={handlePointerDown}

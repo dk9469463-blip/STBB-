@@ -73,6 +73,13 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
   // In-Reader AI Side Panel State
   const [isAiPanelOpen, setIsAiPanelOpen] = useState<boolean>(false);
   const [selectedReaderText, setSelectedReaderText] = useState<string>('');
+  const [floatingSelection, setFloatingSelection] = useState<{
+    text: string;
+    pageNumber: number;
+    clientX: number;
+    clientY: number;
+  } | null>(null);
+  const [copiedSelectionText, setCopiedSelectionText] = useState<boolean>(false);
 
   // Study workspace annotation state
   const [isStudyToolsOpen, setIsStudyToolsOpen] = useState<boolean>(false);
@@ -199,7 +206,7 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
 
       if (msg.includes('404')) {
         setDocError(
-          `The official Sindh Textbook Board server reported that the digital PDF file for this title (${book.title}) is currently pending upload on ebooks.stbb.edu.pk.`
+          `The official Sindh Textbook Board server reported that the digital PDF file for this title (${book.title}) is currently pending upload on portal.stbb.edu.pk.`
         );
       } else if (msg.includes('502') || msg.includes('504')) {
         setDocError(
@@ -380,8 +387,6 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
     if (!book) return;
     const currentStrokes = pageAnnotations[currentPage] || [];
     if (currentStrokes.length === 0) return;
-
-    if (!window.confirm(`Clear all drawings on Page ${currentPage}?`)) return;
 
     setUndoHistory((prev) => ({
       ...prev,
@@ -841,7 +846,7 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
                 <div className="space-y-1">
                   <p className="text-base font-bold text-white">Loading Official STBB Textbook...</p>
                   <p className="text-xs text-slate-400">
-                    Streaming verified document from Sindh Textbook Board (ebooks.stbb.edu.pk)
+                    Streaming verified document from Sindh Textbook Board (portal.stbb.edu.pk)
                     {loadingPercent === null ? '' : ` — ${loadingPercent}% loaded`}
                   </p>
                 </div>
@@ -901,6 +906,7 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
                     key={pageNum}
                     pdfDoc={pdfDocRef.current!}
                     pageNumber={pageNum}
+                    bookId={book.id}
                     scale={scale}
                     rotation={rotation}
                     activeTool={activeTool}
@@ -908,18 +914,74 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
                     strokeWidth={strokeWidth}
                     highlighterOpacity={highlighterOpacity}
                     showAnnotations={showAnnotations}
-                    strokes={pageAnnotations[pageNum] || []}
+                    strokes={pageAnnotations[pageNum] !== undefined ? pageAnnotations[pageNum] : getStoredPageAnnotations(book.id, pageNum)}
                     onSaveStrokes={handleSavePageStrokes}
                     isBookmarked={bookmarks.includes(pageNum)}
                     onToggleBookmark={handleToggleBookmark}
                     isDarkMode={isDarkMode}
                     onAskAiPage={handleAskAiAboutPage}
-                    onSelectText={handleSelectTextOnPage}
+                    onSelectionChange={setFloatingSelection}
                   />
                 ))}
               </div>
             )}
           </div>
+
+          {/* Floating Contextual Action Menu on Text Selection (Copy & Ask Chatbot) */}
+          {floatingSelection && (
+            <div
+              style={{
+                position: 'fixed',
+                left: `${Math.min(window.innerWidth - 240, Math.max(16, floatingSelection.clientX - 100))}px`,
+                top: `${Math.max(70, floatingSelection.clientY - 46)}px`,
+                zIndex: 65,
+              }}
+              className="bg-slate-900/95 border border-slate-700/90 rounded-2xl shadow-2xl p-1.5 flex items-center gap-1.5 text-xs text-white backdrop-blur-md animate-in fade-in zoom-in-95 duration-150"
+            >
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(floatingSelection.text);
+                  setCopiedSelectionText(true);
+                  setTimeout(() => setCopiedSelectionText(false), 2000);
+                }}
+                className="px-2.5 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-medium flex items-center gap-1 transition cursor-pointer"
+                title="Copy text to clipboard"
+              >
+                {copiedSelectionText ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    <span className="text-emerald-400 font-bold">Copied</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3.5 h-3.5" />
+                    <span>Copy</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                onClick={() => {
+                  setSelectedReaderText(floatingSelection.text);
+                  setIsAiPanelOpen(true);
+                  setFloatingSelection(null);
+                }}
+                className="px-2.5 py-1 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold flex items-center gap-1 transition cursor-pointer shadow-md"
+                title="Transfer text to chatbot input for editing before sending"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                <span>Ask Chatbot</span>
+              </button>
+
+              <button
+                onClick={() => setFloatingSelection(null)}
+                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
+                title="Dismiss"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
 
           {/* Ask AI Side Panel */}
           {isAiPanelOpen && (
