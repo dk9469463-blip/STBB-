@@ -204,6 +204,31 @@ export function deleteConversation(convId: string): Conversation[] {
 }
 
 // Reader-specific chat helpers (scoped per book)
+export function getStoredReaderChatArchive(bookId: string): ChatMessage[][] {
+  try {
+    const raw = localStorage.getItem(`stbb_reader_chat_archive_${bookId}`);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.filter((chat) => Array.isArray(chat)) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function archiveStoredReaderMessages(bookId: string, messages: ChatMessage[]): void {
+  if (!messages.length) return;
+  try {
+    const existing = getStoredReaderChatArchive(bookId);
+    // Avoid archiving an empty welcome-only session repeatedly.
+    const isOnlyWelcome = messages.length === 1 && messages[0].role === 'assistant';
+    if (isOnlyWelcome) return;
+    const archive = [messages, ...existing].slice(0, 30);
+    localStorage.setItem(`stbb_reader_chat_archive_${bookId}`, JSON.stringify(archive));
+  } catch (err) {
+    console.warn('Failed to archive reader conversation:', err);
+  }
+}
+
 export function getStoredReaderMessages(bookId: string): ChatMessage[] {
   try {
     const raw = localStorage.getItem(`stbb_reader_chat_${bookId}`);
