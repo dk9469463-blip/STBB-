@@ -88,14 +88,43 @@ async function getPdfMetadata(targetUrl: string): Promise<PdfMetadata | null> {
       signal: AbortSignal.timeout(10000),
     });
 
+    if (!upstream.ok && upstream.status !== 206) {
+      console.warn(`PDF probe failed for ${targetUrl}: upstream HTTP ${upstream.status}`);
+      await upstream.body?.cancel().catch(() => undefined);
+      return null;
+    }
+
+    const contentType = (upstream.headers.get('content-type') || '').toLowerCase();
+    if (contentType.includes('text/html') || contentType.includes('text/plain')) {
+      await upstream.body?.cancel().catch(() => undefined);
+      console.warn(`PDF probe returned non-PDF content for ${targetUrl}: ${contentType}`);
+      return null;
+    }
+
+    // Verify the response starts with a PDF signature before telling PDF.js it is available.
+    const reader = upstream.body?.getReader();
+    let firstBytes = new Uint8Array(0);
+    if (reader) {
+      try {
+        const first = await reader.read();
+        firstBytes = first.value || new Uint8Array(0);
+      } finally {
+        await reader.cancel().catch(() => undefined);
+      }
+    }
+    const signature = new TextDecoder().decode(firstBytes.slice(0, 5));
+    if (!signature.startsWith('%PDF-')) {
+      console.warn(`PDF probe did not contain a PDF signature for ${targetUrl}`);
+      return null;
+    }
+
     const cr = upstream.headers.get('content-range');
     let contentLength = 0;
     if (cr) {
       const match = cr.match(/\/(\d+)$/);
-      if (match && match[1]) {
-        contentLength = parseInt(match[1], 10);
-      }
-    } else {
+      if (match && match[1]) contentLength = parseInt(match[1], 10);
+    }
+    if (!contentLength) {
       const cl = upstream.headers.get('content-length');
       if (cl) contentLength = parseInt(cl, 10);
     }
@@ -103,8 +132,8 @@ async function getPdfMetadata(targetUrl: string): Promise<PdfMetadata | null> {
     if (contentLength > 0) {
       const meta: PdfMetadata = {
         contentLength,
-        contentType: upstream.headers.get('content-type') || 'application/pdf',
-        acceptRanges: true,
+        contentType: contentType || 'application/pdf',
+        acceptRanges: upstream.status === 206 || upstream.headers.get('accept-ranges') === 'bytes',
         fetchedAt: Date.now(),
       };
       pdfMetadataCache.set(targetUrl, meta);
@@ -182,13 +211,17 @@ app.all('/api/pdf/stream', async (req: Request, res: Response) => {
   // Handle HEAD requests (PDF.js capability probe)
   if (method === 'HEAD') {
     const meta = await getPdfMetadata(targetUrl);
+    if (!meta) {
+      return res.status(502).json({
+        error: 'The official STBB source did not return a verifiable PDF for this book.',
+        code: 'PDF_SOURCE_UNAVAILABLE',
+      });
+    }
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', 'inline');
-    res.setHeader('Accept-Ranges', 'bytes');
-    res.setHeader('Cache-Control', 'public, max-age=86400');
-    if (meta?.contentLength) {
-      res.setHeader('Content-Length', meta.contentLength.toString());
-    }
+    res.setHeader('Accept-Ranges', meta.acceptRanges ? 'bytes' : 'none');
+    res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('Content-Length', meta.contentLength.toString());
     return res.status(200).end();
   }
 
@@ -314,6 +347,7 @@ app.get('/api/pdf/download', async (req: Request, res: Response) => {
   try {
     const forwardHeaders: Record<string, string> = {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) STBB-Books/2.0',
+      Referer: 'https://portal.stbb.edu.pk/ebooks/',
       Accept: 'application/pdf, */*',
     };
     if (req.headers.range) {

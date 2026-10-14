@@ -23,6 +23,8 @@ import {
   ChatMessage,
   getStoredReaderMessages,
   saveStoredReaderMessages,
+  getStoredReaderChatArchive,
+  archiveStoredReaderMessages,
 } from '../utils/chatStorage';
 import {
   isSpeechRecognitionSupported,
@@ -70,10 +72,12 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
 
   // Persistent Messages for this book reader session
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [archivedChats, setArchivedChats] = useState<ChatMessage[][]>([]);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   // Load saved reader chat for this book from localStorage
   useEffect(() => {
+    setArchivedChats(getStoredReaderChatArchive(book.id));
     const saved = getStoredReaderMessages(book.id);
     if (saved.length > 0) {
       setMessages(saved);
@@ -199,6 +203,8 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
 
   // New Chat for this book
   const handleNewChat = () => {
+    archiveStoredReaderMessages(book.id, messages);
+    setArchivedChats(getStoredReaderChatArchive(book.id));
     stopSpeech();
     setSpeakingId(null);
     setErrorMsg(null);
@@ -394,6 +400,32 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
         </div>
 
         <div className="flex items-center gap-1 shrink-0">
+          {archivedChats.length > 0 && (
+            <select
+              aria-label="Open previous reader chat"
+              title="Open a previous conversation"
+              className="max-w-28 sm:max-w-36 rounded-md border border-slate-700 bg-slate-900 px-1.5 py-1 text-[10px] text-slate-200"
+              defaultValue=""
+              onChange={(event) => {
+                const index = Number(event.target.value);
+                const archived = archivedChats[index];
+                if (Number.isInteger(index) && archived?.length) {
+                  archiveStoredReaderMessages(book.id, messages);
+                  saveStoredReaderMessages(book.id, archived);
+                  setMessages(archived);
+                  setArchivedChats(getStoredReaderChatArchive(book.id));
+                  event.target.value = "";
+                }
+              }}
+            >
+              <option value="">Previous chats ({archivedChats.length})</option>
+              {archivedChats.map((chat, index) => (
+                <option key={index} value={index}>
+                  {chat.find((message) => message.role === 'user')?.content.slice(0, 32) || `Chat ${index + 1}`}
+                </option>
+              ))}
+            </select>
+          )}
           <button
             onClick={handleNewChat}
             className="p-1.5 rounded-lg text-slate-400 hover:text-amber-300 hover:bg-slate-800 transition cursor-pointer"
