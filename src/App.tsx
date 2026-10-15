@@ -10,6 +10,7 @@ import { Footer } from './components/Footer';
 import { PDFViewerModal } from './components/PDFViewerModal';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { Book } from './types';
+import { getStoredReadingPage } from './utils/readingProgress';
 
 const STORAGE_LAST_CLASS_KEY = 'stbb_last_selected_class';
 
@@ -18,6 +19,7 @@ export default function App() {
   const [selectedClassNumber, setSelectedClassNumber] = useState<number | null>(null);
   const [activeBookForModal, setActiveBookForModal] = useState<Book | null>(null);
   const [initialPageForModal, setInitialPageForModal] = useState<number | undefined>(undefined);
+  const [readingProgressVersion, setReadingProgressVersion] = useState(0);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [aiContext, setAiContext] = useState<{
     book?: Book | null;
@@ -81,7 +83,8 @@ export default function App() {
   };
 
   const handleOpenBook = (book: Book, pageNumber?: number) => {
-    setInitialPageForModal(pageNumber);
+    const savedPage = pageNumber ?? getStoredReadingPage(book.id) ?? 1;
+    setInitialPageForModal(savedPage);
     setActiveBookForModal(book);
   };
 
@@ -126,6 +129,8 @@ export default function App() {
             onGoToSearch={handleGoToSearch}
             onGoToAIAssistant={handleGoToAIAssistant}
             lastSelectedClass={getLastStoredClass()}
+            readingProgressVersion={readingProgressVersion}
+            onContinueReading={(book, pageNumber) => handleOpenBook(book, pageNumber)}
           />
         )}
 
@@ -176,6 +181,7 @@ export default function App() {
         onClose={() => {
           setActiveBookForModal(null);
           setInitialPageForModal(undefined);
+          setReadingProgressVersion((version) => version + 1);
         }}
         onOpenUniversalAiAssistant={handleOpenAIAssistantFromReader}
       />
