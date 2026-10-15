@@ -151,7 +151,9 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
     setErrorDetails(null);
     setLoadingPercent(null);
 
-    const streamUrl = book.officialId
+    const streamUrl = book.driveFileId
+      ? `/api/pdf/drive-stream?id=${encodeURIComponent(book.driveFileId)}`
+      : book.officialId
       ? `/api/pdf/stream?id=${encodeURIComponent(book.officialId)}`
       : `/api/pdf/stream?url=${encodeURIComponent(book.pdfUrl || '')}`;
 
