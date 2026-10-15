@@ -40,6 +40,7 @@ import { downloadBookDirectly, DownloadProgress } from '../utils/downloadHelper'
 import { PDFPageItem } from './PDFPageItem';
 import { PDFAnnotationToolbar } from './PDFAnnotationToolbar';
 import { AIReaderPanel } from './AIReaderPanel';
+import { saveReadingProgress } from '../utils/readingProgress';
 
 // Configure self-hosted worker from public directory
 if (typeof window !== 'undefined') {
@@ -252,6 +253,12 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
       setPageInput(closestPage.toString());
     }
   }, [currentPage, numPages]);
+
+  // Save the last page read for this book on this device.
+  useEffect(() => {
+    if (!book || !pdfDocRef.current || numPages < 1) return;
+    saveReadingProgress(book.id, currentPage);
+  }, [book, currentPage, numPages]);
 
   // 4. Smooth page navigation helpers
   const scrollToPage = useCallback(
