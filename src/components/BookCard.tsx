@@ -159,7 +159,9 @@ export const BookCard: React.FC<BookCardProps> = ({ book, onViewBook }) => {
                 <span>
                   {isDownloading
                     ? downloadProgress?.status === 'completed'
-                      ? 'Saved!'
+                      ? book.driveFileId
+                        ? 'Started!'
+                        : 'Saved!'
                       : downloadProgress?.percent
                       ? `${downloadProgress.percent}%`
                       : 'Saving...'
