@@ -13,7 +13,9 @@ import {
   Calculator,
   MessageSquare,
 } from 'lucide-react';
-import { CLASSES_LIST } from '../data/stbbData';
+import { CLASSES_LIST, getAllBooks } from '../data/stbbData';
+import { Book } from '../types';
+import { getMostRecentReadingProgress } from '../utils/readingProgress';
 
 interface HomeViewProps {
   onExploreClasses: () => void;
@@ -21,6 +23,8 @@ interface HomeViewProps {
   onGoToSearch: (initialQuery?: string) => void;
   onGoToAIAssistant: () => void;
   lastSelectedClass: number | null;
+  readingProgressVersion: number;
+  onContinueReading: (book: Book, pageNumber: number) => void;
 }
 
 export const HomeView: React.FC<HomeViewProps> = ({
@@ -29,6 +33,8 @@ export const HomeView: React.FC<HomeViewProps> = ({
   onGoToSearch,
   onGoToAIAssistant,
   lastSelectedClass,
+  readingProgressVersion,
+  onContinueReading,
 }) => {
   const [searchInput, setSearchInput] = React.useState('');
 
@@ -44,6 +50,19 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const lastClassInfo = lastSelectedClass
     ? CLASSES_LIST.find((c) => c.classNumber === lastSelectedClass)
     : null;
+
+  const [continueReadingBook, setContinueReadingBook] = React.useState<Book | null>(null);
+  const [continueReadingPage, setContinueReadingPage] = React.useState(1);
+
+  React.useEffect(() => {
+    const allBooks = getAllBooks();
+    const validBookIds = new Set(allBooks.map((book) => book.id));
+    const saved = getMostRecentReadingProgress(validBookIds);
+    const matchingBook = saved ? allBooks.find((book) => book.id === saved.bookId) : null;
+
+    setContinueReadingBook(matchingBook || null);
+    setContinueReadingPage(saved?.pageNumber || 1);
+  }, [readingProgressVersion]);
 
   return (
     <div className="space-y-12 pb-16">
@@ -129,6 +148,29 @@ export const HomeView: React.FC<HomeViewProps> = ({
           </div>
         </div>
       </section>
+
+      {continueReadingBook && (
+        <section className="rounded-2xl border border-blue-100 bg-white p-4 sm:p-5 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+              <BookOpen className="h-6 w-6" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-bold uppercase tracking-wide text-blue-700">Continue Reading</p>
+              <h2 className="truncate text-base font-extrabold text-slate-900">{continueReadingBook.title}</h2>
+              <p className="text-sm text-slate-500">Class {continueReadingBook.classNumber} · {continueReadingBook.subjectName} · Page {continueReadingPage}</p>
+            </div>
+            <button
+              onClick={() => onContinueReading(continueReadingBook, continueReadingPage)}
+              className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-blue-700 px-3 py-2.5 text-sm font-bold text-white transition hover:bg-blue-800"
+              aria-label={`Continue reading ${continueReadingBook.title} from page ${continueReadingPage}`}
+            >
+              <BookOpen className="h-4 w-4" />
+              <span className="hidden sm:inline">Continue</span>
+            </button>
+          </div>
+        </section>
+      )}
 
       {/* AI Study Assistant Feature Banner */}
       <section
