@@ -5,6 +5,9 @@ export type LanguageMedium = 'English' | 'Sindhi' | 'Urdu';
 export interface Book {
   id: string;
   officialId?: string; // e.g. "117" from portal.stbb.edu.pk/ebooks/book.php?id=117
+  driveFileId?: string; // Public Google Drive file ID used by the in-app PDF reader
+  driveViewUrl?: string; // Public Google Drive preview URL
+  driveDownloadUrl?: string; // Public Google Drive download URL
   title: string;
   titleSindhi?: string;
   titleUrdu?: string;
