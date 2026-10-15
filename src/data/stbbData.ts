@@ -143,7 +143,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "139",
     "driveFileId": "1lJmv0nB-b745Hvq_zNSMBWNxkOW2pRAj",
     "driveViewUrl": "https://drive.google.com/file/d/1lJmv0nB-b745Hvq_zNSMBWNxkOW2pRAj/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1lJmv0nB-b745Hvq_zNSMBWNxkOW2pRAj"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1lJmv0nB-b745Hvq_zNSMBWNxkOW2pRAj",
     "title": "English Book I",
     "classNumber": 1,
     "subjectId": "c1-english",
@@ -168,7 +168,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "39",
     "driveFileId": "17gLqS_t97j5p7zNEwHBneLWhr4Y1e5pW",
     "driveViewUrl": "https://drive.google.com/file/d/17gLqS_t97j5p7zNEwHBneLWhr4Y1e5pW/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=17gLqS_t97j5p7zNEwHBneLWhr4Y1e5pW"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=17gLqS_t97j5p7zNEwHBneLWhr4Y1e5pW",
     "title": "General Knowledge I",
     "classNumber": 1,
     "subjectId": "c1-general-knowledge",
@@ -193,7 +193,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "47",
     "driveFileId": "1nbYpzVRl0KPhjKCsUM3skt2ZID09Ry_3",
     "driveViewUrl": "https://drive.google.com/file/d/1nbYpzVRl0KPhjKCsUM3skt2ZID09Ry_3/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1nbYpzVRl0KPhjKCsUM3skt2ZID09Ry_3"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1nbYpzVRl0KPhjKCsUM3skt2ZID09Ry_3",
     "title": "General Knowledge I",
     "classNumber": 1,
     "subjectId": "c1-general-knowledge",
@@ -218,7 +218,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "48",
     "driveFileId": "1Xy1QIP5Ha8t5kPNdmh3N-JE9nKneK6bn",
     "driveViewUrl": "https://drive.google.com/file/d/1Xy1QIP5Ha8t5kPNdmh3N-JE9nKneK6bn/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1Xy1QIP5Ha8t5kPNdmh3N-JE9nKneK6bn"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1Xy1QIP5Ha8t5kPNdmh3N-JE9nKneK6bn",
     "title": "General Knowledge I",
     "classNumber": 1,
     "subjectId": "c1-general-knowledge",
@@ -243,7 +243,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "40",
     "driveFileId": "1PmN3OfsWWDproeYxrs0tjNluWZu2Jsh8",
     "driveViewUrl": "https://drive.google.com/file/d/1PmN3OfsWWDproeYxrs0tjNluWZu2Jsh8/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1PmN3OfsWWDproeYxrs0tjNluWZu2Jsh8"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1PmN3OfsWWDproeYxrs0tjNluWZu2Jsh8",
     "title": "Math I",
     "classNumber": 1,
     "subjectId": "c1-mathematics",
@@ -268,7 +268,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "208",
     "driveFileId": "13JYREnIVUZzSF3aDgj7d9ZFVYajpieKJ",
     "driveViewUrl": "https://drive.google.com/file/d/13JYREnIVUZzSF3aDgj7d9ZFVYajpieKJ/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=13JYREnIVUZzSF3aDgj7d9ZFVYajpieKJ"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=13JYREnIVUZzSF3aDgj7d9ZFVYajpieKJ",
     "title": "Riazi I",
     "classNumber": 1,
     "subjectId": "c1-mathematics",
@@ -293,7 +293,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "271",
     "driveFileId": "1ukG83lJaNWVHoTWvkNS0AF5SnwERTHJj",
     "driveViewUrl": "https://drive.google.com/file/d/1ukG83lJaNWVHoTWvkNS0AF5SnwERTHJj/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1ukG83lJaNWVHoTWvkNS0AF5SnwERTHJj"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1ukG83lJaNWVHoTWvkNS0AF5SnwERTHJj",
     "title": "Riazi Sindhi I",
     "classNumber": 1,
     "subjectId": "c1-mathematics",
@@ -318,7 +318,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "42",
     "driveFileId": "1mzQkD2wVQ7YtcPtIi1_aTB1nzXG2DWpV",
     "driveViewUrl": "https://drive.google.com/file/d/1mzQkD2wVQ7YtcPtIi1_aTB1nzXG2DWpV/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1mzQkD2wVQ7YtcPtIi1_aTB1nzXG2DWpV"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1mzQkD2wVQ7YtcPtIi1_aTB1nzXG2DWpV",
     "title": "Sindhi Reader I",
     "classNumber": 1,
     "subjectId": "c1-sindhi",
@@ -343,7 +343,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "15",
     "driveFileId": "1IfCt3JnCqzdE6kwCxw482XItXWs6B4wN",
     "driveViewUrl": "https://drive.google.com/file/d/1IfCt3JnCqzdE6kwCxw482XItXWs6B4wN/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1IfCt3JnCqzdE6kwCxw482XItXWs6B4wN"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1IfCt3JnCqzdE6kwCxw482XItXWs6B4wN",
     "title": "Urdu Reader",
     "classNumber": 1,
     "subjectId": "c1-urdu",
@@ -368,7 +368,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "79",
     "driveFileId": "1eJSC7L9X7IMjp4B2Vw9BJ1YtJHAFsCMM",
     "driveViewUrl": "https://drive.google.com/file/d/1eJSC7L9X7IMjp4B2Vw9BJ1YtJHAFsCMM/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1eJSC7L9X7IMjp4B2Vw9BJ1YtJHAFsCMM"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1eJSC7L9X7IMjp4B2Vw9BJ1YtJHAFsCMM",
     "title": "General Knowledge II",
     "classNumber": 2,
     "subjectId": "c2-general-knowledge",
@@ -393,7 +393,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "104",
     "driveFileId": "1OwjBjIGtL_XTC93MepmcGVvdbr-g-qci",
     "driveViewUrl": "https://drive.google.com/file/d/1OwjBjIGtL_XTC93MepmcGVvdbr-g-qci/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1OwjBjIGtL_XTC93MepmcGVvdbr-g-qci"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1OwjBjIGtL_XTC93MepmcGVvdbr-g-qci",
     "title": "General Knowledge II",
     "classNumber": 2,
     "subjectId": "c2-general-knowledge",
@@ -418,7 +418,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "135",
     "driveFileId": "11FyXdUJpN4vCDqozVaGKMRhcAGUsyePl",
     "driveViewUrl": "https://drive.google.com/file/d/11FyXdUJpN4vCDqozVaGKMRhcAGUsyePl/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=11FyXdUJpN4vCDqozVaGKMRhcAGUsyePl"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=11FyXdUJpN4vCDqozVaGKMRhcAGUsyePl",
     "title": "General Knowledge II",
     "classNumber": 2,
     "subjectId": "c2-general-knowledge",
@@ -443,7 +443,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "86",
     "driveFileId": "1pXASg5ke25vBdRwAoGGzOtYpqGS0oyik",
     "driveViewUrl": "https://drive.google.com/file/d/1pXASg5ke25vBdRwAoGGzOtYpqGS0oyik/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1pXASg5ke25vBdRwAoGGzOtYpqGS0oyik"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1pXASg5ke25vBdRwAoGGzOtYpqGS0oyik",
     "title": "Math II",
     "classNumber": 2,
     "subjectId": "c2-mathematics",
@@ -468,7 +468,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "140",
     "driveFileId": "1AzaeGqrVYjvr_Pog5cz0pyv4MMierNbb",
     "driveViewUrl": "https://drive.google.com/file/d/1AzaeGqrVYjvr_Pog5cz0pyv4MMierNbb/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1AzaeGqrVYjvr_Pog5cz0pyv4MMierNbb"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1AzaeGqrVYjvr_Pog5cz0pyv4MMierNbb",
     "title": "My English II",
     "classNumber": 2,
     "subjectId": "c2-english",
@@ -493,7 +493,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "280",
     "driveFileId": "15cZ_v_JhEu_TKadI6L5qn6Fs4CY3VH8s",
     "driveViewUrl": "https://drive.google.com/file/d/15cZ_v_JhEu_TKadI6L5qn6Fs4CY3VH8s/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=15cZ_v_JhEu_TKadI6L5qn6Fs4CY3VH8s"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=15cZ_v_JhEu_TKadI6L5qn6Fs4CY3VH8s",
     "title": "Riazi II Sindhi",
     "classNumber": 2,
     "subjectId": "c2-mathematics",
@@ -518,7 +518,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "281",
     "driveFileId": "1IH-vdrcHLz8shstNI_UnuRHMpjFL8rc0",
     "driveViewUrl": "https://drive.google.com/file/d/1IH-vdrcHLz8shstNI_UnuRHMpjFL8rc0/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1IH-vdrcHLz8shstNI_UnuRHMpjFL8rc0"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1IH-vdrcHLz8shstNI_UnuRHMpjFL8rc0",
     "title": "Riazi II Urdu",
     "classNumber": 2,
     "subjectId": "c2-mathematics",
@@ -543,7 +543,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "88",
     "driveFileId": "1znQX3DuxxLwd3g9Xw5OI8HycxOVe2iMz",
     "driveViewUrl": "https://drive.google.com/file/d/1znQX3DuxxLwd3g9Xw5OI8HycxOVe2iMz/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1znQX3DuxxLwd3g9Xw5OI8HycxOVe2iMz"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1znQX3DuxxLwd3g9Xw5OI8HycxOVe2iMz",
     "title": "Sindhi Reader II",
     "classNumber": 2,
     "subjectId": "c2-sindhi",
@@ -568,7 +568,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "16",
     "driveFileId": "1r1Pz7FVGrmumMeewmjbS9W6PLJtMQUrP",
     "driveViewUrl": "https://drive.google.com/file/d/1r1Pz7FVGrmumMeewmjbS9W6PLJtMQUrP/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1r1Pz7FVGrmumMeewmjbS9W6PLJtMQUrP"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1r1Pz7FVGrmumMeewmjbS9W6PLJtMQUrP",
     "title": "Urdu Reader II",
     "classNumber": 2,
     "subjectId": "c2-urdu",
@@ -593,7 +593,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "300",
     "driveFileId": "151O-1LEskEIlKjBy9c3J3YwWVSwrPWNC",
     "driveViewUrl": "https://drive.google.com/file/d/151O-1LEskEIlKjBy9c3J3YwWVSwrPWNC/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=151O-1LEskEIlKjBy9c3J3YwWVSwrPWNC"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=151O-1LEskEIlKjBy9c3J3YwWVSwrPWNC",
     "title": "Asan Sindhi III",
     "classNumber": 3,
     "subjectId": "c3-sindhi",
@@ -618,7 +618,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "236",
     "driveFileId": "1jfFR3GkX_YyPXKuNoKHBY6K9PPQHsjGd",
     "driveViewUrl": "https://drive.google.com/file/d/1jfFR3GkX_YyPXKuNoKHBY6K9PPQHsjGd/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1jfFR3GkX_YyPXKuNoKHBY6K9PPQHsjGd"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1jfFR3GkX_YyPXKuNoKHBY6K9PPQHsjGd",
     "title": "Asan Urdu III",
     "classNumber": 3,
     "subjectId": "c3-urdu",
@@ -643,7 +643,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "105",
     "driveFileId": "1C8-6wFBZsgBqXKnPIeqWezmQwkC5SufA",
     "driveViewUrl": "https://drive.google.com/file/d/1C8-6wFBZsgBqXKnPIeqWezmQwkC5SufA/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1C8-6wFBZsgBqXKnPIeqWezmQwkC5SufA"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1C8-6wFBZsgBqXKnPIeqWezmQwkC5SufA",
     "title": "General Knowledge III",
     "classNumber": 3,
     "subjectId": "c3-general-knowledge",
@@ -668,7 +668,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "112",
     "driveFileId": "1kb8XGPkenIjdCtT2_wvdvMT2bYBDkC7W",
     "driveViewUrl": "https://drive.google.com/file/d/1kb8XGPkenIjdCtT2_wvdvMT2bYBDkC7W/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1kb8XGPkenIjdCtT2_wvdvMT2bYBDkC7W"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1kb8XGPkenIjdCtT2_wvdvMT2bYBDkC7W",
     "title": "General Knowledge III",
     "classNumber": 3,
     "subjectId": "c3-general-knowledge",
@@ -715,7 +715,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "256",
     "driveFileId": "1bKXeWJDlHGTCwTHEcFPFDaOt8TYbbY8m",
     "driveViewUrl": "https://drive.google.com/file/d/1bKXeWJDlHGTCwTHEcFPFDaOt8TYbbY8m/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1bKXeWJDlHGTCwTHEcFPFDaOt8TYbbY8m"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1bKXeWJDlHGTCwTHEcFPFDaOt8TYbbY8m",
     "title": "Islamiyat III",
     "classNumber": 3,
     "subjectId": "c3-islamiat-ethics",
@@ -740,7 +740,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "257",
     "driveFileId": "1xWVYyXsKOhDKuLWNCOi8E3vz-4T3YWA-",
     "driveViewUrl": "https://drive.google.com/file/d/1xWVYyXsKOhDKuLWNCOi8E3vz-4T3YWA-/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1xWVYyXsKOhDKuLWNCOi8E3vz-4T3YWA-"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1xWVYyXsKOhDKuLWNCOi8E3vz-4T3YWA-",
     "title": "Ismaiyat III",
     "classNumber": 3,
     "subjectId": "c3-islamiat-ethics",
@@ -765,7 +765,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "85",
     "driveFileId": "1KNZSrehI3kydtrikmcOui30A6gN9sa3E",
     "driveViewUrl": "https://drive.google.com/file/d/1KNZSrehI3kydtrikmcOui30A6gN9sa3E/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1KNZSrehI3kydtrikmcOui30A6gN9sa3E"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1KNZSrehI3kydtrikmcOui30A6gN9sa3E",
     "title": "Math III",
     "classNumber": 3,
     "subjectId": "c3-mathematics",
@@ -790,7 +790,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "241",
     "driveFileId": "1d-v0v_pyUC5owL6I7VkNjvcxJa5um8WO",
     "driveViewUrl": "https://drive.google.com/file/d/1d-v0v_pyUC5owL6I7VkNjvcxJa5um8WO/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1d-v0v_pyUC5owL6I7VkNjvcxJa5um8WO"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1d-v0v_pyUC5owL6I7VkNjvcxJa5um8WO",
     "title": "Mazhabi Taleemat III",
     "classNumber": 3,
     "subjectId": "c3-islamiat-ethics",
@@ -815,7 +815,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "244",
     "driveFileId": "1CagVdygosVpXKmEadW3s6tsTvMTaJot4",
     "driveViewUrl": "https://drive.google.com/file/d/1CagVdygosVpXKmEadW3s6tsTvMTaJot4/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1CagVdygosVpXKmEadW3s6tsTvMTaJot4"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1CagVdygosVpXKmEadW3s6tsTvMTaJot4",
     "title": "Mazhabi taleemat III",
     "classNumber": 3,
     "subjectId": "c3-islamiat-ethics",
@@ -840,7 +840,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "141",
     "driveFileId": "16zJe0Nc-y9MoozT34wF49_e3Ymue5wj0",
     "driveViewUrl": "https://drive.google.com/file/d/16zJe0Nc-y9MoozT34wF49_e3Ymue5wj0/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=16zJe0Nc-y9MoozT34wF49_e3Ymue5wj0"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=16zJe0Nc-y9MoozT34wF49_e3Ymue5wj0",
     "title": "My English III",
     "classNumber": 3,
     "subjectId": "c3-english",
@@ -865,7 +865,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "192",
     "driveFileId": "1lLNqeIagzNqSeZhOsoc65Nwj1ke-9bih",
     "driveViewUrl": "https://drive.google.com/file/d/1lLNqeIagzNqSeZhOsoc65Nwj1ke-9bih/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1lLNqeIagzNqSeZhOsoc65Nwj1ke-9bih"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1lLNqeIagzNqSeZhOsoc65Nwj1ke-9bih",
     "title": "Riazi III",
     "classNumber": 3,
     "subjectId": "c3-mathematics",
@@ -890,7 +890,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "209",
     "driveFileId": "1GDy-ebLeedB56zz_XP5MZmH3peFgyf4i",
     "driveViewUrl": "https://drive.google.com/file/d/1GDy-ebLeedB56zz_XP5MZmH3peFgyf4i/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1GDy-ebLeedB56zz_XP5MZmH3peFgyf4i"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1GDy-ebLeedB56zz_XP5MZmH3peFgyf4i",
     "title": "Riazi III",
     "classNumber": 3,
     "subjectId": "c3-mathematics",
@@ -915,7 +915,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "89",
     "driveFileId": "1zrCZ-oNBukN9jvSNhIeof85aDWEZTvzQ",
     "driveViewUrl": "https://drive.google.com/file/d/1zrCZ-oNBukN9jvSNhIeof85aDWEZTvzQ/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1zrCZ-oNBukN9jvSNhIeof85aDWEZTvzQ"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1zrCZ-oNBukN9jvSNhIeof85aDWEZTvzQ",
     "title": "Sindhi Reader III",
     "classNumber": 3,
     "subjectId": "c3-sindhi",
@@ -940,7 +940,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "17",
     "driveFileId": "14Q2rATwOSC3v3V5VG30VHgIDusYGtjVG",
     "driveViewUrl": "https://drive.google.com/file/d/14Q2rATwOSC3v3V5VG30VHgIDusYGtjVG/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=14Q2rATwOSC3v3V5VG30VHgIDusYGtjVG"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=14Q2rATwOSC3v3V5VG30VHgIDusYGtjVG",
     "title": "Urdu Reader III",
     "classNumber": 3,
     "subjectId": "c3-urdu",
@@ -965,7 +965,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "312",
     "driveFileId": "1Fs_L66ykxoqgmKnbSh4fRWfIcEJYYAz0",
     "driveViewUrl": "https://drive.google.com/file/d/1Fs_L66ykxoqgmKnbSh4fRWfIcEJYYAz0/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1Fs_L66ykxoqgmKnbSh4fRWfIcEJYYAz0"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1Fs_L66ykxoqgmKnbSh4fRWfIcEJYYAz0",
     "title": "Asan Sindhi IV",
     "classNumber": 4,
     "subjectId": "c4-sindhi",
@@ -990,7 +990,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "237",
     "driveFileId": "1BXuwl57oB-essmWZK9Vq24JyqR36CQgF",
     "driveViewUrl": "https://drive.google.com/file/d/1BXuwl57oB-essmWZK9Vq24JyqR36CQgF/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1BXuwl57oB-essmWZK9Vq24JyqR36CQgF"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1BXuwl57oB-essmWZK9Vq24JyqR36CQgF",
     "title": "Asan Urdu IV",
     "classNumber": 4,
     "subjectId": "c4-urdu",
@@ -1015,7 +1015,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "258",
     "driveFileId": "1w16vVY7ct6k-sk4S7DZvMFkqnnBxB5Nd",
     "driveViewUrl": "https://drive.google.com/file/d/1w16vVY7ct6k-sk4S7DZvMFkqnnBxB5Nd/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1w16vVY7ct6k-sk4S7DZvMFkqnnBxB5Nd"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1w16vVY7ct6k-sk4S7DZvMFkqnnBxB5Nd",
     "title": "Islamiyat IV",
     "classNumber": 4,
     "subjectId": "c4-islamiat-ethics",
@@ -1040,7 +1040,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "128",
     "driveFileId": "1PdIx59SOSonUoGo1btcL6IUC7IhjaJX2",
     "driveViewUrl": "https://drive.google.com/file/d/1PdIx59SOSonUoGo1btcL6IUC7IhjaJX2/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1PdIx59SOSonUoGo1btcL6IUC7IhjaJX2"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1PdIx59SOSonUoGo1btcL6IUC7IhjaJX2",
     "title": "Mashrati Uloom IV",
     "classNumber": 4,
     "subjectId": "c4-social-studies",
@@ -1065,7 +1065,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "87",
     "driveFileId": "1hA_RIYaxDwOGJg7mlZDhYRXc03kCpozr",
     "driveViewUrl": "https://drive.google.com/file/d/1hA_RIYaxDwOGJg7mlZDhYRXc03kCpozr/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1hA_RIYaxDwOGJg7mlZDhYRXc03kCpozr"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1hA_RIYaxDwOGJg7mlZDhYRXc03kCpozr",
     "title": "Math IV",
     "classNumber": 4,
     "subjectId": "c4-mathematics",
@@ -1090,7 +1090,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "242",
     "driveFileId": "1ueU_tsna_0WCuVvCCtFakbiPs3EUnv4B",
     "driveViewUrl": "https://drive.google.com/file/d/1ueU_tsna_0WCuVvCCtFakbiPs3EUnv4B/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1ueU_tsna_0WCuVvCCtFakbiPs3EUnv4B"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1ueU_tsna_0WCuVvCCtFakbiPs3EUnv4B",
     "title": "Mazhabi taleemat IV",
     "classNumber": 4,
     "subjectId": "c4-islamiat-ethics",
@@ -1115,7 +1115,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "246",
     "driveFileId": "1JBCMUF4bFgaJGA1Sf8IFMp7IP2lkUghT",
     "driveViewUrl": "https://drive.google.com/file/d/1JBCMUF4bFgaJGA1Sf8IFMp7IP2lkUghT/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1JBCMUF4bFgaJGA1Sf8IFMp7IP2lkUghT"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1JBCMUF4bFgaJGA1Sf8IFMp7IP2lkUghT",
     "title": "Mazhabi taleemat IV",
     "classNumber": 4,
     "subjectId": "c4-islamiat-ethics",
@@ -1140,7 +1140,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "142",
     "driveFileId": "1XLXdjPwAbA2pMIh0q-eyZzH9yjMOpZpw",
     "driveViewUrl": "https://drive.google.com/file/d/1XLXdjPwAbA2pMIh0q-eyZzH9yjMOpZpw/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1XLXdjPwAbA2pMIh0q-eyZzH9yjMOpZpw"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1XLXdjPwAbA2pMIh0q-eyZzH9yjMOpZpw",
     "title": "My English IV",
     "classNumber": 4,
     "subjectId": "c4-english",
@@ -1165,7 +1165,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "278",
     "driveFileId": "1PJFWL0rCUp1gj5z7alKsnrhRj1ATT_nG",
     "driveViewUrl": "https://drive.google.com/file/d/1PJFWL0rCUp1gj5z7alKsnrhRj1ATT_nG/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1PJFWL0rCUp1gj5z7alKsnrhRj1ATT_nG"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1PJFWL0rCUp1gj5z7alKsnrhRj1ATT_nG",
     "title": "Riazi Sindh IV",
     "classNumber": 4,
     "subjectId": "c4-mathematics",
@@ -1190,7 +1190,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "269",
     "driveFileId": "11WEoRIvwon-frU0tCkmwpjlki7wE6l1h",
     "driveViewUrl": "https://drive.google.com/file/d/11WEoRIvwon-frU0tCkmwpjlki7wE6l1h/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=11WEoRIvwon-frU0tCkmwpjlki7wE6l1h"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=11WEoRIvwon-frU0tCkmwpjlki7wE6l1h",
     "title": "Riazi Urdu IV",
     "classNumber": 4,
     "subjectId": "c4-mathematics",
@@ -1215,7 +1215,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "84",
     "driveFileId": "1evxrQ50jXELcKEU8WHNqhl__BEszWBGw",
     "driveViewUrl": "https://drive.google.com/file/d/1evxrQ50jXELcKEU8WHNqhl__BEszWBGw/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1evxrQ50jXELcKEU8WHNqhl__BEszWBGw"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1evxrQ50jXELcKEU8WHNqhl__BEszWBGw",
     "title": "Science IV",
     "classNumber": 4,
     "subjectId": "c4-general-science",
@@ -1240,7 +1240,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "101",
     "driveFileId": "1s5WxZhWHRkO45P2mF7Rf4unTR0w_u_RT",
     "driveViewUrl": "https://drive.google.com/file/d/1s5WxZhWHRkO45P2mF7Rf4unTR0w_u_RT/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1s5WxZhWHRkO45P2mF7Rf4unTR0w_u_RT"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1s5WxZhWHRkO45P2mF7Rf4unTR0w_u_RT",
     "title": "Science IV",
     "classNumber": 4,
     "subjectId": "c4-general-science",
@@ -1265,7 +1265,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "103",
     "driveFileId": "14vOFlBFXy5cb_8j4_P23BbuOdiyE_7ZC",
     "driveViewUrl": "https://drive.google.com/file/d/14vOFlBFXy5cb_8j4_P23BbuOdiyE_7ZC/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=14vOFlBFXy5cb_8j4_P23BbuOdiyE_7ZC"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=14vOFlBFXy5cb_8j4_P23BbuOdiyE_7ZC",
     "title": "Science IV",
     "classNumber": 4,
     "subjectId": "c4-general-science",
@@ -1290,7 +1290,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "90",
     "driveFileId": "1RPJvpcdqTCpFMEKoXYunKrVu23VihcZP",
     "driveViewUrl": "https://drive.google.com/file/d/1RPJvpcdqTCpFMEKoXYunKrVu23VihcZP/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1RPJvpcdqTCpFMEKoXYunKrVu23VihcZP"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1RPJvpcdqTCpFMEKoXYunKrVu23VihcZP",
     "title": "Sindhi Reader IV",
     "classNumber": 4,
     "subjectId": "c4-sindhi",
@@ -1315,7 +1315,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "107",
     "driveFileId": "18KOZHCmRUxyoGPJweng_0wApM4LMt1mX",
     "driveViewUrl": "https://drive.google.com/file/d/18KOZHCmRUxyoGPJweng_0wApM4LMt1mX/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=18KOZHCmRUxyoGPJweng_0wApM4LMt1mX"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=18KOZHCmRUxyoGPJweng_0wApM4LMt1mX",
     "title": "Smajhi Abhiyas IV",
     "classNumber": 4,
     "subjectId": "c4-social-studies",
@@ -1340,7 +1340,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "124",
     "driveFileId": "1d_YOuR48RFLqCHegaU_PYLqLuFHdFICl",
     "driveViewUrl": "https://drive.google.com/file/d/1d_YOuR48RFLqCHegaU_PYLqLuFHdFICl/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1d_YOuR48RFLqCHegaU_PYLqLuFHdFICl"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1d_YOuR48RFLqCHegaU_PYLqLuFHdFICl",
     "title": "Social Studies IV",
     "classNumber": 4,
     "subjectId": "c4-social-studies",
@@ -1365,7 +1365,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "18",
     "driveFileId": "1uO-Q0pzc5kBeyyZahxVWGxj0KRQ-JlHn",
     "driveViewUrl": "https://drive.google.com/file/d/1uO-Q0pzc5kBeyyZahxVWGxj0KRQ-JlHn/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1uO-Q0pzc5kBeyyZahxVWGxj0KRQ-JlHn"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1uO-Q0pzc5kBeyyZahxVWGxj0KRQ-JlHn",
     "title": "Urdu Reader IV",
     "classNumber": 4,
     "subjectId": "c4-urdu",
@@ -1390,7 +1390,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "65",
     "driveFileId": "1u3IYCX12f_CpeYDnXH-Tg8aEw80_OMll",
     "driveViewUrl": "https://drive.google.com/file/d/1u3IYCX12f_CpeYDnXH-Tg8aEw80_OMll/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1u3IYCX12f_CpeYDnXH-Tg8aEw80_OMll"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1u3IYCX12f_CpeYDnXH-Tg8aEw80_OMll",
     "title": "Asaan Sindhi V",
     "classNumber": 5,
     "subjectId": "c5-sindhi",
@@ -1415,7 +1415,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "10",
     "driveFileId": "1mHFY0imFb9amG7jFU4XK1SDDLc36F9JF",
     "driveViewUrl": "https://drive.google.com/file/d/1mHFY0imFb9amG7jFU4XK1SDDLc36F9JF/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1mHFY0imFb9amG7jFU4XK1SDDLc36F9JF"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1mHFY0imFb9amG7jFU4XK1SDDLc36F9JF",
     "title": "Asan Urdu V",
     "classNumber": 5,
     "subjectId": "c5-urdu",
@@ -1440,7 +1440,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "259",
     "driveFileId": "1rQITj6nawg8wMlstAPdqC5-p30cJ2zft",
     "driveViewUrl": "https://drive.google.com/file/d/1rQITj6nawg8wMlstAPdqC5-p30cJ2zft/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1rQITj6nawg8wMlstAPdqC5-p30cJ2zft"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1rQITj6nawg8wMlstAPdqC5-p30cJ2zft",
     "title": "Islamiyat V",
     "classNumber": 5,
     "subjectId": "c5-islamiat-ethics",
@@ -1465,7 +1465,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "129",
     "driveFileId": "1RQgvxij5Oil2nIQF3OMIO9IlKeLgGa8Y",
     "driveViewUrl": "https://drive.google.com/file/d/1RQgvxij5Oil2nIQF3OMIO9IlKeLgGa8Y/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1RQgvxij5Oil2nIQF3OMIO9IlKeLgGa8Y"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1RQgvxij5Oil2nIQF3OMIO9IlKeLgGa8Y",
     "title": "Mashrati Uloom V",
     "classNumber": 5,
     "subjectId": "c5-social-studies",
@@ -1490,7 +1490,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "95",
     "driveFileId": "1-tGL2FdV4uIAHzuy6g3TGAclOh2NBNDU",
     "driveViewUrl": "https://drive.google.com/file/d/1-tGL2FdV4uIAHzuy6g3TGAclOh2NBNDU/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1-tGL2FdV4uIAHzuy6g3TGAclOh2NBNDU"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1-tGL2FdV4uIAHzuy6g3TGAclOh2NBNDU",
     "title": "Math V",
     "classNumber": 5,
     "subjectId": "c5-mathematics",
@@ -1515,7 +1515,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "243",
     "driveFileId": "1TQDF1DsE8wvCQsJcXnf_OMlQaIbHHJXh",
     "driveViewUrl": "https://drive.google.com/file/d/1TQDF1DsE8wvCQsJcXnf_OMlQaIbHHJXh/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1TQDF1DsE8wvCQsJcXnf_OMlQaIbHHJXh"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1TQDF1DsE8wvCQsJcXnf_OMlQaIbHHJXh",
     "title": "Mazhabi taleemat V",
     "classNumber": 5,
     "subjectId": "c5-islamiat-ethics",
@@ -1540,7 +1540,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "245",
     "driveFileId": "1r8vq9F7fuuGE9Vx2WCEWYIWKfOR5JwW1",
     "driveViewUrl": "https://drive.google.com/file/d/1r8vq9F7fuuGE9Vx2WCEWYIWKfOR5JwW1/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1r8vq9F7fuuGE9Vx2WCEWYIWKfOR5JwW1"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1r8vq9F7fuuGE9Vx2WCEWYIWKfOR5JwW1",
     "title": "Mazhabi taleemat V",
     "classNumber": 5,
     "subjectId": "c5-islamiat-ethics",
@@ -1565,7 +1565,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "144",
     "driveFileId": "1YdZ-3lpYlGrzA2FzZmvu1CEAwcP_UoCD",
     "driveViewUrl": "https://drive.google.com/file/d/1YdZ-3lpYlGrzA2FzZmvu1CEAwcP_UoCD/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1YdZ-3lpYlGrzA2FzZmvu1CEAwcP_UoCD"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1YdZ-3lpYlGrzA2FzZmvu1CEAwcP_UoCD",
     "title": "My English V",
     "classNumber": 5,
     "subjectId": "c5-english",
@@ -1590,7 +1590,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "268",
     "driveFileId": "1XNWSvCNhs-o7TbLB70mH-6I6TIiGukpH",
     "driveViewUrl": "https://drive.google.com/file/d/1XNWSvCNhs-o7TbLB70mH-6I6TIiGukpH/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1XNWSvCNhs-o7TbLB70mH-6I6TIiGukpH"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1XNWSvCNhs-o7TbLB70mH-6I6TIiGukpH",
     "title": "Riazi V",
     "classNumber": 5,
     "subjectId": "c5-mathematics",
@@ -1615,7 +1615,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "210",
     "driveFileId": "1cpnFJM_-ayHScq246JQc2uedH70IEy97",
     "driveViewUrl": "https://drive.google.com/file/d/1cpnFJM_-ayHScq246JQc2uedH70IEy97/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1cpnFJM_-ayHScq246JQc2uedH70IEy97"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1cpnFJM_-ayHScq246JQc2uedH70IEy97",
     "title": "Riazi V",
     "classNumber": 5,
     "subjectId": "c5-mathematics",
@@ -1640,7 +1640,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "83",
     "driveFileId": "1yzHkXFEKfmZW9DcjU5oH3XzjVce1o6Eg",
     "driveViewUrl": "https://drive.google.com/file/d/1yzHkXFEKfmZW9DcjU5oH3XzjVce1o6Eg/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1yzHkXFEKfmZW9DcjU5oH3XzjVce1o6Eg"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1yzHkXFEKfmZW9DcjU5oH3XzjVce1o6Eg",
     "title": "Science V",
     "classNumber": 5,
     "subjectId": "c5-general-science",
@@ -1665,7 +1665,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "102",
     "driveFileId": "17GygmHW_ilepRRT0EpLuNsF9IdJULlzh",
     "driveViewUrl": "https://drive.google.com/file/d/17GygmHW_ilepRRT0EpLuNsF9IdJULlzh/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=17GygmHW_ilepRRT0EpLuNsF9IdJULlzh"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=17GygmHW_ilepRRT0EpLuNsF9IdJULlzh",
     "title": "Science V",
     "classNumber": 5,
     "subjectId": "c5-general-science",
@@ -1690,7 +1690,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "120",
     "driveFileId": "1t9Lv3ROuA5ubCzJv331HUxDedvmO-wtW",
     "driveViewUrl": "https://drive.google.com/file/d/1t9Lv3ROuA5ubCzJv331HUxDedvmO-wtW/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1t9Lv3ROuA5ubCzJv331HUxDedvmO-wtW"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1t9Lv3ROuA5ubCzJv331HUxDedvmO-wtW",
     "title": "Science V",
     "classNumber": 5,
     "subjectId": "c5-general-science",
@@ -1715,7 +1715,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "91",
     "driveFileId": "1-Q1aJ09VRPgVQI3YhIDgVnYlI3Rjxnj-",
     "driveViewUrl": "https://drive.google.com/file/d/1-Q1aJ09VRPgVQI3YhIDgVnYlI3Rjxnj-/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1-Q1aJ09VRPgVQI3YhIDgVnYlI3Rjxnj-"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1-Q1aJ09VRPgVQI3YhIDgVnYlI3Rjxnj-",
     "title": "Sindhi Reader V",
     "classNumber": 5,
     "subjectId": "c5-sindhi",
@@ -1740,7 +1740,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "108",
     "driveFileId": "1uEmFfM0fjAwRaRoLOSzxESGiitRu2diE",
     "driveViewUrl": "https://drive.google.com/file/d/1uEmFfM0fjAwRaRoLOSzxESGiitRu2diE/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1uEmFfM0fjAwRaRoLOSzxESGiitRu2diE"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1uEmFfM0fjAwRaRoLOSzxESGiitRu2diE",
     "title": "Smajhi Abhiyas V",
     "classNumber": 5,
     "subjectId": "c5-social-studies",
@@ -1765,7 +1765,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "80",
     "driveFileId": "1heXy3QVPn2Vcm67wHdwWme7_SHOCimfq",
     "driveViewUrl": "https://drive.google.com/file/d/1heXy3QVPn2Vcm67wHdwWme7_SHOCimfq/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1heXy3QVPn2Vcm67wHdwWme7_SHOCimfq"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1heXy3QVPn2Vcm67wHdwWme7_SHOCimfq",
     "title": "Social Studies V",
     "classNumber": 5,
     "subjectId": "c5-social-studies",
@@ -1790,7 +1790,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "19",
     "driveFileId": "17Upo0tKKU2_bDWAmN3CmkQeakVNC5WVi",
     "driveViewUrl": "https://drive.google.com/file/d/17Upo0tKKU2_bDWAmN3CmkQeakVNC5WVi/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=17Upo0tKKU2_bDWAmN3CmkQeakVNC5WVi"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=17Upo0tKKU2_bDWAmN3CmkQeakVNC5WVi",
     "title": "Urdu Reader V",
     "classNumber": 5,
     "subjectId": "c5-urdu",
@@ -1815,7 +1815,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "41",
     "driveFileId": "1HYu-N3qp4R_r9eiSYam1fHKn9TpxPw_r",
     "driveViewUrl": "https://drive.google.com/file/d/1HYu-N3qp4R_r9eiSYam1fHKn9TpxPw_r/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1HYu-N3qp4R_r9eiSYam1fHKn9TpxPw_r"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1HYu-N3qp4R_r9eiSYam1fHKn9TpxPw_r",
     "title": "Arabic VI",
     "classNumber": 6,
     "subjectId": "c6-arabic",
@@ -1840,7 +1840,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "43",
     "driveFileId": "1NlIweovFSKacGuZ_jySAIgEyD3fFG6TH",
     "driveViewUrl": "https://drive.google.com/file/d/1NlIweovFSKacGuZ_jySAIgEyD3fFG6TH/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1NlIweovFSKacGuZ_jySAIgEyD3fFG6TH"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1NlIweovFSKacGuZ_jySAIgEyD3fFG6TH",
     "title": "Arabic VI",
     "classNumber": 6,
     "subjectId": "c6-arabic",
@@ -1865,7 +1865,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "46",
     "driveFileId": "1Z_UCBB5Xjp9Wb_RmerjsW5nbeHd92r1O",
     "driveViewUrl": "https://drive.google.com/file/d/1Z_UCBB5Xjp9Wb_RmerjsW5nbeHd92r1O/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1Z_UCBB5Xjp9Wb_RmerjsW5nbeHd92r1O"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1Z_UCBB5Xjp9Wb_RmerjsW5nbeHd92r1O",
     "title": "Arabic VI",
     "classNumber": 6,
     "subjectId": "c6-arabic",
@@ -1890,7 +1890,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "229",
     "driveFileId": "1zM2yIa6dp67zQOMofB2KUAxB1sSyZdVf",
     "driveViewUrl": "https://drive.google.com/file/d/1zM2yIa6dp67zQOMofB2KUAxB1sSyZdVf/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1zM2yIa6dp67zQOMofB2KUAxB1sSyZdVf"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1zM2yIa6dp67zQOMofB2KUAxB1sSyZdVf",
     "title": "Arabic VI",
     "classNumber": 6,
     "subjectId": "c6-arabic",
@@ -1915,7 +1915,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "66",
     "driveFileId": "1z41_Mz8InGLKpkUzoyLxsydOU4KgNDCF",
     "driveViewUrl": "https://drive.google.com/file/d/1z41_Mz8InGLKpkUzoyLxsydOU4KgNDCF/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1z41_Mz8InGLKpkUzoyLxsydOU4KgNDCF"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1z41_Mz8InGLKpkUzoyLxsydOU4KgNDCF",
     "title": "Asaan Sindhi VI",
     "classNumber": 6,
     "subjectId": "c6-sindhi",
@@ -1940,7 +1940,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "314",
     "driveFileId": "1XEC4wdp6_EYIALhiRDvyuIZbwcexD6p5",
     "driveViewUrl": "https://drive.google.com/file/d/1XEC4wdp6_EYIALhiRDvyuIZbwcexD6p5/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1XEC4wdp6_EYIALhiRDvyuIZbwcexD6p5"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1XEC4wdp6_EYIALhiRDvyuIZbwcexD6p5",
     "title": "Asan Sindhi VI",
     "classNumber": 6,
     "subjectId": "c6-sindhi",
@@ -1965,7 +1965,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "11",
     "driveFileId": "1ZYf5JE6PXIVskutUOf0w1YagwdnlXMmc",
     "driveViewUrl": "https://drive.google.com/file/d/1ZYf5JE6PXIVskutUOf0w1YagwdnlXMmc/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1ZYf5JE6PXIVskutUOf0w1YagwdnlXMmc"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1ZYf5JE6PXIVskutUOf0w1YagwdnlXMmc",
     "title": "Asan Urdu VI",
     "classNumber": 6,
     "subjectId": "c6-urdu",
@@ -1990,7 +1990,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "287",
     "driveFileId": "1G73nHBcwplG3vYnWNE-8Cg_psHJV35AP",
     "driveViewUrl": "https://drive.google.com/file/d/1G73nHBcwplG3vYnWNE-8Cg_psHJV35AP/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1G73nHBcwplG3vYnWNE-8Cg_psHJV35AP"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1G73nHBcwplG3vYnWNE-8Cg_psHJV35AP",
     "title": "Computer Education - VI",
     "classNumber": 6,
     "subjectId": "c6-computer-science",
@@ -2015,7 +2015,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "289",
     "driveFileId": "1WeANx90lAHsnI4s3T9P7vw_-tD_p-Muc",
     "driveViewUrl": "https://drive.google.com/file/d/1WeANx90lAHsnI4s3T9P7vw_-tD_p-Muc/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1WeANx90lAHsnI4s3T9P7vw_-tD_p-Muc"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1WeANx90lAHsnI4s3T9P7vw_-tD_p-Muc",
     "title": "Computer Ji Taleem - VI",
     "classNumber": 6,
     "subjectId": "c6-computer-science",
@@ -2040,7 +2040,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "288",
     "driveFileId": "1mio-lwSENQ-Msekove-NIYsZ-7AUAtgY",
     "driveViewUrl": "https://drive.google.com/file/d/1mio-lwSENQ-Msekove-NIYsZ-7AUAtgY/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1mio-lwSENQ-Msekove-NIYsZ-7AUAtgY"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1mio-lwSENQ-Msekove-NIYsZ-7AUAtgY",
     "title": "Computer Ki Taleem - VI",
     "classNumber": 6,
     "subjectId": "c6-computer-science",
@@ -2065,7 +2065,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "260",
     "driveFileId": "1NXxONb_Ex8z3cN5rSINvgzJMTnwkjnNt",
     "driveViewUrl": "https://drive.google.com/file/d/1NXxONb_Ex8z3cN5rSINvgzJMTnwkjnNt/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1NXxONb_Ex8z3cN5rSINvgzJMTnwkjnNt"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1NXxONb_Ex8z3cN5rSINvgzJMTnwkjnNt",
     "title": "Islamiyat VI",
     "classNumber": 6,
     "subjectId": "c6-islamiat-ethics",
@@ -2090,7 +2090,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "25",
     "driveFileId": "1JQb4qmAab7R_r92ouhL1MT4Nr6nYScup",
     "driveViewUrl": "https://drive.google.com/file/d/1JQb4qmAab7R_r92ouhL1MT4Nr6nYScup/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1JQb4qmAab7R_r92ouhL1MT4Nr6nYScup"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1JQb4qmAab7R_r92ouhL1MT4Nr6nYScup",
     "title": "Islamiyat VI",
     "classNumber": 6,
     "subjectId": "c6-islamiat-ethics",
@@ -2115,7 +2115,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "29",
     "driveFileId": "1__g6DyiYYDVIvzBf10QRSGPMMQqD1fus",
     "driveViewUrl": "https://drive.google.com/file/d/1__g6DyiYYDVIvzBf10QRSGPMMQqD1fus/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1__g6DyiYYDVIvzBf10QRSGPMMQqD1fus"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1__g6DyiYYDVIvzBf10QRSGPMMQqD1fus",
     "title": "Islamiyat VI",
     "classNumber": 6,
     "subjectId": "c6-islamiat-ethics",
@@ -2140,7 +2140,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "131",
     "driveFileId": "18SPsXZ7gIK2x0-peDIl6cI08G0ZPtyln",
     "driveViewUrl": "https://drive.google.com/file/d/18SPsXZ7gIK2x0-peDIl6cI08G0ZPtyln/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=18SPsXZ7gIK2x0-peDIl6cI08G0ZPtyln"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=18SPsXZ7gIK2x0-peDIl6cI08G0ZPtyln",
     "title": "Mashrati Uloom VI",
     "classNumber": 6,
     "subjectId": "c6-social-studies",
@@ -2165,7 +2165,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "96",
     "driveFileId": "1cYxcYMIGECGHWn8GgUNg5M7W-Hp0XgXl",
     "driveViewUrl": "https://drive.google.com/file/d/1cYxcYMIGECGHWn8GgUNg5M7W-Hp0XgXl/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1cYxcYMIGECGHWn8GgUNg5M7W-Hp0XgXl"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1cYxcYMIGECGHWn8GgUNg5M7W-Hp0XgXl",
     "title": "Math VI",
     "classNumber": 6,
     "subjectId": "c6-mathematics",
@@ -2190,7 +2190,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "238",
     "driveFileId": "1f3g6NXVq13AAIyFZg5Xbhk2jsQFLsqJ1",
     "driveViewUrl": "https://drive.google.com/file/d/1f3g6NXVq13AAIyFZg5Xbhk2jsQFLsqJ1/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1f3g6NXVq13AAIyFZg5Xbhk2jsQFLsqJ1"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1f3g6NXVq13AAIyFZg5Xbhk2jsQFLsqJ1",
     "title": "Mazhabi Taleemat VI",
     "classNumber": 6,
     "subjectId": "c6-islamiat-ethics",
@@ -2215,7 +2215,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "249",
     "driveFileId": "1mWD8WZ6nwlrFf_K1omJMaTo9LcVc4DfI",
     "driveViewUrl": "https://drive.google.com/file/d/1mWD8WZ6nwlrFf_K1omJMaTo9LcVc4DfI/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1mWD8WZ6nwlrFf_K1omJMaTo9LcVc4DfI"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1mWD8WZ6nwlrFf_K1omJMaTo9LcVc4DfI",
     "title": "Mazhabi Taleemat VI",
     "classNumber": 6,
     "subjectId": "c6-islamiat-ethics",
@@ -2240,7 +2240,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "143",
     "driveFileId": "1Ul7fPcS2veeiwBtX3JnL-vJdKhtRDCWe",
     "driveViewUrl": "https://drive.google.com/file/d/1Ul7fPcS2veeiwBtX3JnL-vJdKhtRDCWe/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1Ul7fPcS2veeiwBtX3JnL-vJdKhtRDCWe"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1Ul7fPcS2veeiwBtX3JnL-vJdKhtRDCWe",
     "title": "My English VI",
     "classNumber": 6,
     "subjectId": "c6-english",
@@ -2265,7 +2265,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "270",
     "driveFileId": "1tOMMnFLn_zDmoChe6PjIybcfb6Z9T1-I",
     "driveViewUrl": "https://drive.google.com/file/d/1tOMMnFLn_zDmoChe6PjIybcfb6Z9T1-I/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1tOMMnFLn_zDmoChe6PjIybcfb6Z9T1-I"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1tOMMnFLn_zDmoChe6PjIybcfb6Z9T1-I",
     "title": "Riazi Sindhi VI",
     "classNumber": 6,
     "subjectId": "c6-mathematics",
@@ -2290,7 +2290,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "115",
     "driveFileId": "1x_Jh3oo_52iwklfo4709hVGDsN2bUqNL",
     "driveViewUrl": "https://drive.google.com/file/d/1x_Jh3oo_52iwklfo4709hVGDsN2bUqNL/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1x_Jh3oo_52iwklfo4709hVGDsN2bUqNL"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1x_Jh3oo_52iwklfo4709hVGDsN2bUqNL",
     "title": "Science VI",
     "classNumber": 6,
     "subjectId": "c6-general-science",
@@ -2315,7 +2315,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "232",
     "driveFileId": "1EvWASEllztbM8gg1nehfP6xWz9kOJGxH",
     "driveViewUrl": "https://drive.google.com/file/d/1EvWASEllztbM8gg1nehfP6xWz9kOJGxH/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1EvWASEllztbM8gg1nehfP6xWz9kOJGxH"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1EvWASEllztbM8gg1nehfP6xWz9kOJGxH",
     "title": "Arabic VII",
     "classNumber": 7,
     "subjectId": "c7-arabic",
@@ -2340,7 +2340,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "315",
     "driveFileId": "1qt_B95qEd8DkvDCyyPPpGMCfEqVQ1bTF",
     "driveViewUrl": "https://drive.google.com/file/d/1qt_B95qEd8DkvDCyyPPpGMCfEqVQ1bTF/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1qt_B95qEd8DkvDCyyPPpGMCfEqVQ1bTF"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1qt_B95qEd8DkvDCyyPPpGMCfEqVQ1bTF",
     "title": "Asan Sindhi VII",
     "classNumber": 7,
     "subjectId": "c7-sindhi",
@@ -2387,7 +2387,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "317",
     "driveFileId": "1d8Mx3cg1txN6fXn3bM7IIAlN6Dw8peh2",
     "driveViewUrl": "https://drive.google.com/file/d/1d8Mx3cg1txN6fXn3bM7IIAlN6Dw8peh2/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1d8Mx3cg1txN6fXn3bM7IIAlN6Dw8peh2"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1d8Mx3cg1txN6fXn3bM7IIAlN6Dw8peh2",
     "title": "Computer Education",
     "classNumber": 7,
     "subjectId": "c7-computer-science",
@@ -2412,7 +2412,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "319",
     "driveFileId": "1YUwiLL6aeDf4rVbwqaoHYSBmZhDc9Eh_",
     "driveViewUrl": "https://drive.google.com/file/d/1YUwiLL6aeDf4rVbwqaoHYSBmZhDc9Eh_/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1YUwiLL6aeDf4rVbwqaoHYSBmZhDc9Eh_"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1YUwiLL6aeDf4rVbwqaoHYSBmZhDc9Eh_",
     "title": "Computer Ji Taleem",
     "classNumber": 7,
     "subjectId": "c7-computer-science",
@@ -2437,7 +2437,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "320",
     "driveFileId": "1wpUOV4KPj1jZA9kYZcKkRzPBhszmxP5Z",
     "driveViewUrl": "https://drive.google.com/file/d/1wpUOV4KPj1jZA9kYZcKkRzPBhszmxP5Z/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1wpUOV4KPj1jZA9kYZcKkRzPBhszmxP5Z"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1wpUOV4KPj1jZA9kYZcKkRzPBhszmxP5Z",
     "title": "Computer Ki Taleem",
     "classNumber": 7,
     "subjectId": "c7-computer-science",
@@ -2462,7 +2462,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "261",
     "driveFileId": "1JDGiOjsDqcjJ7TGbZurRJsOyRSi-lb2X",
     "driveViewUrl": "https://drive.google.com/file/d/1JDGiOjsDqcjJ7TGbZurRJsOyRSi-lb2X/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1JDGiOjsDqcjJ7TGbZurRJsOyRSi-lb2X"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1JDGiOjsDqcjJ7TGbZurRJsOyRSi-lb2X",
     "title": "Islamiyat VII",
     "classNumber": 7,
     "subjectId": "c7-islamiat-ethics",
@@ -2487,7 +2487,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "136",
     "driveFileId": "14BmDT_Mr76GRawVLCIw5RHwvK6mHUvvo",
     "driveViewUrl": "https://drive.google.com/file/d/14BmDT_Mr76GRawVLCIw5RHwvK6mHUvvo/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=14BmDT_Mr76GRawVLCIw5RHwvK6mHUvvo"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=14BmDT_Mr76GRawVLCIw5RHwvK6mHUvvo",
     "title": "Islamiyat VII",
     "classNumber": 7,
     "subjectId": "c7-islamiat-ethics",
@@ -2512,7 +2512,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "137",
     "driveFileId": "1UguTSHVf_sYMTRal-WQcfMGO-tQyjO7M",
     "driveViewUrl": "https://drive.google.com/file/d/1UguTSHVf_sYMTRal-WQcfMGO-tQyjO7M/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1UguTSHVf_sYMTRal-WQcfMGO-tQyjO7M"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1UguTSHVf_sYMTRal-WQcfMGO-tQyjO7M",
     "title": "Islamiyat VII",
     "classNumber": 7,
     "subjectId": "c7-islamiat-ethics",
@@ -2537,7 +2537,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "130",
     "driveFileId": "1sBZQs_usP9jsa_C-eO0yZ4FDCFxtyYN3",
     "driveViewUrl": "https://drive.google.com/file/d/1sBZQs_usP9jsa_C-eO0yZ4FDCFxtyYN3/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1sBZQs_usP9jsa_C-eO0yZ4FDCFxtyYN3"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1sBZQs_usP9jsa_C-eO0yZ4FDCFxtyYN3",
     "title": "Mashrati Uloom VII",
     "classNumber": 7,
     "subjectId": "c7-social-studies",
@@ -2562,7 +2562,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "97",
     "driveFileId": "1z3wx1EFc_ivHFx_Tdq1fXaCs_w3nu7Ug",
     "driveViewUrl": "https://drive.google.com/file/d/1z3wx1EFc_ivHFx_Tdq1fXaCs_w3nu7Ug/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1z3wx1EFc_ivHFx_Tdq1fXaCs_w3nu7Ug"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1z3wx1EFc_ivHFx_Tdq1fXaCs_w3nu7Ug",
     "title": "Math VII",
     "classNumber": 7,
     "subjectId": "c7-mathematics",
@@ -2587,7 +2587,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "239",
     "driveFileId": "1_5wEQnq7YgwOQA73LDXr5gCfbxf3BxPs",
     "driveViewUrl": "https://drive.google.com/file/d/1_5wEQnq7YgwOQA73LDXr5gCfbxf3BxPs/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1_5wEQnq7YgwOQA73LDXr5gCfbxf3BxPs"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1_5wEQnq7YgwOQA73LDXr5gCfbxf3BxPs",
     "title": "Mazhabi Taleemat VII",
     "classNumber": 7,
     "subjectId": "c7-islamiat-ethics",
@@ -2612,7 +2612,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "251",
     "driveFileId": "1T6kh4CnhJ6AjYX2fqXXv1949zQcMNHg6",
     "driveViewUrl": "https://drive.google.com/file/d/1T6kh4CnhJ6AjYX2fqXXv1949zQcMNHg6/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1T6kh4CnhJ6AjYX2fqXXv1949zQcMNHg6"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1T6kh4CnhJ6AjYX2fqXXv1949zQcMNHg6",
     "title": "Mazhabi Taleemat VII",
     "classNumber": 7,
     "subjectId": "c7-islamiat-ethics",
@@ -2637,7 +2637,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "145",
     "driveFileId": "1AVtZWoCakWI8UckUQtTIN1x-sf-DGF8c",
     "driveViewUrl": "https://drive.google.com/file/d/1AVtZWoCakWI8UckUQtTIN1x-sf-DGF8c/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1AVtZWoCakWI8UckUQtTIN1x-sf-DGF8c"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1AVtZWoCakWI8UckUQtTIN1x-sf-DGF8c",
     "title": "My English VII",
     "classNumber": 7,
     "subjectId": "c7-english",
@@ -2662,7 +2662,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "282",
     "driveFileId": "1f6bHQUZ4VFPRqe0V1NE9ubGbXEwETTl5",
     "driveViewUrl": "https://drive.google.com/file/d/1f6bHQUZ4VFPRqe0V1NE9ubGbXEwETTl5/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1f6bHQUZ4VFPRqe0V1NE9ubGbXEwETTl5"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1f6bHQUZ4VFPRqe0V1NE9ubGbXEwETTl5",
     "title": "Riazi Sindhi VII",
     "classNumber": 7,
     "subjectId": "c7-mathematics",
@@ -2687,7 +2687,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "279",
     "driveFileId": "1F3VCE7RF7CJUVz6jro1G5jTJb7Kd0X8q",
     "driveViewUrl": "https://drive.google.com/file/d/1F3VCE7RF7CJUVz6jro1G5jTJb7Kd0X8q/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1F3VCE7RF7CJUVz6jro1G5jTJb7Kd0X8q"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1F3VCE7RF7CJUVz6jro1G5jTJb7Kd0X8q",
     "title": "Riazi Urdu VII",
     "classNumber": 7,
     "subjectId": "c7-mathematics",
@@ -2712,7 +2712,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "114",
     "driveFileId": "17QJG9zMnb1eHWWeMusVMzZn4LNWbhvnQ",
     "driveViewUrl": "https://drive.google.com/file/d/17QJG9zMnb1eHWWeMusVMzZn4LNWbhvnQ/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=17QJG9zMnb1eHWWeMusVMzZn4LNWbhvnQ"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=17QJG9zMnb1eHWWeMusVMzZn4LNWbhvnQ",
     "title": "Science VII",
     "classNumber": 7,
     "subjectId": "c7-general-science",
@@ -2737,7 +2737,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "116",
     "driveFileId": "1ORbELb7QcbanVWTw8n3i2t9WPnFMociQ",
     "driveViewUrl": "https://drive.google.com/file/d/1ORbELb7QcbanVWTw8n3i2t9WPnFMociQ/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1ORbELb7QcbanVWTw8n3i2t9WPnFMociQ"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1ORbELb7QcbanVWTw8n3i2t9WPnFMociQ",
     "title": "Science VII",
     "classNumber": 7,
     "subjectId": "c7-general-science",
@@ -2762,7 +2762,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "125",
     "driveFileId": "1GAzcFwrd7OsFjLPu_OuHwg0SM1k_dnMX",
     "driveViewUrl": "https://drive.google.com/file/d/1GAzcFwrd7OsFjLPu_OuHwg0SM1k_dnMX/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1GAzcFwrd7OsFjLPu_OuHwg0SM1k_dnMX"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1GAzcFwrd7OsFjLPu_OuHwg0SM1k_dnMX",
     "title": "Science VII",
     "classNumber": 7,
     "subjectId": "c7-general-science",
@@ -2787,7 +2787,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "93",
     "driveFileId": "1dwy8d9exByMWroHG8Xw2K3Ddbaz6M-_T",
     "driveViewUrl": "https://drive.google.com/file/d/1dwy8d9exByMWroHG8Xw2K3Ddbaz6M-_T/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1dwy8d9exByMWroHG8Xw2K3Ddbaz6M-_T"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1dwy8d9exByMWroHG8Xw2K3Ddbaz6M-_T",
     "title": "Sindhi Reader VII",
     "classNumber": 7,
     "subjectId": "c7-sindhi",
@@ -2812,7 +2812,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "233",
     "driveFileId": "1O0H7-zVy8F0Nd8eaxFx50dcd2qyxL0Jc",
     "driveViewUrl": "https://drive.google.com/file/d/1O0H7-zVy8F0Nd8eaxFx50dcd2qyxL0Jc/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1O0H7-zVy8F0Nd8eaxFx50dcd2qyxL0Jc"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1O0H7-zVy8F0Nd8eaxFx50dcd2qyxL0Jc",
     "title": "Arabic VIII",
     "classNumber": 8,
     "subjectId": "c8-arabic",
@@ -2837,7 +2837,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "69",
     "driveFileId": "1yXngvlfqcz9aGTceLF217ipQicpt40_s",
     "driveViewUrl": "https://drive.google.com/file/d/1yXngvlfqcz9aGTceLF217ipQicpt40_s/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1yXngvlfqcz9aGTceLF217ipQicpt40_s"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1yXngvlfqcz9aGTceLF217ipQicpt40_s",
     "title": "Asaan Sindhi VIII",
     "classNumber": 8,
     "subjectId": "c8-sindhi",
@@ -2862,7 +2862,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "24",
     "driveFileId": "1SawxXgE9v7NSuXvuXTBywkZCUzv9g2V9",
     "driveViewUrl": "https://drive.google.com/file/d/1SawxXgE9v7NSuXvuXTBywkZCUzv9g2V9/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1SawxXgE9v7NSuXvuXTBywkZCUzv9g2V9"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1SawxXgE9v7NSuXvuXTBywkZCUzv9g2V9",
     "title": "Asan Urdu VIII",
     "classNumber": 8,
     "subjectId": "c8-urdu",
@@ -2887,7 +2887,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "322",
     "driveFileId": "15v0PhHFnGKmksTOqfOkU8XiwLATDOnYZ",
     "driveViewUrl": "https://drive.google.com/file/d/15v0PhHFnGKmksTOqfOkU8XiwLATDOnYZ/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=15v0PhHFnGKmksTOqfOkU8XiwLATDOnYZ"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=15v0PhHFnGKmksTOqfOkU8XiwLATDOnYZ",
     "title": "Computer Education",
     "classNumber": 8,
     "subjectId": "c8-computer-science",
@@ -2912,7 +2912,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "292",
     "driveFileId": "1Bw4XbMpDaMdrMKAeGHLjX23w5HvNLNCB",
     "driveViewUrl": "https://drive.google.com/file/d/1Bw4XbMpDaMdrMKAeGHLjX23w5HvNLNCB/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1Bw4XbMpDaMdrMKAeGHLjX23w5HvNLNCB"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1Bw4XbMpDaMdrMKAeGHLjX23w5HvNLNCB",
     "title": "Computer Taleem VIII",
     "classNumber": 8,
     "subjectId": "c8-computer-science",
@@ -2937,7 +2937,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "32",
     "driveFileId": "1_pADOOjJDSEO3nJla-H7bo9KdB2ajWe9",
     "driveViewUrl": "https://drive.google.com/file/d/1_pADOOjJDSEO3nJla-H7bo9KdB2ajWe9/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1_pADOOjJDSEO3nJla-H7bo9KdB2ajWe9"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1_pADOOjJDSEO3nJla-H7bo9KdB2ajWe9",
     "title": "Islamiyat VIII",
     "classNumber": 8,
     "subjectId": "c8-islamiat-ethics",
@@ -2962,7 +2962,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "138",
     "driveFileId": "13zf2a0a9_7WgXB9vCjEQCc1I9s2Qkjhs",
     "driveViewUrl": "https://drive.google.com/file/d/13zf2a0a9_7WgXB9vCjEQCc1I9s2Qkjhs/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=13zf2a0a9_7WgXB9vCjEQCc1I9s2Qkjhs"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=13zf2a0a9_7WgXB9vCjEQCc1I9s2Qkjhs",
     "title": "Islamiyat VIII",
     "classNumber": 8,
     "subjectId": "c8-islamiat-ethics",
@@ -2987,7 +2987,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "262",
     "driveFileId": "1awWGpRCeb5lXkigRhJ7eiKT7G_yZybdB",
     "driveViewUrl": "https://drive.google.com/file/d/1awWGpRCeb5lXkigRhJ7eiKT7G_yZybdB/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1awWGpRCeb5lXkigRhJ7eiKT7G_yZybdB"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1awWGpRCeb5lXkigRhJ7eiKT7G_yZybdB",
     "title": "Islmaiyat VIII",
     "classNumber": 8,
     "subjectId": "c8-islamiat-ethics",
@@ -3012,7 +3012,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "283",
     "driveFileId": "1VD4J0or5pDogP6AgN-MqmCWiCs8MGmn6",
     "driveViewUrl": "https://drive.google.com/file/d/1VD4J0or5pDogP6AgN-MqmCWiCs8MGmn6/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1VD4J0or5pDogP6AgN-MqmCWiCs8MGmn6"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1VD4J0or5pDogP6AgN-MqmCWiCs8MGmn6",
     "title": "Math VIII",
     "classNumber": 8,
     "subjectId": "c8-mathematics",
@@ -3037,7 +3037,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "248",
     "driveFileId": "127YJRAyNz9bKWLnUVyPfoNQZqkm-hdg8",
     "driveViewUrl": "https://drive.google.com/file/d/127YJRAyNz9bKWLnUVyPfoNQZqkm-hdg8/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=127YJRAyNz9bKWLnUVyPfoNQZqkm-hdg8"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=127YJRAyNz9bKWLnUVyPfoNQZqkm-hdg8",
     "title": "Mazhabi Taleemat  VIII",
     "classNumber": 8,
     "subjectId": "c8-islamiat-ethics",
@@ -3062,7 +3062,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "240",
     "driveFileId": "1orHhokMCEqdMn48_54DgeaNss2eYZ_Nd",
     "driveViewUrl": "https://drive.google.com/file/d/1orHhokMCEqdMn48_54DgeaNss2eYZ_Nd/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1orHhokMCEqdMn48_54DgeaNss2eYZ_Nd"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1orHhokMCEqdMn48_54DgeaNss2eYZ_Nd",
     "title": "Mazhabi Taleemat VIII",
     "classNumber": 8,
     "subjectId": "c8-islamiat-ethics",
@@ -3087,7 +3087,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "146",
     "driveFileId": "1zy68QUVpmPMoBibogxHJJBvZbDDDjRwD",
     "driveViewUrl": "https://drive.google.com/file/d/1zy68QUVpmPMoBibogxHJJBvZbDDDjRwD/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1zy68QUVpmPMoBibogxHJJBvZbDDDjRwD"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1zy68QUVpmPMoBibogxHJJBvZbDDDjRwD",
     "title": "My English VIII",
     "classNumber": 8,
     "subjectId": "c8-english",
@@ -3112,7 +3112,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "284",
     "driveFileId": "1am6dTDC6NMK5g1B2bVdcn8IfJHb_QB2i",
     "driveViewUrl": "https://drive.google.com/file/d/1am6dTDC6NMK5g1B2bVdcn8IfJHb_QB2i/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1am6dTDC6NMK5g1B2bVdcn8IfJHb_QB2i"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1am6dTDC6NMK5g1B2bVdcn8IfJHb_QB2i",
     "title": "Riazi Urdu VIII",
     "classNumber": 8,
     "subjectId": "c8-mathematics",
@@ -3137,7 +3137,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "272",
     "driveFileId": "1Bt8HjBGbgLRkjLtS3hXyKk60f0BRneIN",
     "driveViewUrl": "https://drive.google.com/file/d/1Bt8HjBGbgLRkjLtS3hXyKk60f0BRneIN/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1Bt8HjBGbgLRkjLtS3hXyKk60f0BRneIN"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1Bt8HjBGbgLRkjLtS3hXyKk60f0BRneIN",
     "title": "Riazi VIII",
     "classNumber": 8,
     "subjectId": "c8-mathematics",
@@ -3162,7 +3162,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "98",
     "driveFileId": "1g6a2Ur88KlHgt1FBMUC2AVjFlUwPsKh9",
     "driveViewUrl": "https://drive.google.com/file/d/1g6a2Ur88KlHgt1FBMUC2AVjFlUwPsKh9/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1g6a2Ur88KlHgt1FBMUC2AVjFlUwPsKh9"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1g6a2Ur88KlHgt1FBMUC2AVjFlUwPsKh9",
     "title": "Science VIII",
     "classNumber": 8,
     "subjectId": "c8-general-science",
@@ -3187,7 +3187,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "123",
     "driveFileId": "1SVepdgZXTduyrPy2JVOH3D9hOvLxfh16",
     "driveViewUrl": "https://drive.google.com/file/d/1SVepdgZXTduyrPy2JVOH3D9hOvLxfh16/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1SVepdgZXTduyrPy2JVOH3D9hOvLxfh16"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1SVepdgZXTduyrPy2JVOH3D9hOvLxfh16",
     "title": "Science VIII",
     "classNumber": 8,
     "subjectId": "c8-general-science",
@@ -3212,7 +3212,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "126",
     "driveFileId": "1dpdSpcKJVpVSULQJqMCxFGthPJuINUfP",
     "driveViewUrl": "https://drive.google.com/file/d/1dpdSpcKJVpVSULQJqMCxFGthPJuINUfP/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1dpdSpcKJVpVSULQJqMCxFGthPJuINUfP"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1dpdSpcKJVpVSULQJqMCxFGthPJuINUfP",
     "title": "Science VIII",
     "classNumber": 8,
     "subjectId": "c8-general-science",
@@ -3237,7 +3237,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "94",
     "driveFileId": "1KOKtD6DWhNIsjQz_RtjPTz2gV2TbfIH3",
     "driveViewUrl": "https://drive.google.com/file/d/1KOKtD6DWhNIsjQz_RtjPTz2gV2TbfIH3/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1KOKtD6DWhNIsjQz_RtjPTz2gV2TbfIH3"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1KOKtD6DWhNIsjQz_RtjPTz2gV2TbfIH3",
     "title": "Sindhi Reader VIII",
     "classNumber": 8,
     "subjectId": "c8-sindhi",
@@ -3262,7 +3262,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "226",
     "driveFileId": "1SwLsh_gIuvZfNz6oC2SReJqfGVKOv-3m",
     "driveViewUrl": "https://drive.google.com/file/d/1SwLsh_gIuvZfNz6oC2SReJqfGVKOv-3m/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1SwLsh_gIuvZfNz6oC2SReJqfGVKOv-3m"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1SwLsh_gIuvZfNz6oC2SReJqfGVKOv-3m",
     "title": "Social Studies VIII",
     "classNumber": 8,
     "subjectId": "c8-social-studies",
@@ -3287,7 +3287,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "23",
     "driveFileId": "1EOzHQvmJxSpi406zA0axMtzL27C3kGpE",
     "driveViewUrl": "https://drive.google.com/file/d/1EOzHQvmJxSpi406zA0axMtzL27C3kGpE/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1EOzHQvmJxSpi406zA0axMtzL27C3kGpE"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1EOzHQvmJxSpi406zA0axMtzL27C3kGpE",
     "title": "Urdu Reader VIII",
     "classNumber": 8,
     "subjectId": "c8-urdu",
@@ -3312,7 +3312,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "212",
     "driveFileId": "1dxN_b-zF0h0GGgwGcveKmas5iEjBdZIv",
     "driveViewUrl": "https://drive.google.com/file/d/1dxN_b-zF0h0GGgwGcveKmas5iEjBdZIv/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1dxN_b-zF0h0GGgwGcveKmas5iEjBdZIv"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1dxN_b-zF0h0GGgwGcveKmas5iEjBdZIv",
     "title": "Asaan Sindhi IX - X",
     "classNumber": 9,
     "subjectId": "c9-sindhi",
@@ -3337,7 +3337,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "13",
     "driveFileId": "17CBAj31P1QQlHe92HTR3FBAB0DX9g2eT",
     "driveViewUrl": "https://drive.google.com/file/d/17CBAj31P1QQlHe92HTR3FBAB0DX9g2eT/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=17CBAj31P1QQlHe92HTR3FBAB0DX9g2eT"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=17CBAj31P1QQlHe92HTR3FBAB0DX9g2eT",
     "title": "Asan Urdu IX - X",
     "classNumber": 9,
     "subjectId": "c9-urdu",
@@ -3362,7 +3362,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "117",
     "driveFileId": "1HzwKc3VJviwy-rXAQedxZke4cjRPYE8s",
     "driveViewUrl": "https://drive.google.com/file/d/1HzwKc3VJviwy-rXAQedxZke4cjRPYE8s/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1HzwKc3VJviwy-rXAQedxZke4cjRPYE8s"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1HzwKc3VJviwy-rXAQedxZke4cjRPYE8s",
     "title": "Biology IX",
     "classNumber": 9,
     "subjectId": "c9-biology",
@@ -3387,7 +3387,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "118",
     "driveFileId": "1LMoOvLMFC0oV3OSTZPqxkZEtqUWg-xG3",
     "driveViewUrl": "https://drive.google.com/file/d/1LMoOvLMFC0oV3OSTZPqxkZEtqUWg-xG3/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1LMoOvLMFC0oV3OSTZPqxkZEtqUWg-xG3"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1LMoOvLMFC0oV3OSTZPqxkZEtqUWg-xG3",
     "title": "Biology IX",
     "classNumber": 9,
     "subjectId": "c9-biology",
@@ -3412,7 +3412,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "119",
     "driveFileId": "1PCyJXEbZ0Bjnz7wCdJWsMZtgKdY6_YIE",
     "driveViewUrl": "https://drive.google.com/file/d/1PCyJXEbZ0Bjnz7wCdJWsMZtgKdY6_YIE/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1PCyJXEbZ0Bjnz7wCdJWsMZtgKdY6_YIE"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1PCyJXEbZ0Bjnz7wCdJWsMZtgKdY6_YIE",
     "title": "Biology IX",
     "classNumber": 9,
     "subjectId": "c9-biology",
@@ -3437,7 +3437,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "197",
     "driveFileId": "1ZRzYwyX4_2AqMA07BI3IHtasWK5Zn6BB",
     "driveViewUrl": "https://drive.google.com/file/d/1ZRzYwyX4_2AqMA07BI3IHtasWK5Zn6BB/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1ZRzYwyX4_2AqMA07BI3IHtasWK5Zn6BB"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1ZRzYwyX4_2AqMA07BI3IHtasWK5Zn6BB",
     "title": "Chemistry IX",
     "classNumber": 9,
     "subjectId": "c9-chemistry",
@@ -3462,7 +3462,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "195",
     "driveFileId": "11-zLzCGoAg7JSy6PsEDYnEWwt7NAOKmm",
     "driveViewUrl": "https://drive.google.com/file/d/11-zLzCGoAg7JSy6PsEDYnEWwt7NAOKmm/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=11-zLzCGoAg7JSy6PsEDYnEWwt7NAOKmm"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=11-zLzCGoAg7JSy6PsEDYnEWwt7NAOKmm",
     "title": "Chemsitry IX",
     "classNumber": 9,
     "subjectId": "c9-chemistry",
@@ -3487,7 +3487,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "196",
     "driveFileId": "1aaj4R8gwxfgBMZMYqrrFUktvLLaTj6bZ",
     "driveViewUrl": "https://drive.google.com/file/d/1aaj4R8gwxfgBMZMYqrrFUktvLLaTj6bZ/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1aaj4R8gwxfgBMZMYqrrFUktvLLaTj6bZ"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1aaj4R8gwxfgBMZMYqrrFUktvLLaTj6bZ",
     "title": "Chemsitry IX",
     "classNumber": 9,
     "subjectId": "c9-chemistry",
@@ -3512,7 +3512,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "121",
     "driveFileId": "1h5lvQeWY4OKF59WU-xFekD7J6OWHI3uI",
     "driveViewUrl": "https://drive.google.com/file/d/1h5lvQeWY4OKF59WU-xFekD7J6OWHI3uI/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1h5lvQeWY4OKF59WU-xFekD7J6OWHI3uI"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1h5lvQeWY4OKF59WU-xFekD7J6OWHI3uI",
     "title": "Computer Science IX",
     "classNumber": 9,
     "subjectId": "c9-computer-science",
@@ -3537,7 +3537,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "184",
     "driveFileId": "1IWKRaAGEoRJrApNHIW9H8yCOSzTmy0xj",
     "driveViewUrl": "https://drive.google.com/file/d/1IWKRaAGEoRJrApNHIW9H8yCOSzTmy0xj/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1IWKRaAGEoRJrApNHIW9H8yCOSzTmy0xj"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1IWKRaAGEoRJrApNHIW9H8yCOSzTmy0xj",
     "title": "Computer Science IX",
     "classNumber": 9,
     "subjectId": "c9-computer-science",
@@ -3562,7 +3562,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "291",
     "driveFileId": "1EwuIaAxa5ZRgIAkEYrKJufSFPOQED6Tx",
     "driveViewUrl": "https://drive.google.com/file/d/1EwuIaAxa5ZRgIAkEYrKJufSFPOQED6Tx/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1EwuIaAxa5ZRgIAkEYrKJufSFPOQED6Tx"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1EwuIaAxa5ZRgIAkEYrKJufSFPOQED6Tx",
     "title": "ComputerScience IX",
     "classNumber": 9,
     "subjectId": "c9-computer-science",
@@ -3587,7 +3587,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "265",
     "driveFileId": "1pXCC1klBfX1VjfpFcmsWkd-DMzhZ5pUP",
     "driveViewUrl": "https://drive.google.com/file/d/1pXCC1klBfX1VjfpFcmsWkd-DMzhZ5pUP/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1pXCC1klBfX1VjfpFcmsWkd-DMzhZ5pUP"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1pXCC1klBfX1VjfpFcmsWkd-DMzhZ5pUP",
     "title": "Islamiyat IX - X",
     "classNumber": 9,
     "subjectId": "c9-islamiat-ethics",
@@ -3612,7 +3612,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "267",
     "driveFileId": "1JmG4cgo3SUvD0E451pEdD5F8Y-bXwlrB",
     "driveViewUrl": "https://drive.google.com/file/d/1JmG4cgo3SUvD0E451pEdD5F8Y-bXwlrB/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1JmG4cgo3SUvD0E451pEdD5F8Y-bXwlrB"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1JmG4cgo3SUvD0E451pEdD5F8Y-bXwlrB",
     "title": "Islamiyat IX-X",
     "classNumber": 9,
     "subjectId": "c9-islamiat-ethics",
@@ -3637,7 +3637,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "264",
     "driveFileId": "1ZYNMdsDPnNpkju02lsYjPaay81yHHqJZ",
     "driveViewUrl": "https://drive.google.com/file/d/1ZYNMdsDPnNpkju02lsYjPaay81yHHqJZ/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1ZYNMdsDPnNpkju02lsYjPaay81yHHqJZ"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1ZYNMdsDPnNpkju02lsYjPaay81yHHqJZ",
     "title": "Islamiyat X - IX",
     "classNumber": 9,
     "subjectId": "c9-islamiat-ethics",
@@ -3662,7 +3662,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "180",
     "driveFileId": "1s9h2R5-ucBXNIKI3Mk3f09JpReccbjMk",
     "driveViewUrl": "https://drive.google.com/file/d/1s9h2R5-ucBXNIKI3Mk3f09JpReccbjMk/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1s9h2R5-ucBXNIKI3Mk3f09JpReccbjMk"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1s9h2R5-ucBXNIKI3Mk3f09JpReccbjMk",
     "title": "Math IX",
     "classNumber": 9,
     "subjectId": "c9-mathematics",
@@ -3687,7 +3687,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "147",
     "driveFileId": "1uSgY9V5JNEnZmPpj8ayU4B1smnzRr3cM",
     "driveViewUrl": "https://drive.google.com/file/d/1uSgY9V5JNEnZmPpj8ayU4B1smnzRr3cM/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1uSgY9V5JNEnZmPpj8ayU4B1smnzRr3cM"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1uSgY9V5JNEnZmPpj8ayU4B1smnzRr3cM",
     "title": "My English IX",
     "classNumber": 9,
     "subjectId": "c9-english",
@@ -3712,7 +3712,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "183",
     "driveFileId": "1l8NVf2D90psjBIzsiZnl_cM0zX9XsZCa",
     "driveViewUrl": "https://drive.google.com/file/d/1l8NVf2D90psjBIzsiZnl_cM0zX9XsZCa/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1l8NVf2D90psjBIzsiZnl_cM0zX9XsZCa"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1l8NVf2D90psjBIzsiZnl_cM0zX9XsZCa",
     "title": "Pakistan Studies IX",
     "classNumber": 9,
     "subjectId": "c9-pakistan-studies",
@@ -3737,7 +3737,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "174",
     "driveFileId": "1h4bF9bQI4H3GSxvFF86oyO_wJVociOa3",
     "driveViewUrl": "https://drive.google.com/file/d/1h4bF9bQI4H3GSxvFF86oyO_wJVociOa3/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1h4bF9bQI4H3GSxvFF86oyO_wJVociOa3"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1h4bF9bQI4H3GSxvFF86oyO_wJVociOa3",
     "title": "Physics IX",
     "classNumber": 9,
     "subjectId": "c9-physics",
@@ -3762,7 +3762,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "247",
     "driveFileId": "1cLkPR-XzPr6_rHL2d6E6yn0cCW9hqzr0",
     "driveViewUrl": "https://drive.google.com/file/d/1cLkPR-XzPr6_rHL2d6E6yn0cCW9hqzr0/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1cLkPR-XzPr6_rHL2d6E6yn0cCW9hqzr0"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1cLkPR-XzPr6_rHL2d6E6yn0cCW9hqzr0",
     "title": "Religious Studies IX -X",
     "classNumber": 9,
     "subjectId": "c9-islamiat-ethics",
@@ -3787,7 +3787,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "275",
     "driveFileId": "1nrVspIy9277pmG4GtTL9soenrY2uq6AM",
     "driveViewUrl": "https://drive.google.com/file/d/1nrVspIy9277pmG4GtTL9soenrY2uq6AM/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1nrVspIy9277pmG4GtTL9soenrY2uq6AM"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1nrVspIy9277pmG4GtTL9soenrY2uq6AM",
     "title": "Riazi IX",
     "classNumber": 9,
     "subjectId": "c9-mathematics",
@@ -3812,7 +3812,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "316",
     "driveFileId": "1guHqM12X3zZn9P55rcHExKSNX2PdJ-of",
     "driveViewUrl": "https://drive.google.com/file/d/1guHqM12X3zZn9P55rcHExKSNX2PdJ-of/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1guHqM12X3zZn9P55rcHExKSNX2PdJ-of"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1guHqM12X3zZn9P55rcHExKSNX2PdJ-of",
     "title": "Asan Sindhi IX-X",
     "classNumber": 10,
     "subjectId": "c10-sindhi",
@@ -3837,7 +3837,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "186",
     "driveFileId": "1EL5-AH8cAoqnSFKcRFcF9KlV1hdRBSSU",
     "driveViewUrl": "https://drive.google.com/file/d/1EL5-AH8cAoqnSFKcRFcF9KlV1hdRBSSU/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1EL5-AH8cAoqnSFKcRFcF9KlV1hdRBSSU"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1EL5-AH8cAoqnSFKcRFcF9KlV1hdRBSSU",
     "title": "Biology X",
     "classNumber": 10,
     "subjectId": "c10-biology",
@@ -3862,7 +3862,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "188",
     "driveFileId": "1hz7L_6cckAJI5_S_9qfP4T1dc3rGp2y-",
     "driveViewUrl": "https://drive.google.com/file/d/1hz7L_6cckAJI5_S_9qfP4T1dc3rGp2y-/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1hz7L_6cckAJI5_S_9qfP4T1dc3rGp2y-"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1hz7L_6cckAJI5_S_9qfP4T1dc3rGp2y-",
     "title": "Biology X",
     "classNumber": 10,
     "subjectId": "c10-biology",
@@ -3887,7 +3887,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "199",
     "driveFileId": "1jh3e3poT45Giz0GWrKReRbxsXrjnO3bt",
     "driveViewUrl": "https://drive.google.com/file/d/1jh3e3poT45Giz0GWrKReRbxsXrjnO3bt/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1jh3e3poT45Giz0GWrKReRbxsXrjnO3bt"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1jh3e3poT45Giz0GWrKReRbxsXrjnO3bt",
     "title": "Chemistry X",
     "classNumber": 10,
     "subjectId": "c10-chemistry",
@@ -3912,7 +3912,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "198",
     "driveFileId": "1HlxmU24CnRHqDNqQyjy2-zaiJyNKn80L",
     "driveViewUrl": "https://drive.google.com/file/d/1HlxmU24CnRHqDNqQyjy2-zaiJyNKn80L/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1HlxmU24CnRHqDNqQyjy2-zaiJyNKn80L"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1HlxmU24CnRHqDNqQyjy2-zaiJyNKn80L",
     "title": "Chemsitry X",
     "classNumber": 10,
     "subjectId": "c10-chemistry",
@@ -3937,7 +3937,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "200",
     "driveFileId": "1EgFEqd3e-KHedd5F8BtWjaUxLW2SKnq2",
     "driveViewUrl": "https://drive.google.com/file/d/1EgFEqd3e-KHedd5F8BtWjaUxLW2SKnq2/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1EgFEqd3e-KHedd5F8BtWjaUxLW2SKnq2"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1EgFEqd3e-KHedd5F8BtWjaUxLW2SKnq2",
     "title": "Chemsitry X",
     "classNumber": 10,
     "subjectId": "c10-chemistry",
@@ -3962,7 +3962,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "204",
     "driveFileId": "1nMyGm77r_QiBafpCLCRj8Yiy1LmGnnFp",
     "driveViewUrl": "https://drive.google.com/file/d/1nMyGm77r_QiBafpCLCRj8Yiy1LmGnnFp/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1nMyGm77r_QiBafpCLCRj8Yiy1LmGnnFp"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1nMyGm77r_QiBafpCLCRj8Yiy1LmGnnFp",
     "title": "Computer Science X",
     "classNumber": 10,
     "subjectId": "c10-computer-science",
@@ -3987,7 +3987,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "205",
     "driveFileId": "1YzlvDDlSvQT2oRtRPX_N6bsmnvgzgqkU",
     "driveViewUrl": "https://drive.google.com/file/d/1YzlvDDlSvQT2oRtRPX_N6bsmnvgzgqkU/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1YzlvDDlSvQT2oRtRPX_N6bsmnvgzgqkU"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1YzlvDDlSvQT2oRtRPX_N6bsmnvgzgqkU",
     "title": "Math X",
     "classNumber": 10,
     "subjectId": "c10-mathematics",
@@ -4012,7 +4012,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "252",
     "driveFileId": "1soOZXFZUbar0HK8aUySwgjVUdsseTyec",
     "driveViewUrl": "https://drive.google.com/file/d/1soOZXFZUbar0HK8aUySwgjVUdsseTyec/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1soOZXFZUbar0HK8aUySwgjVUdsseTyec"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1soOZXFZUbar0HK8aUySwgjVUdsseTyec",
     "title": "Mazhabi Taleemat IX - X",
     "classNumber": 10,
     "subjectId": "c10-islamiat-ethics",
@@ -4037,7 +4037,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "227",
     "driveFileId": "1XAI_e81b9QCqSA9XehabKj9SvLucsff5",
     "driveViewUrl": "https://drive.google.com/file/d/1XAI_e81b9QCqSA9XehabKj9SvLucsff5/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1XAI_e81b9QCqSA9XehabKj9SvLucsff5"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1XAI_e81b9QCqSA9XehabKj9SvLucsff5",
     "title": "Mutala E Pakistan",
     "classNumber": 10,
     "subjectId": "c10-pakistan-studies",
@@ -4062,7 +4062,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "235",
     "driveFileId": "1uOQ24jM7-6AV3-7ioHn4vXs2Joo3i5Hu",
     "driveViewUrl": "https://drive.google.com/file/d/1uOQ24jM7-6AV3-7ioHn4vXs2Joo3i5Hu/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1uOQ24jM7-6AV3-7ioHn4vXs2Joo3i5Hu"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1uOQ24jM7-6AV3-7ioHn4vXs2Joo3i5Hu",
     "title": "Pak Studies X",
     "classNumber": 10,
     "subjectId": "c10-pakistan-studies",
@@ -4087,7 +4087,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "202",
     "driveFileId": "1mTl--se52rnvVKoPIDKiwCdAd9PLQ27a",
     "driveViewUrl": "https://drive.google.com/file/d/1mTl--se52rnvVKoPIDKiwCdAd9PLQ27a/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1mTl--se52rnvVKoPIDKiwCdAd9PLQ27a"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1mTl--se52rnvVKoPIDKiwCdAd9PLQ27a",
     "title": "Physics X",
     "classNumber": 10,
     "subjectId": "c10-physics",
@@ -4134,7 +4134,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "277",
     "driveFileId": "1ToczyIBQbXenRPC0uTqk_tLaJXRXYiuy",
     "driveViewUrl": "https://drive.google.com/file/d/1ToczyIBQbXenRPC0uTqk_tLaJXRXYiuy/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1ToczyIBQbXenRPC0uTqk_tLaJXRXYiuy"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1ToczyIBQbXenRPC0uTqk_tLaJXRXYiuy",
     "title": "Riazi Urdu X",
     "classNumber": 10,
     "subjectId": "c10-mathematics",
@@ -4159,7 +4159,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "285",
     "driveFileId": "122JcUdj6f-mvyiX8xYcoysZNEbpk48jd",
     "driveViewUrl": "https://drive.google.com/file/d/122JcUdj6f-mvyiX8xYcoysZNEbpk48jd/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=122JcUdj6f-mvyiX8xYcoysZNEbpk48jd"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=122JcUdj6f-mvyiX8xYcoysZNEbpk48jd",
     "title": "Riazi X",
     "classNumber": 10,
     "subjectId": "c10-mathematics",
@@ -4184,7 +4184,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "201",
     "driveFileId": "1jd-8-nhoV5Afa86dejs4OF3Ro8f-qhjl",
     "driveViewUrl": "https://drive.google.com/file/d/1jd-8-nhoV5Afa86dejs4OF3Ro8f-qhjl/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1jd-8-nhoV5Afa86dejs4OF3Ro8f-qhjl"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1jd-8-nhoV5Afa86dejs4OF3Ro8f-qhjl",
     "title": "Secondary Stage English X",
     "classNumber": 10,
     "subjectId": "c10-english",
@@ -4209,7 +4209,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "219",
     "driveFileId": "1vA2uN5JvT-dZG8bYLHUiaQhFt2eJIBon",
     "driveViewUrl": "https://drive.google.com/file/d/1vA2uN5JvT-dZG8bYLHUiaQhFt2eJIBon/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1vA2uN5JvT-dZG8bYLHUiaQhFt2eJIBon"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1vA2uN5JvT-dZG8bYLHUiaQhFt2eJIBon",
     "title": "Biology XI",
     "classNumber": 11,
     "subjectId": "c11-biology",
@@ -4234,7 +4234,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "206",
     "driveFileId": "1Ug9VfpirwWXXBSe6PtVU_UpeqHF0gelE",
     "driveViewUrl": "https://drive.google.com/file/d/1Ug9VfpirwWXXBSe6PtVU_UpeqHF0gelE/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1Ug9VfpirwWXXBSe6PtVU_UpeqHF0gelE"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1Ug9VfpirwWXXBSe6PtVU_UpeqHF0gelE",
     "title": "Chemistry XI",
     "classNumber": 11,
     "subjectId": "c11-chemistry",
@@ -4259,7 +4259,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "324",
     "driveFileId": "1FYJaLLXwQJSK-koHZ6ZJzTctTtHz4kNW",
     "driveViewUrl": "https://drive.google.com/file/d/1FYJaLLXwQJSK-koHZ6ZJzTctTtHz4kNW/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1FYJaLLXwQJSK-koHZ6ZJzTctTtHz4kNW"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1FYJaLLXwQJSK-koHZ6ZJzTctTtHz4kNW",
     "title": "Computer Science XI",
     "classNumber": 11,
     "subjectId": "c11-computer-science",
@@ -4284,7 +4284,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "203",
     "driveFileId": "1dLcMan6BsOwncoZuTutN1uvyOp74Xcc6",
     "driveViewUrl": "https://drive.google.com/file/d/1dLcMan6BsOwncoZuTutN1uvyOp74Xcc6/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1dLcMan6BsOwncoZuTutN1uvyOp74Xcc6"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1dLcMan6BsOwncoZuTutN1uvyOp74Xcc6",
     "title": "English XI",
     "classNumber": 11,
     "subjectId": "c11-english",
@@ -4309,7 +4309,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "214",
     "driveFileId": "1q5Hv8JMU1ydnNGurLYNjbX3XoONaebmT",
     "driveViewUrl": "https://drive.google.com/file/d/1q5Hv8JMU1ydnNGurLYNjbX3XoONaebmT/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1q5Hv8JMU1ydnNGurLYNjbX3XoONaebmT"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1q5Hv8JMU1ydnNGurLYNjbX3XoONaebmT",
     "title": "Gulzar-E-Urdu XI",
     "classNumber": 11,
     "subjectId": "c11-urdu",
@@ -4334,7 +4334,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "266",
     "driveFileId": "1erFejLabJCq6Vei2fbNv1jsJ2Dt2VLJ6",
     "driveViewUrl": "https://drive.google.com/file/d/1erFejLabJCq6Vei2fbNv1jsJ2Dt2VLJ6/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1erFejLabJCq6Vei2fbNv1jsJ2Dt2VLJ6"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1erFejLabJCq6Vei2fbNv1jsJ2Dt2VLJ6",
     "title": "Islamiyat XI- XII",
     "classNumber": 11,
     "subjectId": "c11-islamiat-ethics",
@@ -4359,7 +4359,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "207",
     "driveFileId": "1r4V7xNunMVJ7RWGXF0sehCCQu8QdyRFx",
     "driveViewUrl": "https://drive.google.com/file/d/1r4V7xNunMVJ7RWGXF0sehCCQu8QdyRFx/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1r4V7xNunMVJ7RWGXF0sehCCQu8QdyRFx"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1r4V7xNunMVJ7RWGXF0sehCCQu8QdyRFx",
     "title": "Math XI",
     "classNumber": 11,
     "subjectId": "c11-mathematics",
@@ -4384,7 +4384,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "221",
     "driveFileId": "1t8_MEEFTC4ZEw9aakusN00ZC49QUW3wR",
     "driveViewUrl": "https://drive.google.com/file/d/1t8_MEEFTC4ZEw9aakusN00ZC49QUW3wR/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1t8_MEEFTC4ZEw9aakusN00ZC49QUW3wR"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1t8_MEEFTC4ZEw9aakusN00ZC49QUW3wR",
     "title": "Physics XI",
     "classNumber": 11,
     "subjectId": "c11-physics",
@@ -4409,7 +4409,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "323",
     "driveFileId": "1PZ_Iid5P0fLNcIPnS2JKQbXk7iqTL2zW",
     "driveViewUrl": "https://drive.google.com/file/d/1PZ_Iid5P0fLNcIPnS2JKQbXk7iqTL2zW/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1PZ_Iid5P0fLNcIPnS2JKQbXk7iqTL2zW"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1PZ_Iid5P0fLNcIPnS2JKQbXk7iqTL2zW",
     "title": "Salees Urdu",
     "classNumber": 11,
     "subjectId": "c11-urdu",
@@ -4434,7 +4434,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "228",
     "driveFileId": "1w0aCfEKqbVyA4mwDaxeSBHPgVjr0wK4G",
     "driveViewUrl": "https://drive.google.com/file/d/1w0aCfEKqbVyA4mwDaxeSBHPgVjr0wK4G/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1w0aCfEKqbVyA4mwDaxeSBHPgVjr0wK4G"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1w0aCfEKqbVyA4mwDaxeSBHPgVjr0wK4G",
     "title": "Biology XII",
     "classNumber": 12,
     "subjectId": "c12-biology",
@@ -4459,7 +4459,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "218",
     "driveFileId": "100nDfQEExohmtUXsjm1PX_W1AJIF7fkC",
     "driveViewUrl": "https://drive.google.com/file/d/100nDfQEExohmtUXsjm1PX_W1AJIF7fkC/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=100nDfQEExohmtUXsjm1PX_W1AJIF7fkC"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=100nDfQEExohmtUXsjm1PX_W1AJIF7fkC",
     "title": "Chemistry XII",
     "classNumber": 12,
     "subjectId": "c12-chemistry",
@@ -4484,7 +4484,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "216",
     "driveFileId": "1ee01q-HGRylx5fCHuudRf7pgx93rP00_",
     "driveViewUrl": "https://drive.google.com/file/d/1ee01q-HGRylx5fCHuudRf7pgx93rP00_/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1ee01q-HGRylx5fCHuudRf7pgx93rP00_"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1ee01q-HGRylx5fCHuudRf7pgx93rP00_",
     "title": "Gulzar-E-Urdu XII",
     "classNumber": 12,
     "subjectId": "c12-urdu",
@@ -4509,7 +4509,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "225",
     "driveFileId": "1fBzw9Mrw4Au1OgFAtOQKXFWEQmvj6Q41",
     "driveViewUrl": "https://drive.google.com/file/d/1fBzw9Mrw4Au1OgFAtOQKXFWEQmvj6Q41/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1fBzw9Mrw4Au1OgFAtOQKXFWEQmvj6Q41"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1fBzw9Mrw4Au1OgFAtOQKXFWEQmvj6Q41",
     "title": "Math XII",
     "classNumber": 12,
     "subjectId": "c12-mathematics",
@@ -4534,7 +4534,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "215",
     "driveFileId": "1pzwsdQlSHcOV7qSy-asSF0Chddgovr-i",
     "driveViewUrl": "https://drive.google.com/file/d/1pzwsdQlSHcOV7qSy-asSF0Chddgovr-i/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1pzwsdQlSHcOV7qSy-asSF0Chddgovr-i"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=1pzwsdQlSHcOV7qSy-asSF0Chddgovr-i",
     "title": "Physics XII",
     "classNumber": 12,
     "subjectId": "c12-physics",
@@ -4559,7 +4559,7 @@ export const ALL_VERIFIED_BOOKS: Book[] = [
     "officialId": "286",
     "driveFileId": "16deyNYBgFDc9Hi_fZ5h8S2iZT7eMrtEJ",
     "driveViewUrl": "https://drive.google.com/file/d/16deyNYBgFDc9Hi_fZ5h8S2iZT7eMrtEJ/view",
-    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=16deyNYBgFDc9Hi_fZ5h8S2iZT7eMrtEJ"
+    "driveDownloadUrl": "https://drive.google.com/uc?export=download&id=16deyNYBgFDc9Hi_fZ5h8S2iZT7eMrtEJ",
     "title": "Sindhi Lazmi XI- XII",
     "classNumber": 12,
     "subjectId": "c12-sindhi",
