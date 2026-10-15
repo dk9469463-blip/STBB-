@@ -51,12 +51,13 @@ function sanitizeFilename(name: string): string {
 function getAuthoritativeUrl(idOrUrl: string): string {
   const cleanId = idOrUrl.replace(/^stbb-official-/, '').trim();
   if (/^\d+$/.test(cleanId)) {
-    return `https://portal.stbb.edu.pk/ebooks/pdf_proxy.php?id=${cleanId}`;
+    // Use the same download endpoint that was verified while bulk-downloading books.
+    return `https://portal.stbb.edu.pk/ebooks/pdf_proxy.php?id=${cleanId}&download=1`;
   }
 
   const idMatch = idOrUrl.match(/id=(\d+)/);
   if (idMatch && idMatch[1]) {
-    return `https://portal.stbb.edu.pk/ebooks/pdf_proxy.php?id=${idMatch[1]}`;
+    return `https://portal.stbb.edu.pk/ebooks/pdf_proxy.php?id=${idMatch[1]}&download=1`;
   }
 
   // Rewrite ebooks.stbb.edu.pk to portal.stbb.edu.pk for high-speed reliable streaming
@@ -100,10 +101,17 @@ async function getPdfMetadata(targetUrl: string): Promise<PdfMetadata | null> {
       if (cl) contentLength = parseInt(cl, 10);
     }
 
-    if (contentLength > 0) {
+    const responseType = (upstream.headers.get('content-type') || '').toLowerCase();
+    // Never cache an HTML/404 page as if it were valid PDF metadata.
+    if (
+      (upstream.ok || upstream.status === 206) &&
+      !responseType.includes('text/html') &&
+      !responseType.includes('text/plain') &&
+      contentLength > 0
+    ) {
       const meta: PdfMetadata = {
         contentLength,
-        contentType: upstream.headers.get('content-type') || 'application/pdf',
+        contentType: responseType || 'application/pdf',
         acceptRanges: true,
         fetchedAt: Date.now(),
       };
