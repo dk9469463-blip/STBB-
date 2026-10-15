@@ -39,7 +39,9 @@ export async function downloadBookDirectly(
   }
 
   // Use backend direct download endpoint for reliable single-origin attachment streaming without opening extra tabs
-  const downloadEndpoint = book.officialId
+  const downloadEndpoint = book.driveFileId
+    ? `/api/pdf/drive-download?id=${encodeURIComponent(book.driveFileId)}&filename=${encodeURIComponent(filename)}`
+    : book.officialId
     ? `/api/pdf/download?id=${encodeURIComponent(book.officialId)}&filename=${encodeURIComponent(filename)}`
     : `/api/pdf/download?url=${encodeURIComponent(book.pdfUrl || '')}&filename=${encodeURIComponent(filename)}`;
 
@@ -51,6 +53,28 @@ export async function downloadBookDirectly(
     status: 'starting',
     filename,
   });
+
+  // Use the browser's native download manager for Drive PDFs. This avoids holding
+  // very large textbooks (some are 300 MB+) in JavaScript memory.
+  if (book.driveFileId) {
+    const link = document.createElement('a');
+    link.href = downloadEndpoint;
+    link.download = filename;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    onProgress?.({
+      bookId: book.id,
+      loaded: 0,
+      total: 0,
+      percent: 100,
+      status: 'completed',
+      filename,
+    });
+    return true;
+  }
 
   try {
     const response = await fetch(downloadEndpoint);
