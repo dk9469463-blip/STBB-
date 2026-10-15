@@ -371,6 +371,186 @@ app.get('/api/pdf/download', async (req: Request, res: Response) => {
   }
 });
 
+// Google Drive PDF streaming for the publicly shared textbooks in the catalog.
+// This endpoint accepts a file ID only (not an arbitrary URL), preventing SSRF.
+function isValidDriveFileId(fileId: string): boolean {
+  return /^[A-Za-z0-9_-]{10,200}$/.test(fileId);
+}
+
+async function fetchPublicDrivePdf(
+  fileId: string,
+  headers: Record<string, string>,
+  timeoutMs: number
+): Promise<Response> {
+  const targets = [
+    'https://drive.usercontent.google.com/download?id=' + encodeURIComponent(fileId) + '&export=download&confirm=t',
+    'https://drive.google.com/uc?export=download&confirm=t&id=' + encodeURIComponent(fileId),
+  ];
+  let lastStatus = 502;
+  let lastMessage = 'Google Drive did not return a PDF file.';
+
+  for (const targetUrl of targets) {
+    try {
+      const upstream = await fetch(targetUrl, {
+        headers,
+        redirect: 'follow',
+        signal: AbortSignal.timeout(timeoutMs),
+      });
+      const contentType = (upstream.headers.get('content-type') || '').toLowerCase();
+      const usableStatus = upstream.ok || upstream.status === 206;
+      if (usableStatus && !contentType.startsWith('text/')) {
+        return upstream;
+      }
+
+      lastStatus = upstream.status;
+      lastMessage = contentType.startsWith('text/')
+        ? 'Google Drive returned a web page instead of PDF bytes. Check that the file is shared as Anyone with the link → Viewer.'
+        : 'Google Drive returned HTTP ' + upstream.status + '.';
+
+      try {
+        await upstream.body?.cancel();
+      } catch {
+        // Ignore cancellation errors while trying the alternate Drive endpoint.
+      }
+    } catch (err: any) {
+      lastMessage = err?.message || lastMessage;
+    }
+  }
+
+  const failure = new Error(lastMessage) as Error & { status?: number };
+  failure.status = lastStatus === 404 ? 404 : lastStatus === 403 ? 403 : 502;
+  throw failure;
+}
+
+app.all('/api/pdf/drive-stream', async (req: Request, res: Response) => {
+  const method = req.method.toUpperCase();
+  if (method !== 'GET' && method !== 'HEAD') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  const fileId = (req.query.id as string) || '';
+  if (!isValidDriveFileId(fileId)) {
+    return res.status(400).json({ error: 'Invalid Google Drive file ID.' });
+  }
+
+  const forwardHeaders: Record<string, string> = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) STBB-Books/2.0',
+    Accept: 'application/pdf, application/octet-stream, */*',
+  };
+
+  if (method === 'HEAD') {
+    // Probe one byte for total length without downloading a large textbook.
+    forwardHeaders.Range = 'bytes=0-0';
+  } else if (req.headers.range) {
+    forwardHeaders.Range = req.headers.range;
+  }
+
+  try {
+    const upstream = await fetchPublicDrivePdf(fileId, forwardHeaders, method === 'HEAD' ? 30000 : 120000);
+    const contentRange = upstream.headers.get('content-range');
+    const contentLength = upstream.headers.get('content-length');
+
+    if (method === 'HEAD') {
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', 'inline');
+      res.setHeader('Cache-Control', 'private, max-age=300');
+      if (contentRange) {
+        const total = contentRange.match(/\/(\d+)$/)?.[1];
+        if (total) res.setHeader('Content-Length', total);
+        res.setHeader('Accept-Ranges', 'bytes');
+      } else if (upstream.status === 200 && contentLength) {
+        res.setHeader('Content-Length', contentLength);
+        res.setHeader('Accept-Ranges', upstream.headers.get('accept-ranges') || 'none');
+      }
+      try {
+        await upstream.body?.cancel();
+      } catch {
+        // Ignore metadata-probe cleanup errors.
+      }
+      return res.status(200).end();
+    }
+
+    res.status(upstream.status);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'inline');
+    res.setHeader('Cache-Control', 'private, max-age=300');
+    if (contentLength) res.setHeader('Content-Length', contentLength);
+    if (contentRange) {
+      res.setHeader('Content-Range', contentRange);
+      res.setHeader('Accept-Ranges', 'bytes');
+    } else {
+      res.setHeader('Accept-Ranges', upstream.headers.get('accept-ranges') || 'none');
+    }
+
+    if (!upstream.body) return res.end();
+
+    const nodeStream = Readable.fromWeb(upstream.body as any);
+    res.on('close', () => nodeStream.destroy());
+    nodeStream.on('error', (err) => {
+      console.warn('Google Drive PDF stream error:', err.message);
+    });
+    nodeStream.pipe(res);
+  } catch (err: any) {
+    console.error('Google Drive stream failed:', err.message);
+    if (!res.headersSent) {
+      res.status(err?.status || 502).json({
+        error: err.message || 'Unable to stream PDF from Google Drive.',
+      });
+    }
+  }
+});
+
+app.get('/api/pdf/drive-download', async (req: Request, res: Response) => {
+  const fileId = (req.query.id as string) || '';
+  const requestedName = (req.query.filename as string) || ('STBB-Textbook-' + (fileId || 'book') + '.pdf');
+  const filename = sanitizeFilename(requestedName);
+  const asciiFilename = filename.replace(/[^\x20-\x7E]/g, '_');
+
+  if (!isValidDriveFileId(fileId)) {
+    return res.status(400).json({ error: 'Invalid Google Drive file ID.' });
+  }
+
+  try {
+    const forwardHeaders: Record<string, string> = {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) STBB-Books/2.0',
+      Accept: 'application/pdf, application/octet-stream, */*',
+    };
+    if (req.headers.range) forwardHeaders.Range = req.headers.range;
+
+    const upstream = await fetchPublicDrivePdf(fileId, forwardHeaders, 15 * 60 * 1000);
+    const contentRange = upstream.headers.get('content-range');
+    const contentLength = upstream.headers.get('content-length');
+
+    res.status(upstream.status);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename="' + asciiFilename + '"; filename*=UTF-8\'\'' + encodeURIComponent(filename)
+    );
+    if (contentLength) res.setHeader('Content-Length', contentLength);
+    if (contentRange) {
+      res.setHeader('Content-Range', contentRange);
+      res.setHeader('Accept-Ranges', 'bytes');
+    }
+
+    if (!upstream.body) return res.end();
+
+    const nodeStream = Readable.fromWeb(upstream.body as any);
+    res.on('close', () => nodeStream.destroy());
+    nodeStream.on('error', (err) => {
+      console.warn('Google Drive download stream error:', err.message);
+    });
+    nodeStream.pipe(res);
+  } catch (err: any) {
+    console.error('Google Drive download failed:', err.message);
+    if (!res.headersSent) {
+      res.status(err?.status || 502).json({
+        error: err.message || 'Unable to download PDF from Google Drive.',
+      });
+    }
+  }
+});
+
 // COVER IMAGE PROXY
 app.get('/api/image/proxy', async (req: Request, res: Response) => {
   const imageUrl = req.query.url as string;
