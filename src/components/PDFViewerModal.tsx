@@ -581,11 +581,14 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
 
   const handleSelectTextOnPage = (text: string) => {
     setSelectedReaderText(text);
+    setFloatingSelection(null);
+    setShowThumbnailsDrawer(false);
     setIsAiPanelOpen(true);
   };
 
   const handleAskAiAboutPage = (pageNum: number) => {
     scrollToPage(pageNum);
+    setShowThumbnailsDrawer(false);
     setIsAiPanelOpen(true);
   };
 
@@ -675,7 +678,11 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             {/* Ask AI Side Panel Button */}
             <button
-              onClick={() => setIsAiPanelOpen(!isAiPanelOpen)}
+              onClick={() => {
+                const nextOpen = !isAiPanelOpen;
+                setIsAiPanelOpen(nextOpen);
+                if (nextOpen) setShowThumbnailsDrawer(false);
+              }}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer shadow-sm ${
                 isAiPanelOpen
                   ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 ring-2 ring-amber-300'
@@ -985,7 +992,7 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
           <div
             ref={scrollContainerRef}
             onScroll={handleScroll}
-            className="flex-1 overflow-y-auto overflow-x-hidden p-2 sm:p-6 flex flex-col items-center select-none relative"
+            className={`${isAiPanelOpen ? 'hidden md:flex' : 'flex'} flex-1 min-w-0 overflow-y-auto overflow-x-hidden p-2 sm:p-6 flex-col items-center relative`}
             style={{ scrollBehavior: 'smooth' }}
           >
             {/* Loading State */}
@@ -1123,10 +1130,11 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
                 onClick={() => {
                   setSelectedReaderText(floatingSelection.text);
                   setIsAiPanelOpen(true);
+                  setShowThumbnailsDrawer(false);
                   setFloatingSelection(null);
                 }}
                 className="px-2.5 py-1 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold flex items-center gap-1 transition cursor-pointer shadow-md"
-                title="Transfer text to chatbot input for editing before sending"
+                title="Use selected text as chatbot context; it will not be typed or sent automatically"
               >
                 <Sparkles className="w-3.5 h-3.5 text-amber-300" />
                 <span>Ask Chatbot</span>
