@@ -423,9 +423,9 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
     };
     // Selected text is always useful context, even in Direct Answer mode, but it
     // must never force textbook retrieval or be inserted into the message box.
-    const bookContext = answerMode === 'textbook'
+    const bookContext = answerMode === 'textbook' || selectedPassage.trim()
       ? selectedBookContext
-      : selectedPassage.trim() ? { selectedText: selectedPassage.trim() } : undefined;
+      : undefined;
 
     const userMsg: ChatMessage = {
       id: `user-${Date.now()}`,
