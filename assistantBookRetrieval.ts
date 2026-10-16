@@ -444,7 +444,11 @@ export async function retrieveTextbookMaterial(
     // Try the official STBB portal first, then its verified public Drive mirror.
     // Give each source a bounded opening window so one dead host cannot block all help.
     const sourceErrors: string[] = [];
+    const sourceOpenDeadline = Date.now() + 7000;
     for (const sourceUrl of sourceUrls) {
+      const sourceTimeLeft = sourceOpenDeadline - Date.now();
+      if (sourceTimeLeft < 500) break;
+
       let candidateTask: any = null;
       try {
         candidateTask = pdfjsLib.getDocument({
@@ -455,7 +459,7 @@ export async function retrieveTextbookMaterial(
         });
         const candidateDocument = await withTimeout(
           candidateTask.promise,
-          3500,
+          Math.min(3500, sourceTimeLeft),
           'This PDF source took too long to open.'
         );
         if (Number(candidateDocument.numPages) > 0) {
