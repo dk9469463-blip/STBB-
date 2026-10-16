@@ -461,6 +461,10 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
         body: JSON.stringify({
           prompt: userMsg.content,
           language: userMsg.language,
+          mode: /\b(?:whole|complete|entire)\s+(?:of\s+)?(?:the\s+)?exercise\b|\bsolve\s+(?:all|every)\s+(?:the\s+)?questions\b|\bsolve\s+(?:this\s+)?question\b/i.test(userMsg.content)
+            ? 'solve-exercise'
+            : 'general',
+          useTextbook: true,
           bookContext: userMsg.bookContext,
           imageBase64: currentAttachment,
           history: historyPayload,
