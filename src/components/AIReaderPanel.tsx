@@ -56,6 +56,8 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
 }) => {
   const [language, setLanguage] = useState<AssistantLanguage>('english');
   const [inputQuery, setInputQuery] = useState<string>('');
+  const [pendingQuestionNumber, setPendingQuestionNumber] = useState<boolean>(false);
+  const [pendingConceptTopic, setPendingConceptTopic] = useState<boolean>(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [isCapturing, setIsCapturing] = useState<boolean>(false);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
@@ -226,6 +228,8 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
     setSpeechError(null);
     setInputQuery('');
     setCapturedImage(null);
+    setPendingQuestionNumber(false);
+    setPendingConceptTopic(false);
 
     const welcome: ChatMessage = {
       id: `reader-welcome-${Date.now()}`,
@@ -282,6 +286,31 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
     sendQuery(prompt);
   };
 
+  // Add a local clarification turn without making the student wait for an AI API call.
+  // The actual answer request is sent only after the student supplies the missing detail.
+  const appendLocalClarification = (choice: string, question: string) => {
+    const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const userMsg: ChatMessage = {
+      id: `user-${Date.now()}`,
+      role: 'user',
+      content: choice,
+      timestamp,
+      language,
+    };
+    const assistantMsg: ChatMessage = {
+      id: `ai-prompt-${Date.now() + 1}`,
+      role: 'assistant',
+      content: question,
+      timestamp,
+      language,
+    };
+    const nextMessages = [...messages, userMsg, assistantMsg];
+    setMessages(nextMessages);
+    saveStoredReaderMessages(book.id, nextMessages);
+    setInputQuery('');
+    window.setTimeout(() => inputRef.current?.focus(), 50);
+  };
+
   const handleFollowUpClick = (chip: string) => {
     const choice = chip.trim().toLowerCase();
 
@@ -293,18 +322,26 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
     }
 
     if (choice === 'solve a specific question') {
-      sendQuery(
-        'I want to solve one specific question from this textbook. First ask me which question number I mean (for example, Question 3 or Question 3(b)). Wait for my reply before solving, and do not guess the question.'
+      setPendingQuestionNumber(true);
+      setPendingConceptTopic(false);
+      appendLocalClarification(
+        'Solve a specific question',
+        'Which question number would you like me to solve? For example, Question 3 or Question 3(b). Type the number below. I will use this book and page as context, and you do not need to type the whole page.'
       );
       return;
     }
 
     if (choice === 'learn a concept') {
-      sendQuery(
-        selectedText.trim()
-          ? 'Teach me the concept in the highlighted textbook passage. Explain it in simple English, step by step, and give one clear example. Focus on the selected passage rather than the entire page.'
-          : 'I want to learn a concept from this textbook. First ask me which concept or topic I want to learn. Do not assume I want the whole page explained.'
-      );
+      if (selectedText.trim()) {
+        sendQuery('Teach me the concept in the highlighted textbook passage. Explain it in simple English, step by step, and give one clear example. Focus on the selected passage rather than the entire page.');
+      } else {
+        setPendingConceptTopic(true);
+        setPendingQuestionNumber(false);
+        appendLocalClarification(
+          'Learn a concept',
+          'Which concept or topic would you like to learn? Type its name below, and I will explain it step by step with an example.'
+        );
+      }
       return;
     }
 
@@ -336,12 +373,24 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
   };
 
   const sendQuery = async (customPrompt?: string) => {
-    const finalPrompt = (customPrompt || inputQuery).trim();
+    const typedPrompt = (customPrompt ?? inputQuery).trim();
+    const isClarificationReply = !customPrompt && (pendingQuestionNumber || pendingConceptTopic);
+    const finalPrompt = pendingQuestionNumber && typedPrompt
+      ? `Please solve question "${typedPrompt}" from ${book.title} (Class ${book.classNumber}, ${book.subjectName}, PDF page ${currentPage}) step by step. Use the selected text shown in the reader as context if it matches this question. Find the question from the book when possible; do not invent its wording or values if it cannot be located.`
+      : pendingConceptTopic && typedPrompt
+        ? `Please teach me the concept/topic "${typedPrompt}" from ${book.title} (Class ${book.classNumber}, ${book.subjectName}) in simple English, step by step, with one clear example.`
+        : typedPrompt;
+
     // An empty input must not silently submit the highlighted passage or capture
     // the entire PDF page. The welcome choices guide the student first.
     if (!finalPrompt) {
       inputRef.current?.focus();
       return;
+    }
+
+    if (isClarificationReply) {
+      setPendingQuestionNumber(false);
+      setPendingConceptTopic(false);
     }
 
     setIsGenerating(true);
