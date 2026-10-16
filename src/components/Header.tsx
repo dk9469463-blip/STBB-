@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {
   Menu,
   X,
+  BookOpen,
   Search,
   Layers,
   Home,
@@ -51,7 +52,7 @@ export const Header: React.FC<HeaderProps> = ({
             onClick={() => handleNav('home')}
             className="flex items-center gap-3 cursor-pointer group py-2 shrink-0 select-none"
           >
-            {/* Updated Official STBB Books Emblem */}
+            {/* STBB Books brand mark */}
             <div className="relative w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center group-hover:scale-105 transition-transform">
               <img
                 src="/logo.svg"
@@ -60,7 +61,7 @@ export const Header: React.FC<HeaderProps> = ({
               />
             </div>
 
-            {/* Brand Title and Tagline (Strictly Zero Developer Credit) */}
+            {/* Brand Title and Tagline */}
             <div className="flex flex-col">
               <span className="text-xl sm:text-2xl font-black tracking-wider text-white group-hover:text-amber-300 transition-colors leading-none">
                 STBB BOOKS
@@ -145,33 +146,30 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           </nav>
 
-          {/* RIGHT: Verified Official Government of Sindh Logo */}
+          {/* RIGHT: Textbook source label */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-            {/* Government of Sindh Official Emblem on Right */}
+            {/* Use a neutral book icon until an authentic government emblem is verified */}
             <div className="hidden sm:flex items-center gap-2.5 pl-3 border-l border-slate-800 text-right">
               <div className="flex flex-col">
                 <span className="text-[11px] font-bold text-slate-200 leading-tight">
-                  Government of Sindh
+                  Sindh Textbook Board
                 </span>
                 <span className="text-[10px] text-emerald-400 font-medium">
-                  School Education Department
+                  Textbook Library
                 </span>
               </div>
-              <img
-                src="/government-sindh-logo.svg"
-                alt="Government of Sindh Official Seal"
-                className="w-10 h-10 object-contain drop-shadow-md rounded-full bg-white/5 p-0.5"
-                title="Verified Government of Sindh Educational Portal Standards"
-              />
+              <div
+                className="w-10 h-10 flex items-center justify-center rounded-full bg-blue-500/10 border border-amber-400/30 text-amber-300"
+                title="Sindh Textbook Library"
+                aria-label="Sindh Textbook Library"
+              >
+                <BookOpen className="w-5 h-5" />
+              </div>
             </div>
 
-            {/* Mobile Official Government Logo Icon */}
-            <div className="sm:hidden flex items-center">
-              <img
-                src="/government-sindh-logo.svg"
-                alt="Government of Sindh Logo"
-                className="w-9 h-9 object-contain drop-shadow-md"
-              />
+            {/* Compact, non-official source icon for mobile */}
+            <div className="sm:hidden flex items-center justify-center w-9 h-9 rounded-xl bg-blue-500/10 text-amber-300">
+              <BookOpen className="w-5 h-5" aria-label="Sindh Textbook Library" />
             </div>
 
             {/* Quick Dark Mode toggle: available without opening settings */}
