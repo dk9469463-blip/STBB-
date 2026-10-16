@@ -76,3 +76,30 @@ html[data-low-data="true"] .stbb-low-data-static {
   transition: none !important;
   animation: none !important;
 }
+html[data-theme="dark"] .text-blue-900,
+html[data-theme="dark"] .text-blue-800 {
+  color: #bfdbfe !important;
+}
+
+html[data-theme="dark"] .text-emerald-900,
+html[data-theme="dark"] .text-emerald-800,
+html[data-theme="dark"] .text-emerald-700 {
+  color: #a7f3d0 !important;
+}
+
+html[data-theme="dark"] .text-amber-900,
+html[data-theme="dark"] .text-amber-800 {
+  color: #fde68a !important;
+}
+
+html[data-theme="dark"] .text-purple-900,
+html[data-theme="dark"] .text-purple-800 {
+  color: #e9d5ff !important;
+}
+
+html[data-theme="dark"] .bg-blue-100,
+html[data-theme="dark"] .bg-emerald-100,
+html[data-theme="dark"] .bg-amber-100,
+html[data-theme="dark"] .bg-purple-100 {
+  background-color: #263449 !important;
+}
