@@ -376,6 +376,18 @@ export async function retrieveTextbookMaterial(
       selectedPageNumbers = [requestedPage - 1, requestedPage, requestedPage + 1]
         .filter((page) => page >= 1 && page <= pageCount);
     } else {
+      // Searching every PDF page sequentially can exceed the web preview's request
+      // timeout. Read small batches concurrently and stop as soon as the requested
+      // chapter/exercise heading is found.
+      const scanLimit = Math.min(pageCount, 260);
+      const SCAN_BUDGET_MS = 18000;
+      const SCAN_BATCH_SIZE = 10;
+      const scanStartedAt = Date.now();
+      const scoredPages: Array<{ pageNumber: number; text: string; score: number }> = [];
+      const explicitChapter = normalizeAssistantText(lookupContext.chapter);
+      const explicitExercise = normalizeAssistantText(lookupContext.exercise);
+      const exerciseNumber = explicitExercise.match(/\d+(?:\.\d+)?/)?.[0];
+      const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\    } else {
       const scanLimit = Math.min(pageCount, 260);
       const scoredPages: Array<{ pageNumber: number; text: string; score: number }> = [];
       for (let pageNumber = 1; pageNumber <= scanLimit; pageNumber += 1) {
@@ -413,6 +425,141 @@ export async function retrieveTextbookMaterial(
           if (page.pageNumber < scanLimit) pageNumbers.add(page.pageNumber + 1);
         }
         selectedPageNumbers = [...pageNumbers].sort((a, b) => a - b).slice(0, 12);
+      }
+    }');
+
+      const matchesChapter = (text: string): boolean => {
+        if (!explicitChapter) return false;
+        const normalized = normalizeAssistantText(text);
+        const numericChapter = explicitChapter.match(/^(?:(?:chapter|unit|lesson)\s*)?(\d+(?:\.\d+)?)$/)?.[1];
+        if (numericChapter) {
+          const numberPattern = new RegExp(
+            '\\b(?:chapter|unit|lesson)\\s*(?:no\\.?\\s*)?' + escapeRegExp(numericChapter) + '\\b',
+            'i'
+          );
+          return numberPattern.test(normalized);
+        }
+        const chapterTitle = explicitChapter.replace(/^(?:chapter|unit|lesson)\s+/, '').trim();
+        return chapterTitle.length >= 3 && normalized.includes(chapterTitle);
+      };
+
+      const matchesExercise = (text: string): boolean => {
+        if (!explicitExercise) return false;
+        const normalized = normalizeAssistantText(text);
+        if (/review\s+exercise/.test(explicitExercise)) {
+          return /review\s+exercise/.test(normalized);
+        }
+        if (exerciseNumber) {
+          const numberPattern = new RegExp('\\b' + escapeRegExp(exerciseNumber) + '\\b');
+          return /\bexercise\b/.test(normalized) && numberPattern.test(normalized);
+        }
+        return normalized.includes(explicitExercise) &&
+          /\bexercise\b/.test(normalized);
+      };
+
+      let lastChapterMarkerPage = 0;
+      let locatedAnchor = 0;
+      let latestChapterPage = 0;
+
+      for (let batchStart = 1; batchStart <= scanLimit; batchStart += SCAN_BATCH_SIZE) {
+        if (Date.now() - scanStartedAt >= SCAN_BUDGET_MS) break;
+
+        const batchEnd = Math.min(scanLimit, batchStart + SCAN_BATCH_SIZE - 1);
+        const batch = await Promise.all(
+          Array.from({ length: batchEnd - batchStart + 1 }, async (_unused, index) => {
+            const pageNumber = batchStart + index;
+            try {
+              return { pageNumber, text: await getAssistantPageText(pdfDocument, book, pageNumber) };
+            } catch {
+              return { pageNumber, text: '' };
+            }
+          })
+        );
+
+        for (const page of batch) {
+          if (!page.text) continue;
+          const score = scoreAssistantPage(page.text, prompt, lookupContext);
+          if (score > 0) scoredPages.push({ ...page, score });
+
+          if (matchesChapter(page.text)) {
+            lastChapterMarkerPage = page.pageNumber;
+            latestChapterPage = page.pageNumber;
+            if (!explicitExercise) {
+              locatedAnchor = page.pageNumber;
+              break;
+            }
+        }
+
+          if (matchesExercise(page.text)) {
+            const chapterIsNearby = !explicitChapter ||
+              (lastChapterMarkerPage > 0 &&
+                page.pageNumber >= lastChapterMarkerPage &&
+                page.pageNumber - lastChapterMarkerPage <= 45);
+            if (chapterIsNearby) {
+              locatedAnchor = page.pageNumber;
+              break;
+            }
+          }
+        }
+
+        if (locatedAnchor) break;
+      }
+
+      if (locatedAnchor) {
+        // Include the previous page (which may contain the exercise heading)
+        // and a few following pages where the remaining exercise questions continue.
+        const pageNumbers = new Set<number>();
+        for (let pageNumber = Math.max(1, locatedAnchor - 1);
+          pageNumber <= Math.min(scanLimit, locatedAnchor + 5);
+          pageNumber += 1) {
+          const text = await getAssistantPageText(pdfDocument, book, pageNumber);
+          if (pageNumber > locatedAnchor && /(?:review\s+exercise|exercise\s+\d+(?:\.\d+)?|chapter\s+\d+)/i.test(text)) {
+            const normalizedNext = normalizeAssistantText(text);
+            if (matchesExercise(text) || matchesChapter(text) ||
+              /(?:review\s+exercise|exercise\s+\d+(?:\.\d+)?|chapter\s+\d+)/i.test(normalizedNext)) {
+              break;
+            }
+          }
+          if (text) pageNumbers.add(pageNumber);
+        }
+        selectedPageNumbers = [...pageNumbers].sort((a, b) => a - b);
+      } else if (Date.now() - scanStartedAt >= SCAN_BUDGET_MS && explicitExercise) {
+        // Return quickly rather than making the student wait until the proxy times out.
+        // Do not feed unrelated pages to the model as if they were the requested exercise.
+        return {
+          pages: [],
+          pageCount,
+          error: 'The book search reached its time limit before finding this exact chapter and exercise. Try sending the chapter title and exercise number together, or upload a photo of the first exercise page.',
+        };
+      }
+
+      if (!selectedPageNumbers.length && scoredPages.length) {
+        if (explicitExercise && explicitChapter && latestChapterPage) {
+          const sameChapter = scoredPages.filter((page) =>
+            page.pageNumber >= latestChapterPage && page.pageNumber <= latestChapterPage + 45
+          );
+          if (sameChapter.length) {
+            const top = sameChapter.sort((a, b) => b.score - a.score).slice(0, 6);
+            const pageNumbers = new Set<number>();
+            for (const page of top) {
+              pageNumbers.add(page.pageNumber);
+              if (page.pageNumber > 1) pageNumbers.add(page.pageNumber - 1);
+              if (page.pageNumber < scanLimit) pageNumbers.add(page.pageNumber + 1);
+            }
+            selectedPageNumbers = [...pageNumbers].sort((a, b) => a - b).slice(0, 12);
+          }
+        }
+
+        if (!selectedPageNumbers.length && (!explicitExercise || !explicitChapter)) {
+          const top = scoredPages.sort((a, b) => b.score - a.score).slice(0, 6);
+          const pageNumbers = new Set<number>();
+          for (const page of top) {
+            pageNumbers.add(page.pageNumber);
+            if (page.pageNumber > 1) pageNumbers.add(page.pageNumber - 1);
+            if (page.pageNumber < scanLimit) pageNumbers.add(page.pageNumber + 1);
+          }
+          selectedPageNumbers = [...pageNumbers].sort((a, b) => a - b).slice(0, 12);
+        }
       }
     }
 
