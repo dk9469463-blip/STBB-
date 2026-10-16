@@ -917,6 +917,8 @@ app.post('/api/ai/study-assist', async (req: Request, res: Response) => {
       ...fallbackModels,
     ])).filter(Boolean).slice(0, 3);
 
+    // One shared deadline bounds all fallback attempts, not 10 seconds per model.
+    const generationDeadline = AbortSignal.timeout(9000);
     let shouldStop = false;
     for (const modelName of modelsToTry) {
       lastTriedModel = modelName;
@@ -931,9 +933,8 @@ app.post('/api/ai/study-assist', async (req: Request, res: Response) => {
               systemInstruction,
               temperature: 0.2,
               maxOutputTokens: 3500,
-              // Prevent a single overloaded model from keeping the web request open
-              // long enough for the preview proxy to drop the connection.
-              abortSignal: AbortSignal.timeout(10000),
+              // All model fallback attempts share one deadline.
+              abortSignal: generationDeadline,
             },
           });
           aiText = (response.text || '').trim();
