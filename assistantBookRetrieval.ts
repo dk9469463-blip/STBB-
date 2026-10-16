@@ -138,6 +138,22 @@ export function resolveAssistantBook(
   const selectedMedium = inferMedium(prompt, promptOverridesContext ? undefined : context);
   const selectedTitle = normalizeAssistantText(context?.bookTitle);
 
+  // Recognise an exact title typed directly in the chat, even when the student
+  // did not use the class/book selectors.
+  const titleMatches = ALL_VERIFIED_BOOKS.filter((book) => {
+    if (selectedClass && book.classNumber !== selectedClass) return false;
+    if (selectedSubject && normalizeAssistantText(book.subjectName) !== selectedSubject) return false;
+    if (selectedMedium && normalizeAssistantText(book.medium) !== selectedMedium) return false;
+    const titles = [book.title, book.titleSindhi, book.titleUrdu]
+      .filter((title): title is string => Boolean(title))
+      .map((title) => normalizeAssistantText(title))
+      .filter((title) => title.length >= 4);
+    return titles.some((title) => normalizedPrompt.includes(title));
+  });
+  if (titleMatches.length === 1) {
+    return { book: titleMatches[0], candidates: titleMatches };
+  }
+
   const byId = ALL_VERIFIED_BOOKS.find((book) => book.id === context?.bookId);
   const byOfficialId = context?.officialId
     ? ALL_VERIFIED_BOOKS.find((book) => book.officialId === String(context.officialId))
