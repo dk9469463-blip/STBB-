@@ -188,6 +188,15 @@ export function resolveAssistantBook(
     );
   }
 
+  // If a class and subject uniquely point to one English-medium edition,
+  // use it as the default only when the student did not specify a medium.
+  if (!selectedMedium && candidates.length > 1 && selectedSubject) {
+    const englishEdition = candidates.filter((book) => normalizeAssistantText(book.medium) === 'english');
+    if (englishEdition.length === 1) {
+      return { book: englishEdition[0], candidates: englishEdition };
+    }
+  }
+
   if (candidates.length > 1) {
     const ranked = candidates.map((book) => {
       const title = normalizeAssistantText(book.title);
