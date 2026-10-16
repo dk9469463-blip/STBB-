@@ -372,7 +372,12 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
     }
   };
 
-  const sendQuery = async (customPrompt?: string) => {
+  const sendQuery = async (
+    customPrompt?: string,
+    retryContext?: { baseMessages: ChatMessage[]; originalUserMessage: ChatMessage }
+  ) => {
+    const baseMessages = retryContext?.baseMessages || messages;
+    const originalRetryMessage = retryContext?.originalUserMessage;
     const typedPrompt = (customPrompt ?? inputQuery).trim();
     const isClarificationReply = !customPrompt && (pendingQuestionNumber || pendingConceptTopic);
     const finalPrompt = pendingQuestionNumber && typedPrompt
@@ -400,8 +405,8 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
     // A highlighted passage is sent as text context only, never as a full-page image.
     // If nothing was highlighted, use the current page image as a fallback so scanned
     // PDFs are still readable by the AI. Explicit Capture Page always takes priority.
-    let attachmentForRequest = capturedImage;
-    if (!attachmentForRequest && !selectedText.trim() && onCapturePageImage) {
+    let attachmentForRequest = originalRetryMessage?.imageBase64 || capturedImage;
+    if (!attachmentForRequest && !originalRetryMessage && !selectedText.trim() && onCapturePageImage) {
       try {
         attachmentForRequest = await onCapturePageImage();
       } catch (captureError) {
@@ -417,9 +422,9 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
       role: 'user',
       content: finalPrompt,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      language,
+      language: originalRetryMessage?.language || language,
       imageBase64: attachmentForRequest || undefined,
-      bookContext: {
+      bookContext: originalRetryMessage?.bookContext || {
         bookId: book.id,
         officialId: book.officialId,
         medium: book.medium,
@@ -432,7 +437,7 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
     };
 
     // Append user message immediately
-    const nextMessages = [...messages, userMsg];
+    const nextMessages = [...baseMessages, userMsg];
     setMessages(nextMessages);
     saveStoredReaderMessages(book.id, nextMessages);
 
@@ -441,7 +446,7 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
     setCapturedImage(null);
 
     // Multi-turn history (excluding the current user message)
-    const historyPayload = messages
+    const historyPayload = baseMessages
       .filter((m) => !m.isError)
       .slice(-6)
       .map((m) => ({
@@ -455,7 +460,7 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           prompt: userMsg.content,
-          language,
+          language: userMsg.language,
           bookContext: userMsg.bookContext,
           imageBase64: currentAttachment,
           history: historyPayload,
@@ -473,7 +478,7 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
         role: 'assistant',
         content: data.answer || 'No response generated.',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        language,
+        language: userMsg.language,
         followUps: data.followUps || [],
         sources: Array.isArray(data.sources) ? data.sources : [],
       };
@@ -491,7 +496,7 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
         role: 'assistant',
         content: `Could not retrieve response: ${errText}. Please click Retry below to run your question again.`,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        language,
+        language: userMsg.language,
         isError: true,
       };
 
@@ -507,6 +512,29 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
     navigator.clipboard.writeText(text);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const handleRetryError = (errorId: string) => {
+    const errorIndex = messages.findIndex((message) => message.id === errorId);
+    if (errorIndex < 0) return;
+
+    let failedUserIndex = -1;
+    for (let index = errorIndex - 1; index >= 0; index -= 1) {
+      if (messages[index].role === 'user') {
+        failedUserIndex = index;
+        break;
+      }
+    }
+    if (failedUserIndex < 0 || isGenerating) return;
+
+    const originalUserMessage = messages[failedUserIndex];
+    const baseMessages = messages.filter((message, index) =>
+      index !== failedUserIndex && message.id !== errorId
+    );
+    setMessages(baseMessages);
+    saveStoredReaderMessages(book.id, baseMessages);
+    setErrorMsg(null);
+    void sendQuery(originalUserMessage.content, { baseMessages, originalUserMessage });
   };
 
   return (
