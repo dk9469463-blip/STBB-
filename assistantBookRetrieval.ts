@@ -209,6 +209,36 @@ export function resolveAssistantBook(
     );
   }
 
+  // In lower classes, Biology/Physics/Chemistry topics often appear inside
+  // General Science rather than a separately named subject book. Try the closest
+  // curriculum book in the selected class before giving up textbook retrieval.
+  if (!candidates.length && selectedSubject) {
+    const fallbackSubjects: Record<string, string[]> = {
+      biology: ['general science'],
+      physics: ['general science'],
+      chemistry: ['general science'],
+      'general mathematics': ['mathematics'],
+      mathematics: ['general mathematics'],
+      'social studies': ['general knowledge'],
+      'pakistan studies': ['social studies', 'general knowledge'],
+      'islamiat / ethics': ['general knowledge'],
+    };
+    const alternatives = fallbackSubjects[selectedSubject] || [];
+    if (alternatives.length) {
+      candidates = ALL_VERIFIED_BOOKS.filter((book) =>
+        (!selectedClass || book.classNumber === selectedClass) &&
+        alternatives.includes(normalizeAssistantText(book.subjectName)) &&
+        (!selectedMedium || normalizeAssistantText(book.medium) === selectedMedium)
+      );
+      if (!candidates.length && selectedMedium) {
+        candidates = ALL_VERIFIED_BOOKS.filter((book) =>
+          (!selectedClass || book.classNumber === selectedClass) &&
+          alternatives.includes(normalizeAssistantText(book.subjectName))
+        );
+      }
+    }
+  }
+
   // If a class and subject uniquely point to one English-medium edition,
   // use it as the default only when the student did not specify a medium.
   if (!selectedMedium && candidates.length > 1 && selectedSubject) {
