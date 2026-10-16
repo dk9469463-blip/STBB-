@@ -78,21 +78,37 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
   // Load saved reader chat for this book from localStorage
   useEffect(() => {
     const saved = getStoredReaderMessages(book.id);
+    const startOptions = [
+      'Solve the whole exercise',
+      'Solve a specific question',
+      'Learn a concept',
+      "Something else (I'll type)",
+    ];
+
     if (saved.length > 0) {
-      setMessages(saved);
+      // Refresh an old, untouched welcome screen so existing users get the new choices.
+      const onlyWelcome = saved.length === 1 &&
+        saved[0].role === 'assistant' &&
+        saved[0].id.startsWith('reader-welcome-');
+      if (onlyWelcome) {
+        const welcome: ChatMessage = {
+          ...saved[0],
+          content: `Hi! What would you like help with in ${book.title}? Choose an option below, or type your own question. Highlighted text stays separate from your message. A full-page image is sent only when you manually choose Capture Page.`,
+          followUps: startOptions,
+        };
+        setMessages([welcome]);
+        saveStoredReaderMessages(book.id, [welcome]);
+      } else {
+        setMessages(saved);
+      }
     } else {
       const welcome: ChatMessage = {
         id: `reader-welcome-${book.id}`,
         role: 'assistant',
-        content: `Hi! What would you like help with in ${book.title}? Choose an option below, or type your own question. If you highlight text in the book, I will focus on that selection. A full-page image is sent only when you manually choose Capture Page.`,
+        content: `Hi! What would you like help with in ${book.title}? Choose an option below, or type your own question. Highlighted text stays separate from your message. A full-page image is sent only when you manually choose Capture Page.`,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         language: 'english',
-        followUps: [
-          'Solve the whole exercise',
-          'Solve a specific question',
-          'Learn a concept',
-          "Something else (I'll type)",
-        ],
+        followUps: startOptions,
       };
       setMessages([welcome]);
       saveStoredReaderMessages(book.id, [welcome]);
