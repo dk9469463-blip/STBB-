@@ -105,6 +105,7 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [speechSupported, setSpeechSupported] = useState<boolean>(false);
   const recognitionRef = useRef<any>(null);
+  const voiceBaseInputRef = useRef<string>('');
 
   // Voice Text-to-Speech State
   const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
@@ -141,39 +142,17 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
 
   const currentSelectedBook = ALL_VERIFIED_BOOKS.find((b) => b.id === selectedBookId) || null;
 
-  // Initialize Speech Recognition
+  // Initialize speech support detection. A recognizer is created only when
+  // the user taps the microphone, through the shared speech helper.
   useEffect(() => {
-    const SpeechRecognition =
-      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (SpeechRecognition) {
-      setSpeechSupported(true);
-      const recognizer = new SpeechRecognition();
-      recognizer.continuous = false;
-      recognizer.interimResults = true;
-
-      recognizer.onresult = (event: any) => {
-        let transcript = '';
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          transcript += event.results[i][0].transcript;
-        }
-        setUserInput(transcript);
-      };
-
-      recognizer.onend = () => {
-        setIsRecording(false);
-      };
-
-      recognizer.onerror = (event: any) => {
-        console.warn('Speech recognition error:', event.error);
-        setIsRecording(false);
-      };
-
-      recognitionRef.current = recognizer;
-    }
+    setSpeechSupported(isSpeechRecognitionSupported());
 
     return () => {
       if (window.speechSynthesis) {
         window.speechSynthesis.cancel();
+      }
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
       }
     };
   }, []);
@@ -283,10 +262,15 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
       return;
     }
 
+    // Keep the text typed before recording as a fixed prefix. Interim
+    // recognition updates replace the dictated draft instead of appending it.
+    voiceBaseInputRef.current = userInput.trim();
+
     const rec = createSpeechRecognizer({
       language: selectedLanguage,
       onResult: (transcript) => {
-        setUserInput((prev) => (prev ? `${prev} ${transcript}` : transcript));
+        const base = voiceBaseInputRef.current;
+        setUserInput([base, transcript.trim()].filter(Boolean).join(' '));
       },
       onError: (err) => {
         setErrorNotice(err);
