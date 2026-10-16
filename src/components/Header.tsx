@@ -178,7 +178,7 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               type="button"
               onClick={() => setPreference('darkMode', !preferences.darkMode)}
-              className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-slate-800 text-amber-300 hover:bg-slate-700 hover:text-amber-200 transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+              className="hidden sm:flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-slate-800 text-amber-300 hover:bg-slate-700 hover:text-amber-200 transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
               aria-label={preferences.darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
               aria-pressed={preferences.darkMode}
               title={preferences.darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
@@ -225,6 +225,29 @@ export const Header: React.FC<HeaderProps> = ({
                 {isOnline ? <Wifi className="h-3 w-3" /> : <WifiOff className="h-3 w-3" />}
                 {isOnline ? 'Online' : 'Offline'}
               </span>
+            </div>
+
+            <div className="sm:hidden">
+              <button
+                type="button"
+                role="switch"
+                aria-checked={preferences.darkMode}
+                onClick={() => setPreference('darkMode', !preferences.darkMode)}
+                className="flex w-full items-center justify-between gap-3 rounded-xl px-3 py-3 text-left transition hover:bg-slate-800"
+              >
+                <span className="flex items-center gap-3">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-500/15 text-indigo-300">
+                    {preferences.darkMode ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+                  </span>
+                  <span>
+                    <span className="block text-sm font-bold">Dark mode</span>
+                    <span className="mt-0.5 block text-xs text-slate-400">Change the whole library appearance</span>
+                  </span>
+                </span>
+                <span className={`relative h-5 w-9 shrink-0 rounded-full transition ${preferences.darkMode ? 'bg-emerald-500' : 'bg-slate-600'}`}>
+                  <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all ${preferences.darkMode ? 'left-[1.125rem]' : 'left-0.5'}`} />
+                </span>
+              </button>
             </div>
 
             <button
