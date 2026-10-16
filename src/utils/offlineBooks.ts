@@ -7,6 +7,14 @@ export interface OfflineBookRecord {
   subjectName: string;
   medium: string;
   savedAt: number;
+  // Existing saved books from database v1 store the Blob directly. New saves
+  // keep metadata here and store the PDF as smaller Blob chunks.
+  blob?: Blob;
+}
+
+interface OfflineBookChunkRecord {
+  bookId: string;
+  chunkIndex: number;
   blob: Blob;
 }
 
@@ -18,11 +26,14 @@ export interface OfflineSaveProgress {
 }
 
 const DATABASE_NAME = 'stbb-offline-books';
-const DATABASE_VERSION = 1;
+const DATABASE_VERSION = 2;
 const BOOKS_STORE = 'books';
-// Protect browser memory on devices with limited RAM. Very large books remain available
-// through the normal Download button, which uses the browser's native download manager.
-const MAX_OFFLINE_BOOK_BYTES = 150 * 1024 * 1024;
+const CHUNKS_STORE = 'bookChunks';
+const DOWNLOAD_CHUNK_BYTES = 4 * 1024 * 1024;
+// A larger safety ceiling now that file data is written as small IndexedDB Blobs
+// instead of retaining the entire PDF in JavaScript memory. Storage quota is
+// also checked below where the browser supports the Storage API.
+const MAX_OFFLINE_BOOK_BYTES = 512 * 1024 * 1024;
 
 let databasePromise: Promise<IDBDatabase> | null = null;
 let savedBookIdsPromise: Promise<Set<string>> | null = null;
@@ -40,6 +51,9 @@ function openDatabase(): Promise<IDBDatabase> {
       const database = request.result;
       if (!database.objectStoreNames.contains(BOOKS_STORE)) {
         database.createObjectStore(BOOKS_STORE, { keyPath: 'bookId' });
+      }
+      if (!database.objectStoreNames.contains(CHUNKS_STORE)) {
+        database.createObjectStore(CHUNKS_STORE, { keyPath: ['bookId', 'chunkIndex'] });
       }
     };
     request.onsuccess = () => resolve(request.result);
@@ -81,6 +95,47 @@ function runTransaction<T>(
   }));
 }
 
+function putOfflineChunk(record: OfflineBookChunkRecord): Promise<void> {
+  return openDatabase().then((database) => new Promise<void>((resolve, reject) => {
+    const transaction = database.transaction(CHUNKS_STORE, 'readwrite');
+    transaction.objectStore(CHUNKS_STORE).put(record);
+    transaction.oncomplete = () => resolve();
+    transaction.onerror = () => reject(transaction.error || new Error('Could not save a PDF chunk.'));
+    transaction.onabort = () => reject(transaction.error || new Error('Saving a PDF chunk was cancelled.'));
+  }));
+}
+
+function getOfflineChunks(bookId: string): Promise<OfflineBookChunkRecord[]> {
+  return openDatabase().then((database) => new Promise<OfflineBookChunkRecord[]>((resolve, reject) => {
+    const transaction = database.transaction(CHUNKS_STORE, 'readonly');
+    const range = IDBKeyRange.bound([bookId, 0], [bookId, Number.MAX_SAFE_INTEGER]);
+    const request = transaction.objectStore(CHUNKS_STORE).getAll(range);
+    request.onsuccess = () => resolve(request.result as OfflineBookChunkRecord[]);
+    request.onerror = () => reject(request.error || new Error('Could not read the saved offline book.'));
+  }));
+}
+
+function deleteOfflineChunks(bookId: string): Promise<void> {
+  return openDatabase().then((database) => new Promise<void>((resolve, reject) => {
+    const transaction = database.transaction(CHUNKS_STORE, 'readwrite');
+    const store = transaction.objectStore(CHUNKS_STORE);
+    const range = IDBKeyRange.bound([bookId, 0], [bookId, Number.MAX_SAFE_INTEGER]);
+    const request = store.openCursor(range);
+
+    request.onsuccess = () => {
+      const cursor = request.result;
+      if (cursor) {
+        cursor.delete();
+        cursor.continue();
+      }
+    };
+    request.onerror = () => reject(request.error || new Error('Could not clean up the incomplete offline download.'));
+    transaction.oncomplete = () => resolve();
+    transaction.onerror = () => reject(transaction.error || new Error('Could not clean up the incomplete offline download.'));
+    transaction.onabort = () => reject(transaction.error || new Error('Offline cleanup was cancelled.'));
+  }));
+}
+
 function streamUrlForBook(book: Book): string {
   if (book.driveFileId) return `/api/pdf/drive-stream?id=${encodeURIComponent(book.driveFileId)}`;
   if (book.officialId) return `/api/pdf/stream?id=${encodeURIComponent(book.officialId)}`;
@@ -88,11 +143,26 @@ function streamUrlForBook(book: Book): string {
   throw new Error('A PDF link is not available for this textbook yet.');
 }
 
+async function assertStorageAvailable(requiredBytes: number): Promise<void> {
+  if (typeof navigator === 'undefined' || !navigator.storage?.estimate) return;
+
+  const estimate = await navigator.storage.estimate().catch(() => undefined);
+  if (!estimate?.quota || estimate.usage === undefined) return;
+
+  const free = Math.max(0, estimate.quota - estimate.usage);
+  // Keep a margin because browsers may reserve some storage for other site data.
+  if (requiredBytes > 0 && requiredBytes > free * 0.85) {
+    throw new Error('There is not enough browser storage for this book. Remove saved offline books or use Download.');
+  }
+}
+
 async function saveBookForOfflineAttempt(
   book: Book,
   onProgress: ((progress: OfflineSaveProgress) => void) | undefined,
   attempt: number
 ): Promise<void> {
+  // Clear leftovers from an earlier interrupted attempt before starting again.
+  await deleteOfflineChunks(book.id);
   onProgress?.({ loaded: 0, total: 0, percent: null, attempt });
 
   const response = await fetch(streamUrlForBook(book), {
@@ -118,31 +188,67 @@ async function saveBookForOfflineAttempt(
 
   const contentLength = Number(response.headers.get('content-length') || 0);
   if (contentLength > MAX_OFFLINE_BOOK_BYTES) {
-    throw new Error('This PDF is too large to keep safely inside the app. Use the regular Download button instead.');
+    throw new Error('This PDF is larger than the 512 MiB offline limit. Use the regular Download button instead.');
   }
+  await assertStorageAvailable(contentLength);
 
-  if (typeof navigator !== 'undefined' && navigator.storage?.estimate) {
-    const estimate = await navigator.storage.estimate().catch(() => undefined);
-    if (estimate?.quota && estimate.usage !== undefined && contentLength > 0) {
-      const free = Math.max(0, estimate.quota - estimate.usage);
-      if (contentLength > free * 0.85) {
-        throw new Error('There is not enough browser storage for this book. Remove saved offline books or use Download.');
-      }
-    }
-  }
+  let loaded = 0;
+  let chunkIndex = 0;
+  const header = new Uint8Array(4);
+  let headerBytes = 0;
 
-  let blob: Blob;
+  const persistChunk = async (parts: Uint8Array[], partBytes: number): Promise<void> => {
+    if (partBytes === 0) return;
+    const blobParts: BlobPart[] = parts.map((part) => {
+      const copy = new Uint8Array(part.byteLength);
+      copy.set(part);
+      return copy.buffer;
+    });
+    await putOfflineChunk({
+      bookId: book.id,
+      chunkIndex,
+      blob: new Blob(blobParts, { type: 'application/pdf' }),
+    });
+    chunkIndex += 1;
+  };
+
   const reader = response.body?.getReader();
 
   if (!reader) {
-    blob = await response.blob();
+    // Compatibility fallback for browsers without a readable response stream.
+    const blob = await response.blob();
     if (blob.size > MAX_OFFLINE_BOOK_BYTES) {
-      throw new Error('This PDF is too large to keep safely inside the app. Use the regular Download button instead.');
+      throw new Error('This PDF is larger than the 512 MiB offline limit. Use the regular Download button instead.');
     }
-    onProgress?.({ loaded: blob.size, total: blob.size, percent: 100 });
+    await assertStorageAvailable(blob.size);
+    if (blob.size < 4) throw new Error('The downloaded file is empty or incomplete.');
+    const signature = new Uint8Array(await blob.slice(0, 4).arrayBuffer());
+    if (String.fromCharCode(...signature) !== '%PDF') {
+      throw new Error('The downloaded content is not a valid PDF file.');
+    }
+
+    for (let offset = 0; offset < blob.size; offset += DOWNLOAD_CHUNK_BYTES) {
+      const part = blob.slice(offset, Math.min(offset + DOWNLOAD_CHUNK_BYTES, blob.size), 'application/pdf');
+      await putOfflineChunk({ bookId: book.id, chunkIndex, blob: part });
+      chunkIndex += 1;
+      loaded = Math.min(offset + DOWNLOAD_CHUNK_BYTES, blob.size);
+      onProgress?.({
+        loaded,
+        total: blob.size,
+        percent: Math.min(99, Math.round((loaded / blob.size) * 100)),
+        attempt,
+      });
+    }
   } else {
-    const chunks: Uint8Array[] = [];
-    let loaded = 0;
+    let pendingParts: Uint8Array[] = [];
+    let pendingBytes = 0;
+
+    const flushPending = async (): Promise<void> => {
+      if (!pendingBytes) return;
+      await persistChunk(pendingParts, pendingBytes);
+      pendingParts = [];
+      pendingBytes = 0;
+    };
 
     try {
       while (true) {
@@ -153,38 +259,49 @@ async function saveBookForOfflineAttempt(
         loaded += value.byteLength;
         if (loaded > MAX_OFFLINE_BOOK_BYTES) {
           await reader.cancel();
-          throw new Error('This PDF is too large to keep safely inside the app. Use the regular Download button instead.');
+          throw new Error('This PDF is larger than the 512 MiB offline limit. Use the regular Download button instead.');
         }
 
-        chunks.push(value);
+        if (headerBytes < header.length) {
+          const copyLength = Math.min(header.length - headerBytes, value.byteLength);
+          header.set(value.subarray(0, copyLength), headerBytes);
+          headerBytes += copyLength;
+        }
+
+        pendingParts.push(value);
+        pendingBytes += value.byteLength;
+
+        if (pendingBytes >= DOWNLOAD_CHUNK_BYTES) {
+          await flushPending();
+        }
+
         onProgress?.({
           loaded,
           total: contentLength,
           percent: contentLength > 0 ? Math.min(99, Math.round((loaded / contentLength) * 100)) : null,
+          attempt,
         });
+
+        // If content-length is missing or inaccurate, avoid filling storage
+        // indefinitely. Check free quota occasionally while streaming.
+        if (loaded % (32 * 1024 * 1024) < value.byteLength) {
+          await assertStorageAvailable(DOWNLOAD_CHUNK_BYTES);
+        }
       }
+      await flushPending();
     } finally {
       reader.releaseLock();
     }
 
-    // Copy into ArrayBuffer-backed parts so strict TypeScript and browsers that
-    // use SharedArrayBuffer-capable typed arrays agree on the BlobPart type.
-    const blobParts: BlobPart[] = chunks.map((chunk) => {
-      const copy = new Uint8Array(chunk.byteLength);
-      copy.set(chunk);
-      return copy.buffer;
-    });
-    blob = new Blob(blobParts, { type: 'application/pdf' });
-    if (blob.size < 4) throw new Error('The downloaded file is empty or incomplete.');
+    if (loaded < 4 || headerBytes < 4) {
+      throw new Error('The downloaded file is empty or incomplete.');
+    }
+    if (String.fromCharCode(...header) !== '%PDF') {
+      throw new Error('The downloaded content is not a valid PDF file.');
+    }
   }
 
-  // Validate both streaming and fallback paths before keeping anything offline.
-  if (blob.size < 4) throw new Error('The downloaded file is empty or incomplete.');
-  const signature = new Uint8Array(await blob.slice(0, 4).arrayBuffer());
-  if (String.fromCharCode(...signature) !== '%PDF') {
-    throw new Error('The downloaded content is not a valid PDF file.');
-  }
-  onProgress?.({ loaded: blob.size, total: blob.size, percent: 100 });
+  if (loaded < 4) throw new Error('The downloaded file is empty or incomplete.');
 
   const record: OfflineBookRecord = {
     bookId: book.id,
@@ -193,23 +310,24 @@ async function saveBookForOfflineAttempt(
     subjectName: book.subjectName,
     medium: book.medium,
     savedAt: Date.now(),
-    blob,
   };
 
+  // Publish the metadata only after all chunks have been written and validated;
+  // incomplete downloads therefore never appear as saved books.
   await runTransaction('readwrite', (store) => store.put(record));
   savedBookIdsPromise = null;
+  onProgress?.({ loaded, total: contentLength || loaded, percent: 100, attempt });
 }
 
 function isRetryableOfflineSaveError(error: unknown): boolean {
   if (error instanceof TypeError) return true;
   const message = error instanceof Error ? error.message : String(error);
-  return /HTTP (408|425|429|500|502|503|504)\\b|failed to fetch|networkerror|network request failed|connection reset|socket hang up|timed? ?out/i.test(message);
+  return /HTTP (408|425|429|500|502|503|504)\b|failed to fetch|networkerror|network request failed|connection reset|socket hang up|timed? ?out/i.test(message);
 }
 
 /**
- * A slow or unstable connection can interrupt a long textbook download.
- * Retry temporary network/server failures twice from the beginning. The final
- * PDF is only written to IndexedDB after it has been downloaded and validated.
+ * Slow or unstable connections get up to three attempts. Download data is stored
+ * in 4 MiB IndexedDB chunks as it arrives, instead of collecting the full PDF in RAM.
  */
 export async function saveBookForOffline(
   book: Book,
@@ -222,6 +340,7 @@ export async function saveBookForOffline(
       await saveBookForOfflineAttempt(book, onProgress, attempt);
       return;
     } catch (error) {
+      await deleteOfflineChunks(book.id).catch(() => undefined);
       if (attempt >= maxAttempts || !isRetryableOfflineSaveError(error)) {
         throw error;
       }
@@ -234,7 +353,14 @@ export async function saveBookForOffline(
 
 export async function getOfflineBookBlob(bookId: string): Promise<Blob | null> {
   const record = await runTransaction<OfflineBookRecord | undefined>('readonly', (store) => store.get(bookId));
-  return record?.blob instanceof Blob ? record.blob : null;
+  if (!record) return null;
+
+  // Preserve compatibility with books saved by the earlier database format.
+  if (record.blob instanceof Blob) return record.blob;
+
+  const chunks = await getOfflineChunks(bookId);
+  if (!chunks.length) return null;
+  return new Blob(chunks.map((chunk) => chunk.blob), { type: 'application/pdf' });
 }
 
 export async function getOfflineBooks(): Promise<OfflineBookRecord[]> {
@@ -256,5 +382,6 @@ export async function isBookSavedOffline(bookId: string): Promise<boolean> {
 
 export async function removeOfflineBook(bookId: string): Promise<void> {
   await runTransaction<undefined>('readwrite', (store) => store.delete(bookId));
+  await deleteOfflineChunks(bookId);
   savedBookIdsPromise = null;
 }
