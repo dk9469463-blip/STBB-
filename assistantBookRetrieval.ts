@@ -616,7 +616,7 @@ export async function retrieveTextbookMaterial(
       return {
         pages: [],
         pageCount,
-        error: 'No selectable text was extracted from the selected PDF pages. Enter the PDF page number in the locator to target a page directly. If the PDF page is scanned as an image, the assistant needs that page image to read its questions.',
+        error: 'No selectable text was extracted from the requested or nearby PDF pages. This may be a scanned page or a temporary PDF-read issue; continue with any available page image, nearby material, and a clearly labelled best-effort explanation based on the selected class, subject and exercise clues.',
       };
     }
     return { pages, pageCount };
@@ -627,7 +627,7 @@ export async function retrieveTextbookMaterial(
     return {
       pages: [],
       pageCount: 0,
-      error: 'The PDF text could not be read automatically. The book may be scanned or the official source may be temporarily unavailable.',
+      error: 'The PDF text could not be read automatically. Treat this only as a retrieval limitation: still use any supplied page image and the selected class, subject, page and exercise clues to attempt a best-effort explanation without claiming exact textbook text was extracted.',
     };
   } finally {
     if (loadingTask) {
