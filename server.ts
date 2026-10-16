@@ -926,7 +926,7 @@ app.post('/api/ai/study-assist', async (req: Request, res: Response) => {
         (detail.status ? ' with HTTP ' + detail.status : '') + '. Trying configured model and safe fallbacks.');
     }
 
-    const configuredModel = geminiModel.replace(/^models\\//, '');
+    const configuredModel = geminiModel.replace(/^models\//, '');
     const fallbackModels = [
       'gemini-3.8-flash',
       'gemini-3.8-flash-lite',
