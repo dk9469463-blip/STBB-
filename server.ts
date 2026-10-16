@@ -926,86 +926,128 @@ app.post('/api/ai/study-assist', async (req: Request, res: Response) => {
         (detail.status ? ' with HTTP ' + detail.status : '') + '. Trying configured model and safe fallbacks.');
     }
 
-    const configuredModel = geminiModel.replace(/^models\//, '');
+    const configuredModel = geminiModel.replace(/^models\\//, '');
     const fallbackModels = [
-      'gemini-3.8-flash-lite',
       'gemini-3.8-flash',
+      'gemini-3.8-flash-lite',
+      'gemini-2.5-flash',
       'gemini-2.5-flash-lite',
       'gemini-2.0-flash',
     ];
-    const modelsToTry = Array.from(new Set([
+
+    // Prefer a different Flash model before trying Flash-Lite variants. The old
+    // sort put Lite models first and the 9-second shared abort signal meant a
+    // single slow fallback could consume the entire budget.
+    const discoveredFlashModels = discoveredModels.filter(
+      (name) => /flash/i.test(name) && !/flash-lite/i.test(name)
+    );
+    const discoveredLiteModels = discoveredModels.filter((name) => /flash-lite/i.test(name));
+    const discoveredOtherModels = discoveredModels.filter(
+      (name) => !/flash/i.test(name) && !/(embedding|imagen|veo|audio|tts|live|robotics|computer-use|deep-research|aqa)/i.test(name)
+    );
+    const uniqueModels = Array.from(new Set([
       configuredModel,
-      ...discoveredModels,
+      ...discoveredFlashModels,
+      ...discoveredLiteModels,
+      ...discoveredOtherModels,
       ...fallbackModels,
-    ])).filter(Boolean).slice(0, 3);
+    ])).filter(Boolean).slice(0, 4);
 
-    // One shared deadline bounds all fallback attempts, not 10 seconds per model.
-    const generationDeadline = AbortSignal.timeout(9000);
+    // Give each model its own timeout, with an overall request ceiling. If all
+    // alternatives return transient errors, make one final attempt on the
+    // configured model because high-demand 503s are often short-lived.
+    const modelsToTry = uniqueModels.length > 1
+      ? [...uniqueModels, configuredModel]
+      : uniqueModels;
+    const overallDeadlineAt = Date.now() + 35000;
+    const MODEL_ATTEMPT_TIMEOUT_MS = 9000;
     let shouldStop = false;
+    let transientFailures = 0;
+
     for (const modelName of modelsToTry) {
+      const remainingMs = overallDeadlineAt - Date.now();
+      if (remainingMs < 750) break;
+
       lastTriedModel = modelName;
-      // A provider 503 can be temporary. Retry the current model once, then
-      // automatically fail over to another model available to this API key.
-      for (let attempt = 0; attempt < 1; attempt += 1) {
-        try {
-          const response = await genAI.models.generateContent({
-            model: modelName,
-            contents,
-            config: {
-              systemInstruction,
-              temperature: 0.2,
-              maxOutputTokens: 3500,
-              // All model fallback attempts share one deadline.
-              abortSignal: generationDeadline,
-            },
+      const attemptTimeoutMs = Math.max(750, Math.min(MODEL_ATTEMPT_TIMEOUT_MS, remainingMs));
+      try {
+        const response = await genAI.models.generateContent({
+          model: modelName,
+          contents,
+          config: {
+            systemInstruction,
+            temperature: 0.2,
+            maxOutputTokens: 3500,
+            // Each attempt has its own budget; one slow model cannot abort all fallbacks.
+            abortSignal: AbortSignal.timeout(attemptTimeoutMs),
+          },
+        });
+        aiText = (response.text || '').trim();
+        if (aiText) break;
+
+        lastGeminiFailure = { status: 502, message: 'The model returned an empty response.' };
+        transientFailures += 1;
+      } catch (providerError: unknown) {
+        const detail = getGeminiErrorDetails(providerError);
+        const provider = providerError as { name?: string; code?: number | string; message?: string };
+        const isAborted = /AbortError|TimeoutError/i.test(String(provider?.name || '')) ||
+          /operation was aborted|request aborted|aborted|timed out|timeout/i.test(detail.message) ||
+          Number(provider?.code) === 20;
+
+        console.warn(
+          'Gemini model "' + modelName + '" failed' +
+          (detail.status ? ' with HTTP/code ' + detail.status : '') +
+          (detail.message ? ': ' + detail.message : '.')
+        );
+
+        if (
+          detail.status === 401 ||
+          detail.status === 403 ||
+          /API_KEY_INVALID|invalid api key|permission denied|forbidden/i.test(detail.message)
+        ) {
+          return res.status(503).json({
+            error: 'The AI assistant needs an administrator to check its Gemini API key and permissions.',
           });
-          aiText = (response.text || '').trim();
-          if (aiText) {
-            shouldStop = true;
-            break;
-          }
-          lastGeminiFailure = { status: 502, message: 'The model returned an empty response.' };
-          break;
-        } catch (providerError: unknown) {
-          const detail = getGeminiErrorDetails(providerError);
+        }
+
+        if (isAborted) {
+          // AbortSignal timeouts are local attempt timeouts, not proof that all
+          // models are unavailable. Keep going with the next eligible model.
+          lastGeminiFailure = {
+            status: 503,
+            message: 'This model attempt timed out. Trying another available model.',
+          };
+          transientFailures += 1;
+        } else {
           lastGeminiFailure = detail;
-
-          console.warn(
-            'Gemini model "' + modelName + '" failed' +
-            (detail.status ? ' with HTTP ' + detail.status : '') +
-            (detail.message ? ': ' + detail.message : '.')
-          );
-
-          if (
-            detail.status === 401 ||
-            detail.status === 403 ||
-            /API_KEY_INVALID|invalid api key|permission denied|forbidden/i.test(detail.message)
-          ) {
-            return res.status(503).json({
-              error: 'The AI assistant needs an administrator to check its Gemini API key and permissions.',
-            });
-          }
-
           const overloaded = detail.status === 503 ||
             /UNAVAILABLE|high demand|overloaded|temporarily unavailable/i.test(detail.message);
           const quotaLimited = detail.status === 429 ||
             /RESOURCE_EXHAUSTED|quota exceeded|rate.?limit|too many requests/i.test(detail.message);
           const modelUnavailable = detail.status === 404 ||
             /not found|no longer available|unsupported model|unknown model/i.test(detail.message);
+          const networkTransient = detail.status === 0 ||
+            /fetch failed|network error|ECONNRESET|ECONNREFUSED|connection reset|socket hang up/i.test(detail.message);
 
-          // Quota/rate limits and model availability can differ by model. Try
-          // the next eligible model instead of failing the whole student query.
-          if (overloaded || quotaLimited || modelUnavailable || detail.status === 400) {
-            break;
+          // These failures may be model-specific or temporary; let fallback
+          // models try rather than treating one provider response as final.
+          if (overloaded || quotaLimited || modelUnavailable || detail.status === 400 || networkTransient || detail.status >= 500) {
+            transientFailures += 1;
+          } else {
+            shouldStop = true;
           }
-
-          // Other failures are unlikely to be fixed by switching models.
-          shouldStop = true;
-          break;
         }
       }
 
       if (aiText || shouldStop) break;
+
+      const timeLeft = overallDeadlineAt - Date.now();
+      if (timeLeft > 1000 && transientFailures > 0) {
+        // Small bounded backoff avoids hammering an overloaded provider while
+        // preserving most of the time budget for other models.
+        const backoffMs = Math.min(900, 200 * transientFailures);
+        await new Promise<void>((resolve) => setTimeout(resolve, Math.min(backoffMs, timeLeft - 500)));
+      }
     }
 
     if (!aiText) {
