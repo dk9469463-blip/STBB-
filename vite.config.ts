@@ -50,6 +50,8 @@ export default defineConfig(() => {
           // Include the self-hosted PDF.js worker so saved books can open without
           // downloading another script when the device is offline.
           globPatterns: ['**/*.{js,mjs,css,html,ico,png,svg,woff,woff2}'],
+          // PDF.js worker is about 2.3 MiB; allow it into the offline app shell.
+          maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
           runtimeCaching: [
             {
               // Cache only the CMap files actually requested by PDF.js, rather than
