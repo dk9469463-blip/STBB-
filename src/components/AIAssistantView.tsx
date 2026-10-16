@@ -354,9 +354,29 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
     reader.readAsDataURL(file);
   };
 
-  // Send Message: Appends user message and AI response, preserves history
+  // Send Message: Appends user message and AI response, preserves history.
+  // Students can submit a chapter/exercise locator without knowing the page number.
   const handleSendMessage = async (customPrompt?: string) => {
-    const promptToSend = (customPrompt || userInput).trim();
+    const typedPrompt = (customPrompt || userInput).trim();
+    const locatorPrompt = [
+      chapterInput.trim() ? 'Chapter / Unit: ' + chapterInput.trim() : '',
+      exerciseInput.trim() ? 'Exercise: ' + exerciseInput.trim() : '',
+      questionInput.trim() ? 'Question: ' + questionInput.trim() : '',
+    ].filter(Boolean).join('\n');
+
+    const generatedLocatorPrompt = locatorPrompt
+      ? 'Please find and solve the selected textbook exercise using the official book content.\n' +
+        (currentSelectedBook
+          ? 'Book: ' + currentSelectedBook.title + ' (Class ' + currentSelectedBook.classNumber + ', ' + currentSelectedBook.subjectName + ', ' + currentSelectedBook.medium + ' medium).\n'
+          : 'Class: ' + (selectedClass || 'not selected') + '. Subject/book: ' + (currentSelectedBook?.subjectName || 'identify from the selected class and clues') + '.\n') +
+        locatorPrompt + '\n' +
+        (questionInput.trim()
+          ? 'Solve the specified question clearly, step by step.'
+          : 'Solve all questions in this exercise in their original order.') +
+        ' Search the selected book by chapter and exercise; a page number was not provided. If the exact exercise cannot be verified, do not invent its questions—ask me to upload a page photo or paste the question text.'
+      : '';
+
+    const promptToSend = typedPrompt || generatedLocatorPrompt;
     if (!promptToSend && !attachedImage) return;
 
     setErrorNotice(null);
@@ -364,11 +384,15 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
     setIsLoading(true);
 
     const bookContext = {
+      bookId: currentSelectedBook?.id,
+      officialId: currentSelectedBook?.officialId,
+      medium: currentSelectedBook?.medium,
       classNumber: selectedClass || undefined,
       subjectName: currentSelectedBook?.subjectName,
       bookTitle: currentSelectedBook?.title,
       chapter: chapterInput.trim() || undefined,
       exercise: exerciseInput.trim() || undefined,
+      // Page number is optional. Keep it only when supplied by a reader deep-link.
       pageNumber: pageInput ? parseInt(pageInput, 10) : undefined,
       questionNumber: questionInput.trim() || undefined,
     };
@@ -703,7 +727,7 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
             }`}
           >
             <Calculator className="w-3.5 h-3.5" />
-            <span>{showAdvancedLocator ? 'Hide Locator' : 'Specify Exercise & Page'}</span>
+            <span>{showAdvancedLocator ? 'Hide Locator' : 'Specify Chapter & Exercise'}</span>
             <ChevronDown className={`w-3 h-3 transition-transform ${showAdvancedLocator ? 'rotate-180' : ''}`} />
           </button>
         </div>
@@ -719,9 +743,9 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
         )}
       </div>
 
-      {/* Collapsible Advanced Locator Bar (Chapter, Exercise, Page, Question) */}
+      {/* Chapter and exercise locator: page number is optional and intentionally hidden. */}
       {showAdvancedLocator && (
-        <div className="bg-slate-950 border-b border-slate-800 p-3 grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs shrink-0 animate-in slide-in-from-top-2 duration-150">
+        <div className="bg-slate-950 border-b border-slate-800 p-3 grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs shrink-0 animate-in slide-in-from-top-2 duration-150">
           <div>
             <label className="text-[11px] font-medium text-slate-400 block mb-1">
               Chapter / Unit:
@@ -748,19 +772,7 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
           </div>
           <div>
             <label className="text-[11px] font-medium text-slate-400 block mb-1">
-              Printed Page Number:
-            </label>
-            <input
-              type="number"
-              placeholder="e.g. 120"
-              value={pageInput}
-              onChange={(e) => setPageInput(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white placeholder-slate-500 text-xs focus:ring-1 focus:ring-amber-400 focus:outline-none"
-            />
-          </div>
-          <div>
-            <label className="text-[11px] font-medium text-slate-400 block mb-1">
-              Question Number:
+              Question Number (optional):
             </label>
             <input
               type="text"
@@ -769,6 +781,20 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
               onChange={(e) => setQuestionInput(e.target.value)}
               className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white placeholder-slate-500 text-xs focus:ring-1 focus:ring-amber-400 focus:outline-none"
             />
+          </div>
+          <div className="sm:col-span-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1">
+            <p className="text-[11px] text-slate-400">
+              Page number is not required. The assistant will search the selected book using your chapter and exercise.
+            </p>
+            <button
+              type="button"
+              onClick={() => handleSendMessage()}
+              disabled={isLoading || (!userInput.trim() && !attachedImage && !chapterInput.trim() && !exerciseInput.trim() && !questionInput.trim())}
+              className="shrink-0 inline-flex items-center justify-center gap-2 rounded-lg bg-amber-500 hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed px-3 py-2 text-xs font-extrabold text-slate-950 transition cursor-pointer"
+            >
+              {isLoading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+              {isLoading ? 'Searching textbook…' : 'Find & Solve Exercise'}
+            </button>
           </div>
         </div>
       )}
