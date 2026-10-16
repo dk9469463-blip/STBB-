@@ -790,12 +790,15 @@ app.post('/api/ai/study-assist', async (req: Request, res: Response) => {
     let pageCount = 0;
 
     const greetingOnly = /^(hi|hello|hey|salam|assalam(?:u|o)? alaikum|اسلام علیکم|السلام علیکم)[!. ]*$/i.test((prompt || '').trim());
-    // When a specific PDF page image is supplied from the browser, use that image
-    // directly instead of launching a second PDF scan that can delay the answer.
+    const wantsWholeExercise =
+      /\b(?:whole|complete|entire)\s+(?:of\s+)?(?:the\s+)?exercise\b/i.test(prompt || '') ||
+      /\bsolve\s+(?:all|every)\s+(?:the\s+)?questions\b/i.test(prompt || '');
+    // A page image is enough for a single-page question, but whole-exercise
+    // requests still need nearby extracted pages so multi-page exercises work.
     if (
       resolved.book &&
       !greetingOnly &&
-      !(imageBase64 && bookContext?.pageNumber) &&
+      !(imageBase64 && bookContext?.pageNumber && !wantsWholeExercise) &&
       (prompt?.trim() || bookContext?.pageNumber || bookContext?.exercise || bookContext?.chapter)
     ) {
       const retrieved = await retrieveTextbookMaterial(resolved.book, bookContext, prompt || '');
