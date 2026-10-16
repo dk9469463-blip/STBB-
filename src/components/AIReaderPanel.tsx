@@ -73,6 +73,7 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
   // Persistent Messages for this book reader session
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
   // Load saved reader chat for this book from localStorage
   useEffect(() => {
@@ -83,13 +84,14 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
       const welcome: ChatMessage = {
         id: `reader-welcome-${book.id}`,
         role: 'assistant',
-        content: `I'm your AI Reader Tutor for ${book.title} (Class ${book.classNumber} ${book.subjectName}). You can highlight text on any page, click quick actions below, or ask questions directly in plain text.`,
+        content: `Hi! What would you like help with in ${book.title}? Choose an option below, or type your own question. If you highlight text in the book, I will focus on that selection. A full-page image is sent only when you manually choose Capture Page.`,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         language: 'english',
         followUps: [
-          `Explain key topics on Page ${currentPage}`,
-          'Solve exercise questions on this page',
-          'Create 3 practice questions',
+          'Solve the whole exercise',
+          'Solve a specific question',
+          'Learn a concept',
+          "Something else (I'll type)",
         ],
       };
       setMessages([welcome]);
@@ -97,12 +99,8 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
     }
   }, [book.id]);
 
-  // When selectedText is transferred from reader text selection, pre-fill editable inputQuery
-  useEffect(() => {
-    if (selectedText && selectedText.trim()) {
-      setInputQuery(`Explain this passage: "${selectedText.trim()}"`);
-    }
-  }, [selectedText]);
+  // Keep the user's question field empty. The highlighted passage is passed
+  // separately as context, so selecting text never auto-types a prompt for them.
 
   // Scroll to bottom on new message
   useEffect(() => {
@@ -216,10 +214,15 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
     const welcome: ChatMessage = {
       id: `reader-welcome-${Date.now()}`,
       role: 'assistant',
-      content: `Started fresh session for ${book.title} (Page ${currentPage}). Ask any question or click an action below.`,
+      content: `New chat for ${book.title}. What would you like to do? Choose an option below, or type your own question. Highlighted text stays separate from your message; the full page is captured only if you manually choose Capture Page.`,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       language,
-      followUps: [`Summarize Page ${currentPage}`, 'Explain main formulas on this page'],
+      followUps: [
+        'Solve the whole exercise',
+        'Solve a specific question',
+        'Learn a concept',
+        "Something else (I'll type)",
+      ],
     };
     setMessages([welcome]);
     saveStoredReaderMessages(book.id, [welcome]);
@@ -263,6 +266,41 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
     sendQuery(prompt);
   };
 
+  const handleFollowUpClick = (chip: string) => {
+    const choice = chip.trim().toLowerCase();
+
+    if (choice === 'solve the whole exercise') {
+      sendQuery(
+        'Please help me solve the complete exercise from this textbook. Use my highlighted text and the current reader context as clues to identify the exercise, then solve every question in order with clear steps. If you cannot identify which exercise it is, ask me for the exercise number. Do not ask me to type the whole page.'
+      );
+      return;
+    }
+
+    if (choice === 'solve a specific question') {
+      sendQuery(
+        'I want to solve one specific question from this textbook. First ask me which question number I mean (for example, Question 3 or Question 3(b)). Wait for my reply before solving, and do not guess the question.'
+      );
+      return;
+    }
+
+    if (choice === 'learn a concept') {
+      sendQuery(
+        selectedText.trim()
+          ? 'Teach me the concept in the highlighted textbook passage. Explain it in simple English, step by step, and give one clear example. Focus on the selected passage rather than the entire page.'
+          : 'I want to learn a concept from this textbook. First ask me which concept or topic I want to learn. Do not assume I want the whole page explained.'
+      );
+      return;
+    }
+
+    if (choice === "something else (i'll type)") {
+      inputRef.current?.focus();
+      return;
+    }
+
+    // Keep normal AI follow-up suggestions working as before.
+    sendQuery(chip);
+  };
+
   const handleCaptureCurrentPage = async () => {
     if (!onCapturePageImage) return;
     setIsCapturing(true);
@@ -283,33 +321,25 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
 
   const sendQuery = async (customPrompt?: string) => {
     const finalPrompt = (customPrompt || inputQuery).trim();
-    if (!finalPrompt && !capturedImage && !selectedText) return;
+    // An empty input must not silently submit the highlighted passage or capture
+    // the entire PDF page. The welcome choices guide the student first.
+    if (!finalPrompt) {
+      inputRef.current?.focus();
+      return;
+    }
 
     setIsGenerating(true);
     setErrorMsg(null);
     setSpeechError(null);
 
-    // The reader already knows the exact PDF page. Attach a snapshot automatically
-    // so scanned/image-only textbook pages can be read by Gemini Vision. Students
-    // should not need to press the camera button or re-upload a page manually.
-    let attachmentForRequest = capturedImage;
-    if (!attachmentForRequest && onCapturePageImage) {
-      try {
-        attachmentForRequest = (await onCapturePageImage()) || null;
-      } catch (captureError) {
-        // Keep solving with the selected text and page metadata if canvas capture
-        // is unavailable; a failed snapshot must never block the student's query.
-        console.warn(
-          'Automatic textbook page capture failed; continuing with text context:',
-          captureError instanceof Error ? captureError.message : 'unknown error'
-        );
-      }
-    }
+    // Only send an image after the student explicitly clicks Capture Page.
+    // Highlighted PDF text is sent separately through bookContext.selectedText.
+    const attachmentForRequest = capturedImage;
 
     const userMsg: ChatMessage = {
       id: `user-${Date.now()}`,
       role: 'user',
-      content: finalPrompt || (selectedText ? `Explain this textbook passage:\n"${selectedText}"` : `Explain Page ${currentPage}`),
+      content: finalPrompt,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       language,
       imageBase64: attachmentForRequest || undefined,
@@ -710,7 +740,7 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
                   {msg.followUps.map((chip, idx) => (
                     <button
                       key={idx}
-                      onClick={() => sendQuery(chip)}
+                      onClick={() => handleFollowUpClick(chip)}
                       className="px-2 py-0.5 rounded-full bg-slate-800 hover:bg-slate-700 text-amber-300 text-[10px] border border-slate-700 transition cursor-pointer"
                     >
                       {chip} →
@@ -765,6 +795,7 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
 
           {/* Editable text field */}
           <input
+            ref={inputRef}
             type="text"
             value={inputQuery}
             onChange={(e) => setInputQuery(e.target.value)}
@@ -782,7 +813,7 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
           {/* Send Button */}
           <button
             type="submit"
-            disabled={isGenerating || (!inputQuery.trim() && !selectedText && !capturedImage)}
+            disabled={isGenerating || !inputQuery.trim()}
             className="p-2 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white transition cursor-pointer shrink-0"
           >
             <Send className="w-4 h-4 text-amber-300" />
