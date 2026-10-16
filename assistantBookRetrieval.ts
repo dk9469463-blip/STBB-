@@ -482,13 +482,9 @@ export async function retrieveTextbookMaterial(
           })
         );
         const confirmedPages = nearbyPages.filter((page) => page.text);
-        const nextAnchorIndex = confirmedPages.findIndex((page) =>
-          page.pageNumber > locatedAnchor &&
-          (matchesChapter(page.text) || matchesExercise(page.text))
-        );
-        selectedPageNumbers = confirmedPages
-          .filter((page) => nextAnchorIndex < 0 || page.pageNumber < confirmedPages[nextAnchorIndex].pageNumber)
-          .map((page) => page.pageNumber);
+        // Keep the whole small neighborhood. Chapter titles may repeat in running
+        // page headers, so don't mistake a repeated heading for a new exercise.
+        selectedPageNumbers = confirmedPages.map((page) => page.pageNumber);
       } else if (
         Date.now() - scanStartedAt >= SCAN_BUDGET_MS &&
         explicitExercise
