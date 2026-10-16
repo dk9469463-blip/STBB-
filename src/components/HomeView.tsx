@@ -13,13 +13,11 @@ import {
   Calculator,
   MessageSquare,
   Clock3,
-  HardDriveDownload,
 } from 'lucide-react';
 import { CLASSES_LIST, getAllBooks } from '../data/stbbData';
 import { Book } from '../types';
 import { getMostRecentReadingProgress, getStoredReadingPage } from '../utils/readingProgress';
 import { getRecentlyViewedBookIds } from '../utils/recentlyViewed';
-import { getOfflineBooks } from '../utils/offlineBooks';
 
 interface HomeViewProps {
   onExploreClasses: () => void;
@@ -58,7 +56,6 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const [continueReadingBook, setContinueReadingBook] = React.useState<Book | null>(null);
   const [continueReadingPage, setContinueReadingPage] = React.useState(1);
   const [recentlyViewedBooks, setRecentlyViewedBooks] = React.useState<Book[]>([]);
-  const [offlineBooks, setOfflineBooks] = React.useState<Book[]>([]);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -77,16 +74,6 @@ export const HomeView: React.FC<HomeViewProps> = ({
         .filter((book): book is Book => Boolean(book))
         .slice(0, 4)
     );
-
-    getOfflineBooks()
-      .then((records) => {
-        if (cancelled) return;
-        const offlineIds = new Set(records.map((record) => record.bookId));
-        setOfflineBooks(allBooks.filter((book) => offlineIds.has(book.id)));
-      })
-      .catch(() => {
-        if (!cancelled) setOfflineBooks([]);
-      });
 
     return () => {
       cancelled = true;
@@ -228,39 +215,6 @@ export const HomeView: React.FC<HomeViewProps> = ({
                   </span>
                 </span>
                 <ArrowRight className="h-4 w-4 shrink-0 text-slate-400" />
-              </button>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {offlineBooks.length > 0 && (
-        <section className="space-y-4">
-          <div className="flex items-center gap-2">
-            <HardDriveDownload className="h-5 w-5 text-emerald-700" />
-            <div>
-              <h2 className="text-lg sm:text-xl font-black text-slate-900">Saved for Offline</h2>
-              <p className="text-xs text-slate-500">These textbook copies are stored in this browser on this device</p>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {offlineBooks.map((book) => (
-              <button
-                type="button"
-                key={book.id}
-                onClick={() => onContinueReading(book, getStoredReadingPage(book.id) ?? 1)}
-                className="flex min-w-0 items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-left transition hover:border-emerald-400 hover:shadow-sm"
-              >
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-800">
-                  <HardDriveDownload className="h-5 w-5" />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-bold text-slate-900">{book.title}</span>
-                  <span className="mt-0.5 block truncate text-xs text-slate-600">
-                    Class {book.classNumber} · {book.subjectName} · Ready offline
-                  </span>
-                </span>
-                <ArrowRight className="h-4 w-4 shrink-0 text-emerald-700" />
               </button>
             ))}
           </div>
