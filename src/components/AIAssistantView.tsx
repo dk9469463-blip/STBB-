@@ -52,6 +52,7 @@ import {
   resumeSpeech,
   stopSpeech,
 } from '../utils/speechHelper';
+import { formatStudyAnswer } from '../utils/formatStudyAnswer';
 
 interface AIAssistantViewProps {
   initialBook?: Book | null;
@@ -792,6 +793,7 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
       <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 scrollbar-thin">
         {messages.map((msg) => {
           const isAssistant = msg.role === 'assistant';
+          const displayContent = formatStudyAnswer(msg.content);
           const isSpeaking = speakingMessageId === msg.id;
 
           return (
@@ -840,7 +842,7 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
                   }`}
                   dir={msg.language === 'urdu' || msg.language === 'sindhi' ? 'rtl' : 'ltr'}
                 >
-                  {msg.content}
+                  {displayContent}
                 </div>
 
                 {/* Official textbook sources returned by the server-side catalogue lookup */}
@@ -878,7 +880,7 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
                   <div className="pt-2 border-t border-slate-700/60 flex items-center justify-between text-xs text-slate-400">
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => handleToggleSpeak(msg.id, msg.content, msg.language)}
+                        onClick={() => handleToggleSpeak(msg.id, displayContent, msg.language)}
                         className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition cursor-pointer ${
                           isSpeaking
                             ? 'bg-amber-400 text-slate-950 font-bold'
@@ -905,7 +907,7 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
                       )}
 
                       <button
-                        onClick={() => handleCopyText(msg.id, msg.content)}
+                        onClick={() => handleCopyText(msg.id, displayContent)}
                         className="flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-700/60 hover:bg-slate-700 text-slate-300 transition cursor-pointer"
                         title="Copy Answer"
                       >
