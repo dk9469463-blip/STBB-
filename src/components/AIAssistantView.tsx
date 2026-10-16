@@ -361,6 +361,7 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
     const locatorPrompt = [
       chapterInput.trim() ? 'Chapter / Unit: ' + chapterInput.trim() : '',
       exerciseInput.trim() ? 'Exercise: ' + exerciseInput.trim() : '',
+      pageInput.trim() ? 'PDF Page Number: ' + pageInput.trim() : '',
       questionInput.trim() ? 'Question: ' + questionInput.trim() : '',
     ].filter(Boolean).join('\n');
 
@@ -373,7 +374,9 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
         (questionInput.trim()
           ? 'Solve the specified question clearly, step by step.'
           : 'Solve all questions in this exercise in their original order.') +
-        ' Search the selected book by chapter and exercise; a page number was not provided. If the exact exercise cannot be verified, do not invent its questions—ask me to upload a page photo or paste the question text.'
+        (pageInput.trim()
+          ? ' Use the specified PDF page first and solve the visible questions on that page.'
+          : ' Search the selected book by chapter and exercise. Use the best matching extracted textbook pages, and do not invent any question that is not visible in the provided book text.')
       : '';
 
     const promptToSend = typedPrompt || generatedLocatorPrompt;
@@ -392,10 +395,9 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
       bookTitle: currentSelectedBook?.title,
       chapter: chapterInput.trim() || undefined,
       exercise: exerciseInput.trim() || undefined,
-      // Chapter/exercise lookup takes priority over any old page value inherited
-      // from a reader deep-link. A page number is never required for this action.
-      pageNumber: !chapterInput.trim() && !exerciseInput.trim() && pageInput
-        ? parseInt(pageInput, 10)
+      // A supplied PDF page number takes priority over chapter/exercise scanning.
+      pageNumber: pageInput.trim() && Number.isInteger(Number(pageInput)) && Number(pageInput) > 0
+        ? Number(pageInput)
         : undefined,
       questionNumber: questionInput.trim() || undefined,
     };
@@ -746,9 +748,9 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
         )}
       </div>
 
-      {/* Chapter and exercise locator: page number is optional and intentionally hidden. */}
+      {/* Chapter, exercise, PDF page and question locator. */}
       {showAdvancedLocator && (
-        <div className="bg-slate-950 border-b border-slate-800 p-3 grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs shrink-0 animate-in slide-in-from-top-2 duration-150">
+        <div className="bg-slate-950 border-b border-slate-800 p-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-xs shrink-0 animate-in slide-in-from-top-2 duration-150">
           <div>
             <label className="text-[11px] font-medium text-slate-400 block mb-1">
               Chapter / Unit:
@@ -775,8 +777,21 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
           </div>
           <div>
             <label className="text-[11px] font-medium text-slate-400 block mb-1">
-              Question Number (optional):
+              PDF Page Number (optional):
             </label>
+            <input
+              type="number"
+              min="1"
+              step="1"
+              placeholder="e.g. 142"
+              value={pageInput}
+              onChange={(e) => setPageInput(e.target.value)}
+              className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white placeholder-slate-500 text-xs focus:ring-1 focus:ring-amber-400 focus:outline-none"
+            />
+          </div>
+          <div>
+            <label className="text-[11px] font-medium text-slate-400 block mb-1">
+              Question Number (optional):
             <input
               type="text"
               placeholder="e.g. Q3 or All"
@@ -785,14 +800,14 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
               className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white placeholder-slate-500 text-xs focus:ring-1 focus:ring-amber-400 focus:outline-none"
             />
           </div>
-          <div className="sm:col-span-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1">
+          <div className="sm:col-span-2 lg:col-span-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1">
             <p className="text-[11px] text-slate-400">
-              Page number is not required. The assistant will search the selected book using your chapter and exercise.
+              Enter a PDF page number to go directly to that page, or leave it blank to search by chapter and exercise.
             </p>
             <button
               type="button"
               onClick={() => handleSendMessage()}
-              disabled={isLoading || (!userInput.trim() && !attachedImage && !chapterInput.trim() && !exerciseInput.trim() && !questionInput.trim())}
+              disabled={isLoading || (!userInput.trim() && !attachedImage && !chapterInput.trim() && !exerciseInput.trim() && !pageInput.trim() && !questionInput.trim())}
               className="shrink-0 inline-flex items-center justify-center gap-2 rounded-lg bg-amber-500 hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed px-3 py-2 text-xs font-extrabold text-slate-950 transition cursor-pointer"
             >
               {isLoading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
