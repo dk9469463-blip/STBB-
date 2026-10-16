@@ -79,9 +79,9 @@ function inferSubjectFromPrompt(prompt: string): string | undefined {
     { subject: 'Chemistry', pattern: /\b(?:chemistry|chem)\b/i },
     { subject: 'Mathematics', pattern: /\b(?:mathematics|maths|math)\b/i },
     { subject: 'Computer Science', pattern: /\b(?:computer science|computer|ics)\b/i },
-    { subject: 'English', pattern: /\benglish\b/i },
-    { subject: 'Urdu', pattern: /\burdu\b/i },
-    { subject: 'Sindhi', pattern: /\bsindhi\b/i },
+    { subject: 'English', pattern: /\benglish\s+(?:book|textbook|subject|chapter|exercise|grammar|reader)\b|\b(?:book|textbook|subject|chapter|exercise)\s+(?:of\s+)?english\b|\b(?:class\s*)?(?:1[0-2]|[1-9])\s+english\b/i },
+    { subject: 'Urdu', pattern: /\burdu\s+(?:book|textbook|subject|chapter|exercise)\b|\b(?:book|textbook|subject|chapter|exercise)\s+(?:of\s+)?urdu\b|\b(?:class\s*)?(?:1[0-2]|[1-9])\s+urdu\b/i },
+    { subject: 'Sindhi', pattern: /\bsindhi\s+(?:book|textbook|subject|chapter|exercise)\b|\b(?:book|textbook|subject|chapter|exercise)\s+(?:of\s+)?sindhi\b|\b(?:class\s*)?(?:1[0-2]|[1-9])\s+sindhi\b/i },
     { subject: 'Islamiat', pattern: /\b(?:islamiat|islamiyat|islamic studies)\b/i },
     { subject: 'Pakistan Studies', pattern: /\b(?:pakistan studies|pak studies)\b/i },
     { subject: 'General Science', pattern: /\bgeneral science\b/i },
@@ -99,10 +99,11 @@ function inferSubjectFromPrompt(prompt: string): string | undefined {
 }
 
 function inferMedium(prompt: string, context?: AssistantBookContext): string | undefined {
-  if (context?.medium) return normalizeAssistantText(context.medium);
+  // Explicit wording in the student's message overrides any older UI selection.
   if (/\b(?:sindhi|سنڌي)\s+medium\b/i.test(prompt)) return 'sindhi';
   if (/\b(?:urdu|اردو)\s+medium\b/i.test(prompt)) return 'urdu';
   if (/\benglish\s+medium\b/i.test(prompt)) return 'english';
+  if (context?.medium) return normalizeAssistantText(context.medium);
   return undefined;
 }
 
@@ -112,14 +113,14 @@ export function resolveAssistantBook(
 ): ResolvedAssistantBook {
   const normalizedPrompt = normalizeAssistantText(prompt);
   const promptClass = inferClassNumber(prompt);
-  const selectedClass = promptClass || (
-    context?.classNumber && context.classNumber >= 1 && context.classNumber <= 12
-      ? context.classNumber
-      : undefined
-  );
-  const selectedSubject = normalizeAssistantText(context?.subjectName) ||
-    normalizeAssistantText(inferSubjectFromPrompt(prompt));
-  const selectedMedium = inferMedium(prompt, context);
+  const contextClass = context?.classNumber && context.classNumber >= 1 && context.classNumber <= 12
+    ? context.classNumber
+    : undefined;
+  const selectedClass = promptClass || contextClass;
+  const promptOverridesContext = Boolean(promptClass && contextClass && promptClass !== contextClass);
+  const promptSubject = normalizeAssistantText(inferSubjectFromPrompt(prompt));
+  const selectedSubject = (promptOverridesContext ? '' : normalizeAssistantText(context?.subjectName)) || promptSubject;
+  const selectedMedium = inferMedium(prompt, promptOverridesContext ? undefined : context);
   const selectedTitle = normalizeAssistantText(context?.bookTitle);
 
   const byId = ALL_VERIFIED_BOOKS.find((book) => book.id === context?.bookId);
