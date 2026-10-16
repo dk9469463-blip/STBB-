@@ -104,8 +104,12 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
   const [downloadProgress, setDownloadProgress] = useState<DownloadProgress | null>(null);
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
 
-  // PDF.js document reference & DOM container
+  // PDF.js document reference & lifecycle guards.
+  // A loading task is cancelled whenever another book replaces the current one.
   const pdfDocRef = useRef<pdfjsLib.PDFDocumentProxy | null>(null);
+  const pdfLoadingTaskRef = useRef<ReturnType<typeof pdfjsLib.getDocument> | null>(null);
+  const loadRequestIdRef = useRef(0);
+  const pageJumpTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const isProgrammaticScrollRef = useRef<boolean>(false);
 
@@ -138,21 +142,68 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
     }
 
     return () => {
+      // Invalidate callbacks before cancelling so an old book cannot update the
+      // loading percentage, error state, or document shown for the next book.
+      loadRequestIdRef.current += 1;
+
+      if (pageJumpTimeoutRef.current !== null) {
+        clearTimeout(pageJumpTimeoutRef.current);
+        pageJumpTimeoutRef.current = null;
+      }
+
       document.body.style.overflow = 'auto';
-      if (pdfDocRef.current) {
-        (pdfDocRef.current as unknown as { destroy?: () => void }).destroy?.();
-        pdfDocRef.current = null;
+
+      const loadingTask = pdfLoadingTaskRef.current;
+      const currentDocument = pdfDocRef.current;
+      pdfLoadingTaskRef.current = null;
+      pdfDocRef.current = null;
+
+      if (loadingTask) {
+        void loadingTask.destroy().catch(() => {
+          // Cancellation during book switching is expected.
+        });
+      } else if (currentDocument) {
+        void currentDocument.destroy().catch(() => {
+          // The document may already have been closed by PDF.js.
+        });
       }
     };
   }, [book, initialPageNumber]);
 
-  // 2. Load PDF document using streaming byte-range endpoint
+  // 2. Load PDF document using streaming byte-range endpoint.
+  // Each request gets a generation ID; progress/errors from old books are ignored.
   const loadPdfDocument = async () => {
     if (!book) return;
+
+    const loadId = ++loadRequestIdRef.current;
+    const previousTask = pdfLoadingTaskRef.current;
+    const previousDocument = pdfDocRef.current;
+    pdfLoadingTaskRef.current = null;
+    pdfDocRef.current = null;
+
+    if (previousTask) {
+      void previousTask.destroy().catch(() => {
+        // Replacing a loading textbook is expected cancellation.
+      });
+    } else if (previousDocument) {
+      void previousDocument.destroy().catch(() => {
+        // Ignore repeated cleanup if PDF.js already closed the document.
+      });
+    }
+
+    if (pageJumpTimeoutRef.current !== null) {
+      clearTimeout(pageJumpTimeoutRef.current);
+      pageJumpTimeoutRef.current = null;
+    }
+
     setIsLoadingDoc(true);
     setDocError(null);
     setErrorDetails(null);
     setLoadingPercent(null);
+    setNumPages(0);
+    setPageAnnotations({});
+    setUndoHistory({});
+    setRedoHistory({});
 
     const streamUrl = book.driveFileId
       ? `/api/pdf/drive-stream?id=${encodeURIComponent(book.driveFileId)}`
@@ -160,31 +211,51 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
       ? `/api/pdf/stream?id=${encodeURIComponent(book.officialId)}`
       : `/api/pdf/stream?url=${encodeURIComponent(book.pdfUrl || '')}`;
 
+    let loadingTask: ReturnType<typeof pdfjsLib.getDocument> | null = null;
+
     try {
-      // Configure PDF.js for chunked range loading
-      const loadingTask = pdfjsLib.getDocument({
+      // A 256 KiB chunk avoids excessive range requests on slower connections.
+      loadingTask = pdfjsLib.getDocument({
         url: streamUrl,
         withCredentials: false,
         cMapUrl: '/cmaps/',
         cMapPacked: true,
-        disableAutoFetch: true, // Prevents loading all 200MB upfront
+        disableAutoFetch: true,
         disableStream: false,
-        rangeChunkSize: 65536,
+        rangeChunkSize: 256 * 1024,
       });
+      pdfLoadingTaskRef.current = loadingTask;
 
       loadingTask.onProgress = (progressData: { loaded: number; total: number }) => {
+        if (
+          loadId !== loadRequestIdRef.current ||
+          pdfLoadingTaskRef.current !== loadingTask ||
+          pdfDocRef.current
+        ) {
+          return;
+        }
+
         if (progressData.total > 0) {
-          const pct = Math.round((progressData.loaded / progressData.total) * 100);
+          const pct = Math.min(100, Math.round((progressData.loaded / progressData.total) * 100));
           setLoadingPercent(pct);
         }
       };
 
       const pdf = await loadingTask.promise;
+
+      // The reader may have been closed or switched while the request was pending.
+      if (loadId !== loadRequestIdRef.current || pdfLoadingTaskRef.current !== loadingTask) {
+        await loadingTask.destroy().catch(() => {
+          // Stale document cleanup is expected.
+        });
+        return;
+      }
+
       pdfDocRef.current = pdf;
       setNumPages(pdf.numPages);
       setIsLoadingDoc(false);
 
-      // Preload saved annotations for early pages
+      // Restore saved annotations only for the first pages; other pages load on demand.
       const initialMap: { [pageNum: number]: AnnotationStroke[] } = {};
       for (let p = 1; p <= Math.min(10, pdf.numPages); p++) {
         const saved = getStoredPageAnnotations(book.id, p);
@@ -195,15 +266,20 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
       setPageAnnotations(initialMap);
 
       if (initialPageNumber && initialPageNumber > 1) {
-        setTimeout(() => {
+        pageJumpTimeoutRef.current = setTimeout(() => {
+          if (loadId !== loadRequestIdRef.current) return;
           const clamped = Math.max(1, Math.min(initialPageNumber, pdf.numPages));
           const pageEl = document.getElementById(`pdf-page-${clamped}`);
           if (pageEl && scrollContainerRef.current) {
-            pageEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            pageEl.scrollIntoView({ behavior: 'auto', block: 'start' });
           }
-        }, 500);
+          pageJumpTimeoutRef.current = null;
+        }, 400);
       }
     } catch (err: unknown) {
+      // PDF.js rejects a pending promise when its loading task is cancelled.
+      if (loadId !== loadRequestIdRef.current) return;
+
       console.error('Failed to load PDF with PDF.js:', err);
       setIsLoadingDoc(false);
       const msg = err instanceof Error ? err.message : 'Unknown loading error';
@@ -221,6 +297,10 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
         setDocError(
           `Unable to open textbook PDF: ${msg}. You may retry or visit the official Sindh Textbook Board portal.`
         );
+      }
+
+      if (pdfLoadingTaskRef.current === loadingTask) {
+        pdfLoadingTaskRef.current = null;
       }
     }
   };
