@@ -766,6 +766,18 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
                   {displayContent}
                 </div>
 
+                {isAssistant && msg.isError && (
+                  <button
+                    type="button"
+                    onClick={() => handleRetryError(msg.id)}
+                    disabled={isGenerating}
+                    className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-rose-700 bg-rose-900/50 px-2.5 py-1.5 text-[11px] font-bold text-rose-100 hover:bg-rose-800/70 disabled:opacity-50"
+                  >
+                    <RefreshCw className="w-3 h-3" />
+                    Retry question
+                  </button>
+                )}
+
                 {/* Official textbook sources returned by the assistant */}
                 {isAssistant && !msg.isError && msg.sources && msg.sources.length > 0 && (
                   <div className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-900/60 p-2.5 space-y-1.5" dir="ltr">
