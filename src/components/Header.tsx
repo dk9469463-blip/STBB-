@@ -186,6 +186,18 @@ export const Header: React.FC<HeaderProps> = ({
               {preferences.darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </button>
 
+            {/* Quick Low Internet Mode toggle for slow or limited connections */}
+            <button
+              type="button"
+              onClick={() => setPreference('lowDataMode', !preferences.lowDataMode)}
+              className={`hidden sm:flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${preferences.lowDataMode ? 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30' : 'bg-slate-800 text-sky-300 hover:bg-slate-700'}`}
+              aria-label={preferences.lowDataMode ? 'Turn off Low Internet Mode' : 'Turn on Low Internet Mode'}
+              aria-pressed={preferences.lowDataMode}
+              title={preferences.lowDataMode ? 'Low Internet Mode is ON' : 'Turn on Low Internet Mode'}
+            >
+              <Gauge className="h-5 w-5" />
+            </button>
+
             {/* Display and connection settings */}
             <button
               onClick={() => setSettingsOpen((open) => !open)}
@@ -262,8 +274,8 @@ export const Header: React.FC<HeaderProps> = ({
                   <Gauge className="h-4 w-4" />
                 </span>
                 <span>
-                  <span className="block text-sm font-bold">Low data mode</span>
-                  <span className="mt-0.5 block text-xs text-slate-400">Skip covers and reduce PDF render quality</span>
+                  <span className="block text-sm font-bold">Low Internet Mode</span>
+                  <span className="mt-0.5 block text-xs text-slate-400">Skip covers, use smaller PDF chunks and lighter rendering</span>
                 </span>
               </span>
               <span className={`relative h-5 w-9 shrink-0 rounded-full transition ${preferences.lowDataMode ? 'bg-emerald-500' : 'bg-slate-600'}`}>
