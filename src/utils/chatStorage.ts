@@ -1,6 +1,9 @@
 export type AssistantLanguage = 'english' | 'urdu' | 'sindhi';
 
 export interface BookContext {
+  bookId?: string;
+  officialId?: string;
+  medium?: string;
   classNumber?: number;
   subjectName?: string;
   bookTitle?: string;
@@ -9,6 +12,12 @@ export interface BookContext {
   pageNumber?: number;
   questionNumber?: string;
   selectedText?: string;
+}
+
+export interface AssistantSource {
+  title: string;
+  url: string;
+  detail?: string;
 }
 
 export interface ChatMessage {
@@ -20,6 +29,7 @@ export interface ChatMessage {
   bookContext?: BookContext;
   imageBase64?: string;
   followUps?: string[];
+  sources?: AssistantSource[];
   isError?: boolean;
 }
 
