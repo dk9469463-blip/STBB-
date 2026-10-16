@@ -8,8 +8,16 @@ import {
   Info,
   Sparkles,
   Bot,
+  Settings2,
+  Moon,
+  Sun,
+  Wifi,
+  WifiOff,
+  Gauge,
 } from 'lucide-react';
 import { PWAInstallButton } from './PWAInstallButton';
+import { useAppPreferences } from '../utils/appPreferences';
+import { useOnlineStatus } from '../hooks/useOnlineStatus';
 
 export type NavTab = 'home' | 'classes' | 'search' | 'ai-assistant' | 'about';
 
@@ -25,6 +33,9 @@ export const Header: React.FC<HeaderProps> = ({
   selectedClassNumber,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const { preferences, setPreference } = useAppPreferences();
+  const isOnline = useOnlineStatus();
 
   const handleNav = (tab: NavTab) => {
     onSelectTab(tab);
@@ -33,7 +44,7 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <header className="sticky top-0 z-40 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 text-white shadow-lg">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20 gap-3">
           {/* LEFT: STBB BOOKS Brand Logo & Title */}
           <div
@@ -163,6 +174,17 @@ export const Header: React.FC<HeaderProps> = ({
               />
             </div>
 
+            {/* Display and connection settings */}
+            <button
+              onClick={() => setSettingsOpen((open) => !open)}
+              className="p-2 rounded-xl bg-slate-800 text-slate-200 hover:text-white hover:bg-slate-700 transition cursor-pointer"
+              aria-label="Display and network settings"
+              aria-expanded={settingsOpen}
+              title="Display and network settings"
+            >
+              <Settings2 className="w-5 h-5" />
+            </button>
+
             {/* Mobile Hamburger Menu Toggle */}
             <div className="lg:hidden flex items-center gap-1.5">
               <button
@@ -175,6 +197,81 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
         </div>
+
+        {/* Settings panel: preferences persist on this device. */}
+        {settingsOpen && (
+          <section
+            className="absolute right-3 top-[4.5rem] z-[60] w-[min(22rem,calc(100vw-1.5rem))] rounded-2xl border border-slate-700 bg-slate-950 p-4 text-white shadow-2xl"
+            aria-label="Display and network settings"
+          >
+            <div className="mb-3 flex items-center justify-between">
+              <div>
+                <h2 className="text-sm font-extrabold">Display & Network</h2>
+                <p className="mt-0.5 text-xs text-slate-400">Saved on this device</p>
+              </div>
+              <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-bold ${isOnline ? 'bg-emerald-950 text-emerald-300' : 'bg-amber-950 text-amber-300'}`}>
+                {isOnline ? <Wifi className="h-3 w-3" /> : <WifiOff className="h-3 w-3" />}
+                {isOnline ? 'Online' : 'Offline'}
+              </span>
+            </div>
+
+            <button
+              type="button"
+              role="switch"
+              aria-checked={preferences.darkMode}
+              onClick={() => setPreference('darkMode', !preferences.darkMode)}
+              className="flex w-full items-center justify-between gap-3 rounded-xl px-3 py-3 text-left transition hover:bg-slate-800"
+            >
+              <span className="flex items-center gap-3">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-500/15 text-indigo-300">
+                  {preferences.darkMode ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+                </span>
+                <span>
+                  <span className="block text-sm font-bold">Dark mode</span>
+                  <span className="mt-0.5 block text-xs text-slate-400">Change the whole library appearance</span>
+                </span>
+              </span>
+              <span className={`relative h-5 w-9 shrink-0 rounded-full transition ${preferences.darkMode ? 'bg-emerald-500' : 'bg-slate-600'}`}>
+                <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all ${preferences.darkMode ? 'left-[1.125rem]' : 'left-0.5'}`} />
+              </span>
+            </button>
+
+            <button
+              type="button"
+              role="switch"
+              aria-checked={preferences.lowDataMode}
+              onClick={() => setPreference('lowDataMode', !preferences.lowDataMode)}
+              className="flex w-full items-center justify-between gap-3 rounded-xl px-3 py-3 text-left transition hover:bg-slate-800"
+            >
+              <span className="flex items-center gap-3">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-sky-500/15 text-sky-300">
+                  <Gauge className="h-4 w-4" />
+                </span>
+                <span>
+                  <span className="block text-sm font-bold">Low data mode</span>
+                  <span className="mt-0.5 block text-xs text-slate-400">Skip covers and reduce PDF render quality</span>
+                </span>
+              </span>
+              <span className={`relative h-5 w-9 shrink-0 rounded-full transition ${preferences.lowDataMode ? 'bg-emerald-500' : 'bg-slate-600'}`}>
+                <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all ${preferences.lowDataMode ? 'left-[1.125rem]' : 'left-0.5'}`} />
+              </span>
+            </button>
+
+            <div className="mt-2 rounded-xl border border-slate-800 bg-slate-900/70 p-3 text-xs leading-relaxed text-slate-300">
+              <p className="font-bold text-slate-200">
+                {isOnline ? 'Connection status: online' : 'You are offline'}
+              </p>
+              <p className="mt-1">
+                {isOnline
+                  ? 'The app shell can be cached after install. Textbook PDFs normally need internet unless you have downloaded them to your device.'
+                  : 'Cached app pages may still work. Online PDF sources and AI assistance may not load without a connection.'}
+              </p>
+              <div className="mt-3 border-t border-slate-800 pt-3">
+                <PWAInstallButton compact />
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* Mobile Navigation Drawer */}
         {mobileMenuOpen && (
