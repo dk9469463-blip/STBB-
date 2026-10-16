@@ -83,6 +83,11 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
   const [selectedBookId, setSelectedBookId] = useState<string>(
     initialBook?.id || ''
   );
+  // General questions should be answered directly by the AI. Textbook retrieval
+  // is opt-in unless this assistant was opened from a specific book in the reader.
+  const [answerMode, setAnswerMode] = useState<'general' | 'textbook'>(
+    initialBook ? 'textbook' : 'general'
+  );
   const [chapterInput, setChapterInput] = useState<string>('');
   const [exerciseInput, setExerciseInput] = useState<string>('');
   const [pageInput, setPageInput] = useState<string>(
@@ -391,7 +396,7 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
     setFailedPrompt(null);
     setIsLoading(true);
 
-    const bookContext = {
+    const selectedBookContext = {
       bookId: currentSelectedBook?.id,
       officialId: currentSelectedBook?.officialId,
       medium: currentSelectedBook?.medium,
@@ -406,6 +411,7 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
         : undefined,
       questionNumber: questionInput.trim() || undefined,
     };
+    const bookContext = answerMode === 'textbook' ? selectedBookContext : undefined;
 
     const userMsg: ChatMessage = {
       id: `user-${Date.now()}`,
@@ -458,7 +464,7 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
     try {
       // A supplied page number lets the browser render the real textbook page
       // and send it as an image too, so scanned PDFs can still be read by Gemini.
-      if (!currentAttachment && bookContext.pageNumber && currentSelectedBook) {
+      if (!currentAttachment && bookContext?.pageNumber && currentSelectedBook) {
         try {
           currentAttachment = await captureBookPdfPage(currentSelectedBook, bookContext.pageNumber);
         } catch (captureError) {
@@ -477,7 +483,8 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
         body: JSON.stringify({
           prompt: promptToSend,
           language: selectedLanguage,
-          mode: exerciseInput ? 'solve-exercise' : 'general',
+          mode: answerMode === 'textbook' && exerciseInput ? 'solve-exercise' : 'general',
+          useTextbook: answerMode === 'textbook',
           bookContext,
           imageBase64: currentAttachment,
           history: previousHistory,
@@ -704,6 +711,34 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
       {/* Textbook Context Bar (Class, Subject, Exercise Locator) */}
       <div className="bg-slate-900/90 border-b border-slate-800 px-4 py-2.5 text-xs text-slate-300 flex flex-wrap items-center justify-between gap-2 shrink-0">
         <div className="flex flex-wrap items-center gap-2">
+          {/* Explicit intent switch: default is direct AI, textbook lookup is opt-in. */}
+          <div className="flex items-center gap-1 rounded-xl border border-slate-800 bg-slate-950 p-1">
+            <button
+              type="button"
+              onClick={() => setAnswerMode('general')}
+              className={`rounded-lg px-2.5 py-1.5 text-xs font-bold transition cursor-pointer ${
+                answerMode === 'general'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+              title="Answer a general question directly without searching textbooks"
+            >
+              Direct Answer
+            </button>
+            <button
+              type="button"
+              onClick={() => setAnswerMode('textbook')}
+              className={`rounded-lg px-2.5 py-1.5 text-xs font-bold transition cursor-pointer ${
+                answerMode === 'textbook'
+                  ? 'bg-amber-500 text-slate-950'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+              title="Search the selected STBB class/book before answering"
+            >
+              Search Textbook
+            </button>
+          </div>
+
           {/* Class Selector */}
           <div className="flex items-center gap-1.5 bg-slate-950 px-2.5 py-1.5 rounded-xl border border-slate-800">
             <GraduationCap className="w-3.5 h-3.5 text-blue-400" />
@@ -713,6 +748,7 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
                 const val = e.target.value ? parseInt(e.target.value, 10) : null;
                 setSelectedClass(val);
                 setSelectedBookId('');
+                setAnswerMode('textbook');
               }}
               className="bg-transparent text-white font-bold text-xs focus:outline-none cursor-pointer"
             >
@@ -729,7 +765,10 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
             <BookOpen className="w-3.5 h-3.5 text-amber-400 shrink-0" />
             <select
               value={selectedBookId}
-              onChange={(e) => setSelectedBookId(e.target.value)}
+              onChange={(e) => {
+                setSelectedBookId(e.target.value);
+                setAnswerMode('textbook');
+              }}
               className="bg-transparent text-white font-bold text-xs focus:outline-none cursor-pointer truncate w-full"
             >
               <option value="" className="bg-slate-900 text-slate-400">
@@ -745,7 +784,11 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
 
           {/* Quick toggle for detailed exercise fields */}
           <button
-            onClick={() => setShowAdvancedLocator(!showAdvancedLocator)}
+            onClick={() => {
+              const nextOpen = !showAdvancedLocator;
+              setShowAdvancedLocator(nextOpen);
+              if (nextOpen) setAnswerMode('textbook');
+            }}
             className={`px-2.5 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1 transition cursor-pointer ${
               showAdvancedLocator || exerciseInput || chapterInput
                 ? 'bg-amber-500/15 border-amber-500/40 text-amber-300'
@@ -767,6 +810,13 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         )}
+        <div className="w-full px-1 pt-1 text-[11px] text-slate-400">
+          {answerMode === 'general'
+            ? 'Direct Answer: general questions are answered directly; the selected class/book will not restrict the answer.'
+            : currentSelectedBook
+              ? 'Search Textbook: answers will be grounded in ' + currentSelectedBook.title + '.'
+              : 'Search Textbook: the AI will look for a relevant book in the selected class based on your question.'}
+        </div>
       </div>
 
       {/* Chapter, exercise, PDF page and question locator. */}
