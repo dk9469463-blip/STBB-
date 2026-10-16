@@ -104,8 +104,11 @@ export const PDFPageItem: React.FC<PDFPageItemProps> = ({
     };
   }, []);
 
-  // 2. Fetch page dimension upfront so placeholder height is exact
+  // 2. Fetch exact dimensions only for nearby pages.
+  // Requesting dimensions for every page at once delayed the first visible page.
   useEffect(() => {
+    if (!isInViewport) return;
+
     let isCancelled = false;
     pdfDoc
       .getPage(pageNumber)
@@ -115,13 +118,13 @@ export const PDFPageItem: React.FC<PDFPageItemProps> = ({
         setPageDimensions({ width: viewport.width, height: viewport.height });
       })
       .catch(() => {
-        // Fallback default
+        // A page may be cancelled if the book closes while loading.
       });
 
     return () => {
       isCancelled = true;
     };
-  }, [pdfDoc, pageNumber, scale, rotation]);
+  }, [pdfDoc, pageNumber, scale, rotation, isInViewport]);
 
   // 3. Render PDF Page onto HTML5 Canvas & Extract Text Content
   const renderPdfCanvas = useCallback(async () => {
