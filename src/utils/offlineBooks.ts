@@ -24,6 +24,7 @@ const BOOKS_STORE = 'books';
 const MAX_OFFLINE_BOOK_BYTES = 150 * 1024 * 1024;
 
 let databasePromise: Promise<IDBDatabase> | null = null;
+let savedBookIdsPromise: Promise<Set<string>> | null = null;
 
 function openDatabase(): Promise<IDBDatabase> {
   if (typeof indexedDB === 'undefined') {
@@ -185,6 +186,7 @@ export async function saveBookForOffline(
   };
 
   await runTransaction('readwrite', (store) => store.put(record));
+  savedBookIdsPromise = null;
 }
 
 export async function getOfflineBookBlob(bookId: string): Promise<Blob | null> {
@@ -198,10 +200,15 @@ export async function getOfflineBooks(): Promise<OfflineBookRecord[]> {
 }
 
 export async function isBookSavedOffline(bookId: string): Promise<boolean> {
-  const record = await runTransaction<OfflineBookRecord | undefined>('readonly', (store) => store.get(bookId));
-  return Boolean(record?.blob instanceof Blob);
+  if (!savedBookIdsPromise) {
+    savedBookIdsPromise = getOfflineBooks().then(
+      (records) => new Set(records.map((record) => record.bookId))
+    );
+  }
+  return (await savedBookIdsPromise).has(bookId);
 }
 
 export async function removeOfflineBook(bookId: string): Promise<void> {
   await runTransaction<undefined>('readwrite', (store) => store.delete(bookId));
+  savedBookIdsPromise = null;
 }
