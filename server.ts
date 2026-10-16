@@ -776,6 +776,12 @@ app.post('/api/ai/study-assist', async (req: Request, res: Response) => {
       if (bookContext?.selectedText) contextDetails.push('Text selected in the reader: "' + bookContext.selectedText + '"');
     }
 
+    // Selected passages are user-supplied context, not a request to scan the book.
+    // Preserve them in Direct Answer mode without activating textbook retrieval.
+    if (!shouldUseTextbook && bookContext?.selectedText?.trim()) {
+      contextDetails.push('Highlighted passage supplied by the student for direct explanation: "' + bookContext.selectedText.trim() + '"');
+    }
+
     const resolved = shouldUseTextbook
       ? resolveAssistantBook(bookContext, prompt || '')
       : { book: null, candidates: [] };
@@ -834,7 +840,7 @@ app.post('/api/ai/study-assist', async (req: Request, res: Response) => {
     }
 
     const contextHeader = contextDetails.length
-      ? '\n[Student textbook context]\n' + contextDetails.join('\n') + '\n'
+      ? '\n[Student context]\n' + contextDetails.join('\n') + '\n'
       : '';
 
     const systemInstruction = [
