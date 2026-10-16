@@ -25,7 +25,7 @@ export async function downloadBookDirectly(
 ): Promise<boolean> {
   const filename = generateSafePdfFilename(book);
 
-  if (!book.officialId && !book.pdfUrl) {
+  if (!book.officialId && !book.pdfUrl && !book.driveFileId) {
     onProgress?.({
       bookId: book.id,
       loaded: 0,
