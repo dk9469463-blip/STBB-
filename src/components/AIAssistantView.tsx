@@ -368,7 +368,7 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
       ? 'Please find and solve the selected textbook exercise using the official book content.\n' +
         (currentSelectedBook
           ? 'Book: ' + currentSelectedBook.title + ' (Class ' + currentSelectedBook.classNumber + ', ' + currentSelectedBook.subjectName + ', ' + currentSelectedBook.medium + ' medium).\n'
-          : 'Class: ' + (selectedClass || 'not selected') + '. Subject/book: ' + (currentSelectedBook?.subjectName || 'identify from the selected class and clues') + '.\n') +
+          : 'Class: ' + (selectedClass || 'not selected') + '. Subject/book: identify from the selected class and clues.\n') +
         locatorPrompt + '\n' +
         (questionInput.trim()
           ? 'Solve the specified question clearly, step by step.'
