@@ -371,12 +371,8 @@ export const Header: React.FC<HeaderProps> = ({
             <div className="pt-2 px-3 border-t border-slate-800/80 flex items-center justify-between">
               <PWAInstallButton />
               <div className="flex items-center gap-2">
-                <img
-                  src="/government-sindh-logo.svg"
-                  alt="Sindh Logo"
-                  className="w-7 h-7 object-contain"
-                />
-                <span className="text-[10px] text-slate-400">Official Curriculum Standards</span>
+                <BookOpen className="w-5 h-5 text-amber-300" aria-label="Sindh Textbook Library" />
+                <span className="text-[10px] text-slate-400">Sindh Textbook Library</span>
               </div>
             </div>
           </div>
