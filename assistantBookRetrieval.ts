@@ -286,10 +286,14 @@ function getSafeBookPdfUrls(book: Book): string[] {
   if (book.pdfUrl) {
     try {
       const parsed = new URL(book.pdfUrl);
-      if (
+      const isAllowed =
         OFFICIAL_HOSTS.has(parsed.hostname.toLowerCase()) &&
-        (parsed.protocol === 'https:' || parsed.protocol === 'http:')
-      ) {
+        (parsed.protocol === 'https:' || parsed.protocol === 'http:');
+      const sameAsOfficialId =
+        Boolean(book.officialId) &&
+        parsed.pathname.endsWith('/pdf_proxy.php') &&
+        parsed.searchParams.get('id') === String(book.officialId);
+      if (isAllowed && !sameAsOfficialId) {
         urls.push(book.pdfUrl.replace('https://ebooks.stbb.edu.pk/', 'https://portal.stbb.edu.pk/ebooks/'));
       }
     } catch {
