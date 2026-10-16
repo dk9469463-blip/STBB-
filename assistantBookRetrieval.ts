@@ -379,6 +379,8 @@ export async function retrieveTextbookMaterial(
       // Searching every PDF page sequentially can exceed the web preview's request
       // timeout. Read small batches concurrently and stop as soon as the requested
       // chapter/exercise heading is found.
+      // Search textbook pages in parallel batches. The old sequential 260-page
+      // scan could exceed the Codespaces/proxy request timeout before answering.
       const scanLimit = Math.min(pageCount, 260);
       const SCAN_BUDGET_MS = 18000;
       const SCAN_BATCH_SIZE = 10;
@@ -387,60 +389,18 @@ export async function retrieveTextbookMaterial(
       const explicitChapter = normalizeAssistantText(lookupContext.chapter);
       const explicitExercise = normalizeAssistantText(lookupContext.exercise);
       const exerciseNumber = explicitExercise.match(/\d+(?:\.\d+)?/)?.[0];
-      const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\    } else {
-      const scanLimit = Math.min(pageCount, 260);
-      const scoredPages: Array<{ pageNumber: number; text: string; score: number }> = [];
-      for (let pageNumber = 1; pageNumber <= scanLimit; pageNumber += 1) {
-        const text = await getAssistantPageText(pdfDocument, book, pageNumber);
-        if (!text) continue;
-        const score = scoreAssistantPage(text, prompt, lookupContext);
-        if (score > 0) scoredPages.push({ pageNumber, text, score });
-      }
-
-      const explicitExercise = normalizeAssistantText(lookupContext.exercise);
-      if (explicitExercise) {
-        const anchors = scoredPages
-          .filter((page) => /exercise|review\s+exercise/.test(normalizeAssistantText(page.text)))
-          .sort((a, b) => b.score - a.score)
-          .slice(0, 2);
-
-        const pageNumbers = new Set<number>();
-        for (const anchor of anchors) {
-          // Exercise headings commonly appear only on the first page.
-          for (let pageNumber = anchor.pageNumber; pageNumber <= Math.min(scanLimit, anchor.pageNumber + 5); pageNumber += 1) {
-            const text = await getAssistantPageText(pdfDocument, book, pageNumber);
-            if (pageNumber > anchor.pageNumber && /(?:review\s+exercise|exercise\s+\d+(?:\.\d+)?|chapter\s+\d+)/i.test(text)) break;
-            if (text) pageNumbers.add(pageNumber);
-          }
-        }
-        selectedPageNumbers = [...pageNumbers].sort((a, b) => a - b);
-      }
-
-      if (!selectedPageNumbers.length && scoredPages.length) {
-        const top = scoredPages.sort((a, b) => b.score - a.score).slice(0, 6);
-        const pageNumbers = new Set<number>();
-        for (const page of top) {
-          pageNumbers.add(page.pageNumber);
-          if (page.pageNumber > 1) pageNumbers.add(page.pageNumber - 1);
-          if (page.pageNumber < scanLimit) pageNumbers.add(page.pageNumber + 1);
-        }
-        selectedPageNumbers = [...pageNumbers].sort((a, b) => a - b).slice(0, 12);
-      }
-    }');
+      const chapterLabel = explicitChapter.replace(/^(?:chapter|unit|lesson)\s*/, '').trim();
+      const numericChapter = /^\d+(?:\.\d+)?$/.test(chapterLabel) ? chapterLabel : '';
 
       const matchesChapter = (text: string): boolean => {
         if (!explicitChapter) return false;
         const normalized = normalizeAssistantText(text);
-        const numericChapter = explicitChapter.match(/^(?:(?:chapter|unit|lesson)\s*)?(\d+(?:\.\d+)?)$/)?.[1];
         if (numericChapter) {
-          const numberPattern = new RegExp(
-            '\\b(?:chapter|unit|lesson)\\s*(?:no\\.?\\s*)?' + escapeRegExp(numericChapter) + '\\b',
-            'i'
-          );
-          return numberPattern.test(normalized);
+          return normalized.includes('chapter ' + numericChapter) ||
+            normalized.includes('unit ' + numericChapter) ||
+            normalized.includes('lesson ' + numericChapter);
         }
-        const chapterTitle = explicitChapter.replace(/^(?:chapter|unit|lesson)\s+/, '').trim();
-        return chapterTitle.length >= 3 && normalized.includes(chapterTitle);
+        return chapterLabel.length >= 3 && normalized.includes(chapterLabel);
       };
 
       const matchesExercise = (text: string): boolean => {
@@ -450,11 +410,9 @@ export async function retrieveTextbookMaterial(
           return /review\s+exercise/.test(normalized);
         }
         if (exerciseNumber) {
-          const numberPattern = new RegExp('\\b' + escapeRegExp(exerciseNumber) + '\\b');
-          return /\bexercise\b/.test(normalized) && numberPattern.test(normalized);
+          return /\bexercise\b/.test(normalized) && normalized.includes(exerciseNumber);
         }
-        return normalized.includes(explicitExercise) &&
-          /\bexercise\b/.test(normalized);
+        return normalized.includes(explicitExercise) && /\bexercise\b/.test(normalized);
       };
 
       let lastChapterMarkerPage = 0;
@@ -488,7 +446,7 @@ export async function retrieveTextbookMaterial(
               locatedAnchor = page.pageNumber;
               break;
             }
-        }
+          }
 
           if (matchesExercise(page.text)) {
             const chapterIsNearby = !explicitChapter ||
@@ -506,30 +464,41 @@ export async function retrieveTextbookMaterial(
       }
 
       if (locatedAnchor) {
-        // Include the previous page (which may contain the exercise heading)
-        // and a few following pages where the remaining exercise questions continue.
-        const pageNumbers = new Set<number>();
-        for (let pageNumber = Math.max(1, locatedAnchor - 1);
-          pageNumber <= Math.min(scanLimit, locatedAnchor + 5);
-          pageNumber += 1) {
-          const text = await getAssistantPageText(pdfDocument, book, pageNumber);
-          if (pageNumber > locatedAnchor && /(?:review\s+exercise|exercise\s+\d+(?:\.\d+)?|chapter\s+\d+)/i.test(text)) {
-            const normalizedNext = normalizeAssistantText(text);
-            if (matchesExercise(text) || matchesChapter(text) ||
-              /(?:review\s+exercise|exercise\s+\d+(?:\.\d+)?|chapter\s+\d+)/i.test(normalizedNext)) {
-              break;
+        // Fetch a small neighborhood around the exercise heading; this also
+        // captures questions that continue onto the next page.
+        const firstPage = Math.max(1, locatedAnchor - 1);
+        const lastPage = Math.min(scanLimit, locatedAnchor + 5);
+        const pageNumbers = Array.from(
+          { length: lastPage - firstPage + 1 },
+          (_unused, index) => firstPage + index
+        );
+        const nearbyPages = await Promise.all(
+          pageNumbers.map(async (pageNumber) => {
+            try {
+              return { pageNumber, text: await getAssistantPageText(pdfDocument, book, pageNumber) };
+            } catch {
+              return { pageNumber, text: '' };
             }
-          }
-          if (text) pageNumbers.add(pageNumber);
-        }
-        selectedPageNumbers = [...pageNumbers].sort((a, b) => a - b);
-      } else if (Date.now() - scanStartedAt >= SCAN_BUDGET_MS && explicitExercise) {
-        // Return quickly rather than making the student wait until the proxy times out.
-        // Do not feed unrelated pages to the model as if they were the requested exercise.
+          })
+        );
+        const confirmedPages = nearbyPages.filter((page) => page.text);
+        const nextAnchorIndex = confirmedPages.findIndex((page) =>
+          page.pageNumber > locatedAnchor &&
+          (matchesChapter(page.text) || matchesExercise(page.text))
+        );
+        selectedPageNumbers = confirmedPages
+          .filter((page) => nextAnchorIndex < 0 || page.pageNumber < confirmedPages[nextAnchorIndex].pageNumber)
+          .map((page) => page.pageNumber);
+      } else if (
+        Date.now() - scanStartedAt >= SCAN_BUDGET_MS &&
+        explicitExercise
+      ) {
+        // Do not keep scanning until the browser returns a 504; be honest that
+        // the exact exercise needs a photo/text if no reliable match was found.
         return {
           pages: [],
           pageCount,
-          error: 'The book search reached its time limit before finding this exact chapter and exercise. Try sending the chapter title and exercise number together, or upload a photo of the first exercise page.',
+          error: 'The textbook search reached its time limit before locating this exact chapter and exercise. Upload a clear photo of the exercise page or paste the questions, and I can solve them without guessing.',
         };
       }
 
