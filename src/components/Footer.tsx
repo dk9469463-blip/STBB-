@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, Layers, ExternalLink, ShieldCheck, Sparkles } from 'lucide-react';
+import { BookOpen, Layers, ExternalLink, Sparkles } from 'lucide-react';
 import { NavTab } from './Header';
 
 interface FooterProps {
@@ -26,7 +26,7 @@ export const Footer: React.FC<FooterProps> = ({ onSelectTab, onSelectClass }) =>
               Every Class, Every Book, One Library.
             </p>
             <p className="text-xs text-slate-400 leading-relaxed">
-              Official digital textbook library providing access to Sindh Textbook Board (Jamshoro) curriculum for students and educators across Sindh, Pakistan.
+              An independent educational reading portal that helps students and teachers find Sindh Textbook Board textbooks in one place.
             </p>
           </div>
 
@@ -121,17 +121,15 @@ export const Footer: React.FC<FooterProps> = ({ onSelectTab, onSelectClass }) =>
             </ul>
           </div>
 
-          {/* Official Sindh Education Details */}
+          {/* Textbook source details - no unofficial government seal */}
           <div className="space-y-3">
             <h4 className="text-xs font-bold uppercase tracking-wider text-white">
               Curriculum Source
             </h4>
             <div className="flex items-center gap-2">
-              <img
-                src="/government-sindh-logo.svg"
-                alt="Government of Sindh"
-                className="w-10 h-10 object-contain rounded-full bg-white/5 p-1"
-              />
+              <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-blue-900 text-amber-300 border border-amber-400/20">
+                <BookOpen className="w-5 h-5" />
+              </div>
               <div className="text-xs">
                 <p className="font-bold text-white">Sindh Textbook Board</p>
                 <p className="text-[11px] text-emerald-400">Jamshoro, Sindh, Pakistan</p>
@@ -152,14 +150,14 @@ export const Footer: React.FC<FooterProps> = ({ onSelectTab, onSelectClass }) =>
           </div>
         </div>
 
-        {/* Bottom Disclaimer & Copyright Bar */}
+        {/* Copyright and developer credits */}
         <div className="pt-8 border-t border-slate-900 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-          <p>
-            © {new Date().getFullYear()} STBB BOOKS. Non-commercial educational platform for students across Sindh.
+          <p className="text-center sm:text-left">
+            © {new Date().getFullYear()} STBB BOOKS. Independent educational project.
           </p>
-          <div className="flex items-center gap-2 text-slate-400">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
-            <span>Verified STBB Jamshoro Curriculum Standards</span>
+          <div className="text-center sm:text-right">
+            <p className="font-extrabold tracking-wide text-amber-300">Developed by D&amp;A Brothers</p>
+            <p className="mt-1 text-slate-400">Dileep Kumar &amp; Ajeet Kumar</p>
           </div>
         </div>
       </div>
