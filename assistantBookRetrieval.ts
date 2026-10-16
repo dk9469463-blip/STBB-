@@ -1,0 +1,402 @@
+import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
+import { ALL_VERIFIED_BOOKS } from './src/data/stbbData';
+import type { Book } from './src/types';
+
+export interface AssistantBookContext {
+  bookId?: string;
+  officialId?: string;
+  classNumber?: number;
+  subjectName?: string;
+  bookTitle?: string;
+  medium?: string;
+  chapter?: string;
+  exercise?: string;
+  pageNumber?: number;
+  questionNumber?: string;
+  selectedText?: string;
+}
+
+export interface AssistantSource {
+  title: string;
+  url: string;
+  detail?: string;
+}
+
+export interface ResolvedAssistantBook {
+  book: Book | null;
+  candidates: Book[];
+}
+
+export interface RetrievedTextbookMaterial {
+  pages: Array<{ pageNumber: number; text: string }>;
+  pageCount: number;
+  error?: string;
+}
+
+interface CachedBookText {
+  pageCount: number;
+  pages: Map<number, string>;
+  touchedAt: number;
+}
+
+const assistantBookTextCache = new Map<string, CachedBookText>();
+const MAX_ASSISTANT_BOOK_CACHES = 4;
+const MAX_CACHED_PAGES_PER_BOOK = 280;
+const OFFICIAL_HOSTS = new Set(['portal.stbb.edu.pk', 'ebooks.stbb.edu.pk']);
+
+export function normalizeAssistantText(value: unknown): string {
+  return typeof value === 'string'
+    ? value.toLowerCase().normalize('NFKC').replace(/[^\p{L}\p{N}\s.-]/gu, ' ').replace(/\s+/g, ' ').trim()
+    : '';
+}
+
+function inferClassNumber(prompt: string): number | undefined {
+  const patterns = [
+    /\b(?:class|grade|standard|std\.?)\s*(1[0-2]|[1-9])\b/i,
+    /\b(1[0-2]|[1-9])(?:st|nd|rd|th)\s*(?:class|grade|standard)\b/i,
+    /\bclass\s+(?:i{1,3}|iv|v|vi{0,3}|ix|x|xi|xii)\b/i,
+  ];
+
+  for (const pattern of patterns) {
+    const match = prompt.match(pattern);
+    if (!match) continue;
+    if (match[1]) return Number(match[1]);
+
+    const roman = match[0].toLowerCase().replace(/^(?:class|grade|standard)\s+/i, '').trim();
+    const romanMap: Record<string, number> = {
+      i: 1, ii: 2, iii: 3, iv: 4, v: 5, vi: 6, vii: 7, viii: 8, ix: 9, x: 10, xi: 11, xii: 12,
+    };
+    if (romanMap[roman]) return romanMap[roman];
+  }
+  return undefined;
+}
+
+function inferSubjectFromPrompt(prompt: string): string | undefined {
+  const normalized = normalizeAssistantText(prompt);
+  const aliases: Array<{ subject: string; pattern: RegExp }> = [
+    { subject: 'Biology', pattern: /\b(?:biology|bio)\b/i },
+    { subject: 'Physics', pattern: /\bphysics\b/i },
+    { subject: 'Chemistry', pattern: /\b(?:chemistry|chem)\b/i },
+    { subject: 'Mathematics', pattern: /\b(?:mathematics|maths|math)\b/i },
+    { subject: 'Computer Science', pattern: /\b(?:computer science|computer|ics)\b/i },
+    { subject: 'English', pattern: /\benglish\b/i },
+    { subject: 'Urdu', pattern: /\burdu\b/i },
+    { subject: 'Sindhi', pattern: /\bsindhi\b/i },
+    { subject: 'Islamiat', pattern: /\b(?:islamiat|islamiyat|islamic studies)\b/i },
+    { subject: 'Pakistan Studies', pattern: /\b(?:pakistan studies|pak studies)\b/i },
+    { subject: 'General Science', pattern: /\bgeneral science\b/i },
+    { subject: 'Social Studies', pattern: /\bsocial studies\b/i },
+    { subject: 'General Mathematics', pattern: /\bgeneral maths|general math|general mathematics\b/i },
+  ];
+
+  for (const entry of aliases) {
+    if (entry.pattern.test(normalized)) return entry.subject;
+  }
+
+  const catalogueSubjects = [...new Set(ALL_VERIFIED_BOOKS.map((book) => book.subjectName))]
+    .sort((a, b) => b.length - a.length);
+  return catalogueSubjects.find((subject) => normalized.includes(normalizeAssistantText(subject)));
+}
+
+function inferMedium(prompt: string, context?: AssistantBookContext): string | undefined {
+  if (context?.medium) return normalizeAssistantText(context.medium);
+  if (/\b(?:sindhi|سنڌي)\s+medium\b/i.test(prompt)) return 'sindhi';
+  if (/\b(?:urdu|اردو)\s+medium\b/i.test(prompt)) return 'urdu';
+  if (/\benglish\s+medium\b/i.test(prompt)) return 'english';
+  return undefined;
+}
+
+export function resolveAssistantBook(
+  context: AssistantBookContext | undefined,
+  prompt: string
+): ResolvedAssistantBook {
+  const normalizedPrompt = normalizeAssistantText(prompt);
+  const promptClass = inferClassNumber(prompt);
+  const selectedClass = promptClass || (
+    context?.classNumber && context.classNumber >= 1 && context.classNumber <= 12
+      ? context.classNumber
+      : undefined
+  );
+  const selectedSubject = normalizeAssistantText(context?.subjectName) ||
+    normalizeAssistantText(inferSubjectFromPrompt(prompt));
+  const selectedMedium = inferMedium(prompt, context);
+  const selectedTitle = normalizeAssistantText(context?.bookTitle);
+
+  const byId = ALL_VERIFIED_BOOKS.find((book) => book.id === context?.bookId);
+  const byOfficialId = context?.officialId
+    ? ALL_VERIFIED_BOOKS.find((book) => book.officialId === String(context.officialId))
+    : undefined;
+  const direct = byId || byOfficialId;
+
+  // An explicitly chosen book is strongest context unless the message clearly
+  // names a different class.
+  if (direct && (!promptClass || direct.classNumber === promptClass)) {
+    return { book: direct, candidates: [direct] };
+  }
+
+  if (selectedTitle) {
+    const exactTitle = ALL_VERIFIED_BOOKS.find((book) =>
+      normalizeAssistantText(book.title) === selectedTitle &&
+      (!selectedClass || book.classNumber === selectedClass) &&
+      (!selectedSubject || normalizeAssistantText(book.subjectName) === selectedSubject)
+    );
+    if (exactTitle) return { book: exactTitle, candidates: [exactTitle] };
+  }
+
+  let candidates = ALL_VERIFIED_BOOKS.filter((book) =>
+    (!selectedClass || book.classNumber === selectedClass) &&
+    (!selectedSubject || normalizeAssistantText(book.subjectName) === selectedSubject) &&
+    (!selectedMedium || normalizeAssistantText(book.medium) === selectedMedium)
+  );
+
+  if (!candidates.length && selectedMedium) {
+    candidates = ALL_VERIFIED_BOOKS.filter((book) =>
+      (!selectedClass || book.classNumber === selectedClass) &&
+      (!selectedSubject || normalizeAssistantText(book.subjectName) === selectedSubject)
+    );
+  }
+
+  if (candidates.length > 1) {
+    const ranked = candidates.map((book) => {
+      const title = normalizeAssistantText(book.title);
+      const words = title.split(' ').filter((word) =>
+        word.length > 2 && !['book', 'class', 'textbook'].includes(word)
+      );
+      const overlap = words.filter((word) => normalizedPrompt.includes(word)).length;
+      const titleScore = selectedTitle && (title.includes(selectedTitle) || selectedTitle.includes(title))
+        ? 20
+        : overlap;
+      return { book, score: titleScore };
+    }).sort((a, b) => b.score - a.score);
+
+    if (ranked[0]?.score > 0 && ranked[0].score > (ranked[1]?.score ?? -1)) {
+      return { book: ranked[0].book, candidates: [ranked[0].book] };
+    }
+  }
+
+  if (candidates.length === 1) return { book: candidates[0], candidates };
+  return { book: null, candidates: candidates.slice(0, 8) };
+}
+
+function getSafeBookPdfUrl(book: Book): string | null {
+  if (book.officialId && /^\d+$/.test(book.officialId)) {
+    return 'https://portal.stbb.edu.pk/ebooks/pdf_proxy.php?id=' +
+      encodeURIComponent(book.officialId) + '&download=1';
+  }
+
+  if (book.pdfUrl) {
+    try {
+      const parsed = new URL(book.pdfUrl);
+      if (!OFFICIAL_HOSTS.has(parsed.hostname.toLowerCase()) ||
+          (parsed.protocol !== 'https:' && parsed.protocol !== 'http:')) {
+        return null;
+      }
+      return book.pdfUrl.replace('https://ebooks.stbb.edu.pk/', 'https://portal.stbb.edu.pk/ebooks/');
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
+function getAssistantBookCache(bookId: string): CachedBookText {
+  let cache = assistantBookTextCache.get(bookId);
+  if (!cache) {
+    cache = { pageCount: 0, pages: new Map<number, string>(), touchedAt: Date.now() };
+    assistantBookTextCache.set(bookId, cache);
+  }
+  cache.touchedAt = Date.now();
+
+  while (assistantBookTextCache.size > MAX_ASSISTANT_BOOK_CACHES) {
+    const oldest = [...assistantBookTextCache.entries()]
+      .sort((a, b) => a[1].touchedAt - b[1].touchedAt)[0];
+    if (!oldest) break;
+    assistantBookTextCache.delete(oldest[0]);
+  }
+  return cache;
+}
+
+async function getAssistantPageText(pdfDocument: any, book: Book, pageNumber: number): Promise<string> {
+  const cache = getAssistantBookCache(book.id);
+  const existing = cache.pages.get(pageNumber);
+  if (existing !== undefined) return existing;
+
+  const page = await pdfDocument.getPage(pageNumber);
+  const textContent = await page.getTextContent();
+  const text = (textContent.items as Array<{ str?: string }>)
+    .map((item) => typeof item.str === 'string' ? item.str : '')
+    .filter(Boolean)
+    .join(' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  cache.pages.set(pageNumber, text);
+  cache.pageCount = pdfDocument.numPages;
+  cache.touchedAt = Date.now();
+
+  while (cache.pages.size > MAX_CACHED_PAGES_PER_BOOK) {
+    const oldestPage = cache.pages.keys().next().value;
+    if (oldestPage === undefined) break;
+    cache.pages.delete(oldestPage);
+  }
+  return text;
+}
+
+function scoreAssistantPage(
+  text: string,
+  prompt: string,
+  context: AssistantBookContext | undefined
+): number {
+  const normalizedText = normalizeAssistantText(text);
+  if (!normalizedText) return 0;
+
+  const normalizedPrompt = normalizeAssistantText(prompt);
+  const chapter = normalizeAssistantText(context?.chapter);
+  const exercise = normalizeAssistantText(context?.exercise);
+  const question = normalizeAssistantText(context?.questionNumber);
+  let score = 0;
+
+  if (chapter && normalizedText.includes(chapter)) score += 8;
+  if (exercise && normalizedText.includes(exercise)) score += 16;
+  if (/review\s+exercise/.test(exercise) && /review\s+exercise/.test(normalizedText)) score += 18;
+
+  if (question) {
+    const questionDigits = question.match(/\d+/)?.[0];
+    const questionPattern = questionDigits
+      ? new RegExp('(?:question|q\\.?|^|\\s)\\s*' + questionDigits + '(?:\\b|[.)])', 'i')
+      : null;
+    if (questionPattern?.test(normalizedText)) score += 7;
+  }
+
+  const stopWords = new Set([
+    'please', 'solve', 'explain', 'answer', 'question', 'questions', 'book', 'textbook',
+    'class', 'chapter', 'exercise', 'review', 'page', 'from', 'this', 'that', 'with',
+    'what', 'where', 'when', 'which', 'make', 'give', 'need', 'want', 'show', 'tell',
+    'complete', 'whole', 'entire', 'every', 'all', 'into', 'about', 'help', 'the', 'and',
+    'for', 'are', 'was', 'were', 'from', 'this', 'that', 'have', 'has', 'can', 'you',
+  ]);
+  const tokens = normalizedPrompt.split(' ')
+    .filter((token) => token.length >= 4 && !stopWords.has(token))
+    .slice(0, 24);
+  for (const token of new Set(tokens)) {
+    if (normalizedText.includes(token)) score += 1;
+  }
+
+  if (/review\s+exercise/.test(normalizedText)) score += 2;
+  if (/\bexercise\b/.test(normalizedText)) score += 1;
+  return score;
+}
+
+export async function retrieveTextbookMaterial(
+  book: Book,
+  context: AssistantBookContext | undefined,
+  prompt: string
+): Promise<RetrievedTextbookMaterial> {
+  const sourceUrl = getSafeBookPdfUrl(book);
+  if (!sourceUrl) {
+    return { pages: [], pageCount: 0, error: 'No official PDF stream is available for this catalogue record.' };
+  }
+
+  let loadingTask: any = null;
+  let pdfDocument: any = null;
+
+  try {
+    // PDF.js uses byte-range requests where the official source supports them.
+    loadingTask = pdfjsLib.getDocument({
+      url: sourceUrl,
+      rangeChunkSize: 64 * 1024,
+      disableAutoFetch: true,
+      disableStream: true,
+      isEvalSupported: false,
+    });
+    pdfDocument = await loadingTask.promise;
+
+    const pageCount = Number(pdfDocument.numPages) || 0;
+    getAssistantBookCache(book.id).pageCount = pageCount;
+    if (!pageCount) return { pages: [], pageCount: 0, error: 'The PDF did not report any pages.' };
+
+    const requestedPage = Number(context?.pageNumber);
+    let selectedPageNumbers: number[] = [];
+
+    if (Number.isInteger(requestedPage) && requestedPage >= 1 && requestedPage <= pageCount) {
+      // The neighbouring pages help when an exercise continues over a page break.
+      selectedPageNumbers = [requestedPage - 1, requestedPage, requestedPage + 1]
+        .filter((page) => page >= 1 && page <= pageCount);
+    } else {
+      const scanLimit = Math.min(pageCount, 260);
+      const scoredPages: Array<{ pageNumber: number; text: string; score: number }> = [];
+      for (let pageNumber = 1; pageNumber <= scanLimit; pageNumber += 1) {
+        const text = await getAssistantPageText(pdfDocument, book, pageNumber);
+        if (!text) continue;
+        const score = scoreAssistantPage(text, prompt, context);
+        if (score > 0) scoredPages.push({ pageNumber, text, score });
+      }
+
+      const explicitExercise = normalizeAssistantText(context?.exercise);
+      if (explicitExercise) {
+        const anchors = scoredPages
+          .filter((page) => /exercise|review\s+exercise/.test(normalizeAssistantText(page.text)))
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 2);
+
+        const pageNumbers = new Set<number>();
+        for (const anchor of anchors) {
+          // Exercise headings commonly appear only on the first page.
+          for (let pageNumber = anchor.pageNumber; pageNumber <= Math.min(scanLimit, anchor.pageNumber + 5); pageNumber += 1) {
+            const text = await getAssistantPageText(pdfDocument, book, pageNumber);
+            if (pageNumber > anchor.pageNumber && /(?:review\s+exercise|exercise\s+\d+(?:\.\d+)?|chapter\s+\d+)/i.test(text)) break;
+            if (text) pageNumbers.add(pageNumber);
+          }
+        }
+        selectedPageNumbers = [...pageNumbers].sort((a, b) => a - b);
+      }
+
+      if (!selectedPageNumbers.length && scoredPages.length) {
+        const top = scoredPages.sort((a, b) => b.score - a.score).slice(0, 6);
+        const pageNumbers = new Set<number>();
+        for (const page of top) {
+          pageNumbers.add(page.pageNumber);
+          if (page.pageNumber > 1) pageNumbers.add(page.pageNumber - 1);
+          if (page.pageNumber < scanLimit) pageNumbers.add(page.pageNumber + 1);
+        }
+        selectedPageNumbers = [...pageNumbers].sort((a, b) => a - b).slice(0, 12);
+      }
+    }
+
+    const pages: Array<{ pageNumber: number; text: string }> = [];
+    for (const pageNumber of selectedPageNumbers.slice(0, 12)) {
+      const text = await getAssistantPageText(pdfDocument, book, pageNumber);
+      if (text) pages.push({ pageNumber, text: text.slice(0, 6500) });
+    }
+
+    return { pages, pageCount };
+  } catch (error) {
+    const err = error as Error;
+    console.warn('Textbook text retrieval failed for record ' + (book.officialId || book.id) + ': ' +
+      (err.message || 'unknown error').slice(0, 180));
+    return {
+      pages: [],
+      pageCount: 0,
+      error: 'The PDF text could not be read automatically. The book may be scanned or the official source may be temporarily unavailable.',
+    };
+  } finally {
+    if (loadingTask) {
+      try { await loadingTask.destroy(); } catch { /* Expected cleanup. */ }
+    } else if (pdfDocument && typeof pdfDocument.destroy === 'function') {
+      try { await pdfDocument.destroy(); } catch { /* Expected cleanup. */ }
+    }
+  }
+}
+
+export function formatBookCatalogEntry(book: Book): string {
+  return [
+    'Title: ' + book.title,
+    'Class: ' + book.classNumber,
+    'Subject: ' + book.subjectName,
+    'Medium: ' + book.medium,
+    'Edition: ' + book.editionYear,
+    'Official page: ' + (book.officialPageUrl || 'https://ebooks.stbb.edu.pk/'),
+    'PDF: ' + (book.pdfUrl || 'not listed'),
+    'Download: ' + (book.downloadUrl || 'not listed'),
+  ].join('\n');
+}
