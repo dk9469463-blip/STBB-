@@ -29,6 +29,79 @@ if (!geminiApiKey) {
   console.info('GEMINI_API_KEY is not set. The textbook library will run; AI assistance will remain disabled.');
 }
 
+interface GeminiListedModel {
+  name?: string;
+  supportedGenerationMethods?: string[];
+  supportedActions?: string[];
+}
+
+let cachedGeminiTextModels: { fetchedAt: number; models: string[] } | null = null;
+
+// Discover models that this particular API key can use. This avoids relying on
+// model names that may be retired or unavailable to newly created API projects.
+async function getAvailableGeminiTextModels(apiKey: string): Promise<string[]> {
+  const now = Date.now();
+  if (cachedGeminiTextModels && now - cachedGeminiTextModels.fetchedAt < 5 * 60 * 1000) {
+    return cachedGeminiTextModels.models;
+  }
+
+  const response = await fetch(
+    'https://generativelanguage.googleapis.com/v1beta/models?pageSize=100',
+    {
+      headers: { 'x-goog-api-key': apiKey },
+      signal: AbortSignal.timeout(12000),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error('Gemini model discovery failed with HTTP ' + response.status);
+  }
+
+  const data = await response.json() as { models?: GeminiListedModel[] };
+  const listed = (Array.isArray(data.models) ? data.models : [])
+    .filter((model) => {
+      const name = String(model.name || '').replace(/^models\\//, '');
+      const methods = model.supportedGenerationMethods || model.supportedActions || [];
+      return (
+        name.startsWith('gemini-') &&
+        methods.includes('generateContent') &&
+        !/(embedding|imagen|veo|audio|tts|live|robotics|computer-use|deep-research|aqa)/i.test(name)
+      );
+    })
+    .map((model) => String(model.name || '').replace(/^models\\//, ''));
+
+  const versionScore = (name: string): number => {
+    const match = name.match(/^gemini-(\\d+)(?:\\.(\\d+))?/i);
+    return match ? Number(match[1]) * 100 + Number(match[2] || 0) : 0;
+  };
+
+  listed.sort((a, b) => {
+    const rank = (name: string): number => {
+      if (/flash-lite/i.test(name)) return 300;
+      if (/flash/i.test(name)) return 200;
+      if (/pro/i.test(name)) return 100;
+      return 0;
+    };
+    return rank(b) + versionScore(b) - rank(a) - versionScore(a);
+  });
+
+  cachedGeminiTextModels = { fetchedAt: now, models: listed };
+  return listed;
+}
+
+function getGeminiErrorDetails(error: unknown): { status: number; message: string } {
+  const provider = error as { message?: string; status?: number | string; code?: number | string };
+  const message = String(provider?.message || '');
+  const status = Number(provider?.status || provider?.code || 0);
+  return {
+    status,
+    message: message
+      .replace(/AIza[0-9A-Za-z_-]{20,}/g, '[REDACTED_API_KEY]')
+      .replace(/\\s+/g, ' ')
+      .slice(0, 300),
+  };
+}
+
 // Lightweight per-process guard against accidental or automated AI request bursts.
 // Production deployments serving large shared networks should also add platform-level quotas.
 const aiRequestWindows = new Map<string, { startedAt: number; count: number }>();
@@ -807,62 +880,132 @@ app.post('/api/ai/study-assist', async (req: Request, res: Response) => {
 
     const genAI = new GoogleGenAI({ apiKey: geminiApiKey });
     let aiText = '';
-    try {
-      const response = await genAI.models.generateContent({
-        model: geminiModel,
-        contents,
-        config: {
-          systemInstruction,
-          temperature: 0.2,
-          maxOutputTokens: 5000,
-        },
-      });
-      aiText = (response.text || '').trim();
-    } catch (providerError: unknown) {
-      const provider = providerError as { message?: string; status?: number | string; code?: number | string };
-      const providerMessage = String(provider?.message || '');
-      const providerStatus = Number(provider?.status || provider?.code || 0);
-      // Log a short, redacted diagnostic for developers; never log the API key.
-      const safeProviderMessage = providerMessage
-        .replace(/AIza[0-9A-Za-z_-]{20,}/g, '[REDACTED_API_KEY]')
-        .replace(/\s+/g, ' ')
-        .slice(0, 300);
-      console.warn(
-        'Gemini provider request failed' +
-        (providerStatus ? ' with HTTP ' + providerStatus : '') +
-        ' for model "' + geminiModel + '"' +
-        (safeProviderMessage ? ': ' + safeProviderMessage : '.')
-      );
+    let successfulModel = geminiModel.replace(/^models\\//, '');
+    let lastGeminiFailure: { status: number; message: string } = { status: 0, message: '' };
 
-      if (
-        providerStatus === 401 ||
-        providerStatus === 403 ||
-        /API_KEY_INVALID|invalid api key|permission denied|forbidden/i.test(providerMessage)
-      ) {
-        return res.status(503).json({
-          error: 'The AI assistant needs an administrator to check its Gemini API key and permissions.',
-        });
+    // Use live models available to this key. If discovery is temporarily down,
+    // still try the configured model plus a few common Flash alternatives.
+    let discoveredModels: string[] = [];
+    try {
+      discoveredModels = await getAvailableGeminiTextModels(geminiApiKey);
+    } catch (discoveryError: unknown) {
+      const detail = getGeminiErrorDetails(discoveryError);
+      console.warn('Gemini model discovery failed' +
+        (detail.status ? ' with HTTP ' + detail.status : '') + '. Trying configured model and safe fallbacks.');
+    }
+
+    const configuredModel = geminiModel.replace(/^models\\//, '');
+    const fallbackModels = [
+      'gemini-3.8-flash-lite',
+      'gemini-3.8-flash',
+      'gemini-2.5-flash-lite',
+      'gemini-2.0-flash',
+    ];
+    const modelsToTry = Array.from(new Set([
+      configuredModel,
+      ...discoveredModels,
+      ...fallbackModels,
+    ])).filter(Boolean).slice(0, 5);
+
+    let shouldStop = false;
+    for (const modelName of modelsToTry) {
+      // A provider 503 can be temporary. Retry the current model once, then
+      // automatically fail over to another model available to this API key.
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        try {
+          const response = await genAI.models.generateContent({
+            model: modelName,
+            contents,
+            config: {
+              systemInstruction,
+              temperature: 0.2,
+              maxOutputTokens: 5000,
+            },
+          });
+          aiText = (response.text || '').trim();
+          if (aiText) {
+            successfulModel = modelName;
+            shouldStop = true;
+            break;
+          }
+          lastGeminiFailure = { status: 502, message: 'The model returned an empty response.' };
+          break;
+        } catch (providerError: unknown) {
+          const detail = getGeminiErrorDetails(providerError);
+          lastGeminiFailure = detail;
+
+          console.warn(
+            'Gemini model "' + modelName + '" failed' +
+            (detail.status ? ' with HTTP ' + detail.status : '') +
+            (detail.message ? ': ' + detail.message : '.')
+          );
+
+          if (
+            detail.status === 401 ||
+            detail.status === 403 ||
+            /API_KEY_INVALID|invalid api key|permission denied|forbidden/i.test(detail.message)
+          ) {
+            return res.status(503).json({
+              error: 'The AI assistant needs an administrator to check its Gemini API key and permissions.',
+            });
+          }
+
+          const overloaded = detail.status === 503 ||
+            /UNAVAILABLE|high demand|overloaded|temporarily unavailable/i.test(detail.message);
+          const quotaLimited = detail.status === 429 ||
+            /RESOURCE_EXHAUSTED|quota exceeded|rate.?limit|too many requests/i.test(detail.message);
+          const modelUnavailable = detail.status === 404 ||
+            /not found|no longer available|unsupported model|unknown model/i.test(detail.message);
+
+          // Retry one transient 503 on the same model, with a brief delay.
+          if (overloaded && attempt === 0) {
+            await new Promise((resolve) => setTimeout(resolve, 700));
+            continue;
+          }
+
+          // Quota/rate limits and model availability can differ by model. Try
+          // the next eligible model instead of failing the whole student query.
+          if (overloaded || quotaLimited || modelUnavailable || detail.status === 400) {
+            break;
+          }
+
+          // Other failures are unlikely to be fixed by switching models.
+          shouldStop = true;
+          break;
+        }
       }
-      if (
-        providerStatus === 429 ||
-        /RESOURCE_EXHAUSTED|quota exceeded|rate.?limit|too many requests/i.test(providerMessage)
-      ) {
-        return res.status(429).json({
-          error: 'The Gemini API usage limit has been reached. Please wait for the free quota to reset or check your Google AI Studio project limits.',
-        });
-      }
-      if (providerStatus >= 500 || /internal error|service unavailable/i.test(providerMessage)) {
-        return res.status(502).json({
-          error: 'The Gemini service is temporarily unavailable. Please try again.',
-        });
-      }
-      return res.status(502).json({
-        error: 'The AI assistant could not complete this request. Please check the Gemini model setting and try again.',
-      });
+
+      if (aiText || shouldStop) break;
     }
 
     if (!aiText) {
-      return res.status(502).json({ error: 'The AI assistant did not return a readable answer. Please try again.' });
+      console.warn(
+        'All Gemini models failed. Last status: ' +
+        (lastGeminiFailure.status || 'unknown') +
+        '; model: ' + successfulModel + '.'
+      );
+
+      if (lastGeminiFailure.status === 429 ||
+        /RESOURCE_EXHAUSTED|quota exceeded|rate.?limit|too many requests/i.test(lastGeminiFailure.message)) {
+        return res.status(429).json({
+          error: 'The Gemini API quota or rate limit has been reached for the available models. Check your Google AI Studio usage limits and try again after they reset.',
+        });
+      }
+      if (lastGeminiFailure.status === 503 ||
+        /UNAVAILABLE|high demand|overloaded|temporarily unavailable/i.test(lastGeminiFailure.message)) {
+        return res.status(503).json({
+          error: 'Gemini is temporarily overloaded across the available models. STBB AI tried automatic retries and model fallback; please retry shortly.',
+        });
+      }
+      if (lastGeminiFailure.status === 404 ||
+        /not found|no longer available|unsupported model|unknown model/i.test(lastGeminiFailure.message)) {
+        return res.status(503).json({
+          error: 'No compatible Gemini text model was found for this API key. Check Google AI Studio model availability and try again.',
+        });
+      }
+      return res.status(502).json({
+        error: 'The AI assistant could not complete this request. Please check Gemini model access and try again.',
+      });
     }
 
     let followUps: string[];
