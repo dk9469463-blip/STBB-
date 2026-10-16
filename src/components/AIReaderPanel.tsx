@@ -95,7 +95,7 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
       if (onlyWelcome) {
         const welcome: ChatMessage = {
           ...saved[0],
-          content: `Hi! What would you like help with in ${book.title}? Choose an option below, or type your own question. Highlighted text stays separate from your message. A full-page image is sent only when you manually choose Capture Page.`,
+          content: `Hi! What would you like help with in ${book.title}? Choose an option below, or type your own question. Highlighted text stays separate from your message. When text is highlighted, only that text is sent as context; if no text is selected, the current page image may be used to read scanned pages.`,
           followUps: startOptions,
         };
         setMessages([welcome]);
@@ -107,7 +107,7 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
       const welcome: ChatMessage = {
         id: `reader-welcome-${book.id}`,
         role: 'assistant',
-        content: `Hi! What would you like help with in ${book.title}? Choose an option below, or type your own question. Highlighted text stays separate from your message. A full-page image is sent only when you manually choose Capture Page.`,
+        content: `Hi! What would you like help with in ${book.title}? Choose an option below, or type your own question. Highlighted text stays separate from your message. When text is highlighted, only that text is sent as context; if no text is selected, the current page image may be used to read scanned pages.`,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         language: 'english',
         followUps: startOptions,
