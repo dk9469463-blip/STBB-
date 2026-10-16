@@ -715,6 +715,7 @@ app.post('/api/ai/study-assist', async (req: Request, res: Response) => {
       prompt,
       language = 'english',
       mode = 'general',
+      useTextbook,
       bookContext,
       imageBase64,
       imageMimeType = 'image/jpeg',
@@ -723,6 +724,7 @@ app.post('/api/ai/study-assist', async (req: Request, res: Response) => {
       prompt?: string;
       language?: string;
       mode?: string;
+      useTextbook?: boolean;
       bookContext?: AssistantBookContext;
       imageBase64?: string | null;
       imageMimeType?: string;
@@ -746,17 +748,37 @@ app.post('/api/ai/study-assist', async (req: Request, res: Response) => {
         'جواب سادي، واضح ۽ معياري سنڌي عربي رسم الخط ۾ ڏيو. رياضي ۽ سائنس جون اصطلاحون سادي سنڌي ۾ سمجهايو.';
     }
 
-    const contextDetails: string[] = [];
-    if (bookContext?.classNumber) contextDetails.push('Selected class: Class ' + bookContext.classNumber);
-    if (bookContext?.subjectName) contextDetails.push('Selected subject: ' + bookContext.subjectName);
-    if (bookContext?.bookTitle) contextDetails.push('Selected book: ' + bookContext.bookTitle);
-    if (bookContext?.chapter) contextDetails.push('Chapter or unit clue: ' + bookContext.chapter);
-    if (bookContext?.exercise) contextDetails.push('Exercise clue: ' + bookContext.exercise);
-    if (bookContext?.pageNumber) contextDetails.push('Requested PDF page: ' + bookContext.pageNumber);
-    if (bookContext?.questionNumber) contextDetails.push('Question number: ' + bookContext.questionNumber);
-    if (bookContext?.selectedText) contextDetails.push('Text selected in the reader: "' + bookContext.selectedText + '"');
+    // The universal assistant only searches the textbook when the student
+    // explicitly chooses Search Textbook. Reader-panel requests do not pass the
+    // flag, so a concrete book/page context preserves the reader's grounded mode.
+    const hasReaderBookContext = Boolean(
+      bookContext?.bookId ||
+      bookContext?.officialId ||
+      bookContext?.bookTitle ||
+      bookContext?.pageNumber ||
+      bookContext?.chapter ||
+      bookContext?.exercise ||
+      bookContext?.selectedText
+    );
+    const shouldUseTextbook = typeof useTextbook === 'boolean'
+      ? useTextbook
+      : hasReaderBookContext;
 
-    const resolved = resolveAssistantBook(bookContext, prompt || '');
+    const contextDetails: string[] = [];
+    if (shouldUseTextbook) {
+      if (bookContext?.classNumber) contextDetails.push('Selected class: Class ' + bookContext.classNumber);
+      if (bookContext?.subjectName) contextDetails.push('Selected subject: ' + bookContext.subjectName);
+      if (bookContext?.bookTitle) contextDetails.push('Selected book: ' + bookContext.bookTitle);
+      if (bookContext?.chapter) contextDetails.push('Chapter or unit clue: ' + bookContext.chapter);
+      if (bookContext?.exercise) contextDetails.push('Exercise clue: ' + bookContext.exercise);
+      if (bookContext?.pageNumber) contextDetails.push('Requested PDF page: ' + bookContext.pageNumber);
+      if (bookContext?.questionNumber) contextDetails.push('Question number: ' + bookContext.questionNumber);
+      if (bookContext?.selectedText) contextDetails.push('Text selected in the reader: "' + bookContext.selectedText + '"');
+    }
+
+    const resolved = shouldUseTextbook
+      ? resolveAssistantBook(bookContext, prompt || '')
+      : { book: null, candidates: [] };
     let retrievedPages: Array<{ pageNumber: number; text: string }> = [];
     let retrievalError: string | undefined;
     let pageCount = 0;
@@ -821,7 +843,7 @@ app.post('/api/ai/study-assist', async (req: Request, res: Response) => {
       'Language: ' + languageDirective,
       'Accuracy and textbook rules:',
       '1. Understand informal wording, Roman Urdu, typos, shorthand and mixed English/Urdu as best you can. If the request remains ambiguous, ask one short clarification instead of guessing.',
-      '2. Respect the class explicitly selected in the app. If a book is selected, search and use that book first. If no book is selected, use the selected class and recognizable topic to choose the closest subject/book from the STBB catalogue, then search relevant book text before answering. Never silently switch to a different class just because the prompt mentions one.',
+      '2. In Direct Answer mode, answer ordinary questions directly from your knowledge and do not search a textbook just because a class is displayed. In Search Textbook mode, respect the selected class, search the selected book first, or identify the closest subject book within the selected class from the question topic. Never silently switch the selected class.',
       '3. When verified textbook text is provided, base textbook-specific answers on it. Do not invent chapter contents, exercise questions, page numbers, official links, or facts supposedly extracted from a book.',
       '4. If a student asks for an entire exercise, solve each visible/retrieved question in order. If the retrieved material is incomplete or too long, clearly say which questions/pages you could answer and ask to continue with the rest; never claim to have completed unseen questions.',
       '5. Solve Mathematics and Physics step by step, show formulas and substitutions, check final results when possible, and state units. For theory subjects, explain concepts in student-friendly language and distinguish textbook facts from extra explanation.',
