@@ -15,6 +15,8 @@ import {
   Maximize,
   ShieldCheck,
   CheckCircle,
+  Check,
+  Copy,
   ExternalLink,
   RefreshCw,
   Bookmark,
