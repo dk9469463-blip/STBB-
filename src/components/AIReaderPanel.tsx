@@ -35,6 +35,7 @@ import {
   resumeSpeech,
   stopSpeech,
 } from '../utils/speechHelper';
+import { formatStudyAnswer } from '../utils/formatStudyAnswer';
 
 interface AIReaderPanelProps {
   book: Book;
@@ -570,6 +571,7 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
       <div className="flex-1 overflow-y-auto p-3 space-y-3 text-xs sm:text-sm scrollbar-thin">
         {messages.map((msg) => {
           const isAssistant = msg.role === 'assistant';
+          const displayContent = formatStudyAnswer(msg.content);
           const isSpeaking = speakingId === msg.id;
 
           return (
@@ -604,7 +606,7 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
                   }`}
                   dir={msg.language === 'urdu' || msg.language === 'sindhi' ? 'rtl' : 'ltr'}
                 >
-                  {msg.content}
+                  {displayContent}
                 </div>
 
                 {/* Official textbook sources returned by the assistant */}
@@ -631,7 +633,7 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
                   <div className="pt-1.5 border-t border-slate-700/60 flex items-center justify-between text-[11px] text-slate-400">
                     <div className="flex items-center gap-1.5">
                       <button
-                        onClick={() => handleToggleSpeak(msg.id, msg.content)}
+                        onClick={() => handleToggleSpeak(msg.id, displayContent)}
                         className={`flex items-center gap-1 px-2 py-0.5 rounded transition cursor-pointer ${
                           isSpeaking
                             ? 'bg-amber-400 text-slate-950 font-bold'
@@ -658,7 +660,7 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
                       )}
 
                       <button
-                        onClick={() => handleCopy(msg.id, msg.content)}
+                        onClick={() => handleCopy(msg.id, displayContent)}
                         className="flex items-center gap-1 px-2 py-0.5 rounded bg-slate-700/60 hover:bg-slate-700 text-slate-300 transition cursor-pointer"
                       >
                         {copiedId === msg.id ? (
