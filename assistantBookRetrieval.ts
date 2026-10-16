@@ -485,17 +485,6 @@ export async function retrieveTextbookMaterial(
         // Keep the whole small neighborhood. Chapter titles may repeat in running
         // page headers, so don't mistake a repeated heading for a new exercise.
         selectedPageNumbers = confirmedPages.map((page) => page.pageNumber);
-      } else if (
-        Date.now() - scanStartedAt >= SCAN_BUDGET_MS &&
-        explicitExercise
-      ) {
-        // Do not keep scanning until the browser returns a 504; be honest that
-        // the exact exercise needs a photo/text if no reliable match was found.
-        return {
-          pages: [],
-          pageCount,
-          error: 'The textbook search reached its time limit before locating this exact chapter and exercise. Upload a clear photo of the exercise page or paste the questions, and I can solve them without guessing.',
-        };
       }
 
       if (!selectedPageNumbers.length && scoredPages.length) {
@@ -515,7 +504,8 @@ export async function retrieveTextbookMaterial(
           }
         }
 
-        if (!selectedPageNumbers.length && (!explicitExercise || !explicitChapter)) {
+        // Fall back to the strongest text matches if heading markers differ between editions.
+        if (!selectedPageNumbers.length) {
           const top = scoredPages.sort((a, b) => b.score - a.score).slice(0, 6);
           const pageNumbers = new Set<number>();
           for (const page of top) {
@@ -538,7 +528,7 @@ export async function retrieveTextbookMaterial(
       return {
         pages: [],
         pageCount,
-        error: 'No searchable text matching this clue was extracted. The PDF may be scanned, or the clue may not match the printed page numbering. Ask for a clear page photo or exact question text.',
+        error: 'No selectable text was extracted from the selected PDF pages. Enter the PDF page number in the locator to target a page directly. If the PDF page is scanned as an image, the assistant needs that page image to read its questions.',
       };
     }
     return { pages, pageCount };
