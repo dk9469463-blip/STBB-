@@ -88,6 +88,22 @@ function inferClassNumber(prompt: string): number | undefined {
 }
 function inferSubjectFromPrompt(prompt: string): string | undefined {
   const normalized = normalizeAssistantText(prompt);
+
+  // Recognise common textbook concepts even when the student does not name a
+  // subject. This helps route general questions to the matching book in the
+  // class currently selected in the UI.
+  const topicAliases: Array<{ subject: string; pattern: RegExp }> = [
+    { subject: 'Biology', pattern: /\\b(?:photosynthesis|chlorophyll|cell membrane|mitochondria|osmosis|diffusion|digestion|respiration in plants|human respiration|ecosystem|food chain|reproduction in plants|genetics|heredity|blood circulation|excretion)\\b/i },
+    { subject: 'Physics', pattern: /\\b(?:newton.?s laws?|force and motion|laws of motion|gravity|gravitational force|velocity|acceleration|electric current|ohm.?s law|magnetic field|electromagnetic induction|refraction|reflection of light|wave length|wavelength|frequency|simple harmonic motion|pressure in fluids|work and energy|kinetic energy|potential energy)\\b/i },
+    { subject: 'Chemistry', pattern: /\\b(?:periodic table|chemical equation|chemical reaction|atomic number|mass number|valency|covalent bond|ionic bond|acid and base|acids and bases|pH scale|mole concept|oxidation|reduction|electrolysis|hydrocarbon|organic chemistry)\\b/i },
+    { subject: 'Mathematics', pattern: /\\b(?:quadratic equation|linear equation|simultaneous equations|trigonometry|trigonometric ratios|pythagoras theorem|circle theorem|tangent to a circle|sets and functions|factorisation|factorization|polynomial|matrices|determinant|arithmetic progression|geometric progression|probability|coordinate geometry|slope of a line|condition of tangency)\\b/i },
+    { subject: 'Computer Science', pattern: /\\b(?:algorithm|flowchart|programming language|binary number|computer network|database|python programming|html and css|operating system|input and output devices)\\b/i },
+    { subject: 'English', pattern: /\\b(?:parts of speech|direct and indirect speech|active and passive voice|tenses|punctuation|comprehension passage|essay writing|letter writing|subject verb agreement)\\b/i },
+  ];
+  for (const entry of topicAliases) {
+    if (entry.pattern.test(normalized)) return entry.subject;
+  }
+
   const aliases: Array<{ subject: string; pattern: RegExp }> = [
     { subject: 'Biology', pattern: /\b(?:biology|bio)\b/i },
     { subject: 'Physics', pattern: /\bphysics\b/i },
@@ -131,11 +147,12 @@ export function resolveAssistantBook(
   const contextClass = context?.classNumber && context.classNumber >= 1 && context.classNumber <= 12
     ? context.classNumber
     : undefined;
-  const selectedClass = promptClass || contextClass;
-  const promptOverridesContext = Boolean(promptClass && contextClass && promptClass !== contextClass);
+  // The class chosen in the UI is authoritative. Do not silently switch classes
+  // just because the student mentions a different class in a general question.
+  const selectedClass = contextClass || promptClass;
   const promptSubject = normalizeAssistantText(inferSubjectFromPrompt(prompt));
-  const selectedSubject = (promptOverridesContext ? '' : normalizeAssistantText(context?.subjectName)) || promptSubject;
-  const selectedMedium = inferMedium(prompt, promptOverridesContext ? undefined : context);
+  const selectedSubject = normalizeAssistantText(context?.subjectName) || promptSubject;
+  const selectedMedium = inferMedium(prompt, context);
   const selectedTitle = normalizeAssistantText(context?.bookTitle);
 
   // Recognise an exact title typed directly in the chat, even when the student
@@ -381,8 +398,11 @@ export async function retrieveTextbookMaterial(
       // chapter/exercise heading is found.
       // Search textbook pages in parallel batches. The old sequential 260-page
       // scan could exceed the Codespaces/proxy request timeout before answering.
-      const scanLimit = Math.min(pageCount, 260);
-      const SCAN_BUDGET_MS = 18000;
+      const hasSpecificLocator = Boolean(lookupContext.chapter || lookupContext.exercise);
+      // Keep general questions quick while still checking the selected textbook.
+      // Explicit chapter/exercise lookups receive a slightly larger search budget.
+      const scanLimit = Math.min(pageCount, hasSpecificLocator ? 140 : 80);
+      const SCAN_BUDGET_MS = hasSpecificLocator ? 6500 : 3500;
       const SCAN_BATCH_SIZE = 10;
       const scanStartedAt = Date.now();
       const scoredPages: Array<{ pageNumber: number; text: string; score: number }> = [];
@@ -432,18 +452,27 @@ export async function retrieveTextbookMaterial(
         if (Date.now() - scanStartedAt >= SCAN_BUDGET_MS) break;
 
         const batchEnd = Math.min(scanLimit, batchStart + SCAN_BATCH_SIZE - 1);
-        const batch = await Promise.all(
-          Array.from({ length: batchEnd - batchStart + 1 }, async (_unused, index) => {
-            const pageNumber = batchStart + index;
-            try {
-              return { pageNumber, text: await getAssistantPageText(pdfDocument, book, pageNumber) };
-            } catch {
-              return { pageNumber, text: '' };
-            }
-          })
-        );
+        const remainingBudget = Math.max(1, SCAN_BUDGET_MS - (Date.now() - scanStartedAt));
+        let batchTimer: ReturnType<typeof setTimeout> | undefined;
+        const batchResult = await Promise.race([
+          Promise.all(
+            Array.from({ length: batchEnd - batchStart + 1 }, async (_unused, index) => {
+              const pageNumber = batchStart + index;
+              try {
+                return { pageNumber, text: await getAssistantPageText(pdfDocument, book, pageNumber) };
+              } catch {
+                return { pageNumber, text: '' };
+              }
+            })
+          ),
+          new Promise<null>((resolve) => {
+            batchTimer = setTimeout(() => resolve(null), remainingBudget);
+          }),
+        ]);
+        if (batchTimer) clearTimeout(batchTimer);
+        if (!batchResult) break;
 
-        for (const page of batch) {
+        for (const page of batchResult) {
           if (!page.text) continue;
           const score = scoreAssistantPage(page.text, prompt, lookupContext);
           if (score > 0) scoredPages.push({ ...page, score });
