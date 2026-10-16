@@ -14,6 +14,7 @@ export interface OfflineSaveProgress {
   loaded: number;
   total: number;
   percent: number | null;
+  attempt?: number;
 }
 
 const DATABASE_NAME = 'stbb-offline-books';
@@ -87,11 +88,12 @@ function streamUrlForBook(book: Book): string {
   throw new Error('A PDF link is not available for this textbook yet.');
 }
 
-export async function saveBookForOffline(
+async function saveBookForOfflineAttempt(
   book: Book,
-  onProgress?: (progress: OfflineSaveProgress) => void
+  onProgress: ((progress: OfflineSaveProgress) => void) | undefined,
+  attempt: number
 ): Promise<void> {
-  onProgress?.({ loaded: 0, total: 0, percent: null });
+  onProgress?.({ loaded: 0, total: 0, percent: null, attempt });
 
   const response = await fetch(streamUrlForBook(book), {
     headers: { Accept: 'application/pdf, application/octet-stream' },
@@ -196,6 +198,38 @@ export async function saveBookForOffline(
 
   await runTransaction('readwrite', (store) => store.put(record));
   savedBookIdsPromise = null;
+}
+
+function isRetryableOfflineSaveError(error: unknown): boolean {
+  if (error instanceof TypeError) return true;
+  const message = error instanceof Error ? error.message : String(error);
+  return /HTTP (408|425|429|500|502|503|504)\\b|failed to fetch|networkerror|network request failed|connection reset|socket hang up|timed? ?out/i.test(message);
+}
+
+/**
+ * A slow or unstable connection can interrupt a long textbook download.
+ * Retry temporary network/server failures twice from the beginning. The final
+ * PDF is only written to IndexedDB after it has been downloaded and validated.
+ */
+export async function saveBookForOffline(
+  book: Book,
+  onProgress?: (progress: OfflineSaveProgress) => void
+): Promise<void> {
+  const maxAttempts = 3;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      await saveBookForOfflineAttempt(book, onProgress, attempt);
+      return;
+    } catch (error) {
+      if (attempt >= maxAttempts || !isRetryableOfflineSaveError(error)) {
+        throw error;
+      }
+
+      onProgress?.({ loaded: 0, total: 0, percent: null, attempt: attempt + 1 });
+      await new Promise<void>((resolve) => window.setTimeout(resolve, 900 * attempt));
+    }
+  }
 }
 
 export async function getOfflineBookBlob(bookId: string): Promise<Blob | null> {
