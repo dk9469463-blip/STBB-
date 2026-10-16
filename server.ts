@@ -14,15 +14,22 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = parseInt(process.env.PORT || '3000', 10);
 
-// Initialize Gemini SDK with telemetry header
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY,
-  httpOptions: {
-    headers: {
-      'User-Agent': 'aistudio-build',
-    },
-  },
-});
+// Keep the textbook library available even when no Gemini key is configured.
+const geminiApiKey = process.env.GEMINI_API_KEY?.trim();
+const ai = geminiApiKey
+  ? new GoogleGenAI({
+      apiKey: geminiApiKey,
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build',
+        },
+      },
+    })
+  : null;
+
+if (!ai) {
+  console.info('GEMINI_API_KEY is not set. The textbook library will run; AI assistance will remain disabled.');
+}
 
 // JSON & Body Parsing for AI chat & image attachments
 app.use(express.json({ limit: '25mb' }));
@@ -589,6 +596,12 @@ app.get('/api/image/proxy', async (req: Request, res: Response) => {
 // UNIVERSAL AI STUDY ASSISTANT ENDPOINT
 app.post('/api/ai/study-assist', async (req: Request, res: Response) => {
   try {
+    if (!ai) {
+      return res.status(503).json({
+        error: 'The AI Study Assistant is unavailable until GEMINI_API_KEY is configured.',
+      });
+    }
+
     const {
       prompt,
       language = 'english',
@@ -762,7 +775,10 @@ async function startServer() {
   if (isDev) {
     const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      // The embedded Codespaces preview can already occupy Vite's separate
+      // HMR WebSocket port. Disable that socket to avoid startup conflicts.
+      // Refresh the preview manually after code edits.
+      server: { middlewareMode: true, hmr: false },
       appType: 'spa',
     });
     app.use(vite.middlewares);
@@ -774,9 +790,31 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`STBB Books server running on port ${PORT}`);
-  });
+  const listenWithFallback = (port: number, attempts: number): Promise<void> =>
+    new Promise<void>((resolve, reject) => {
+      const server = app.listen(port, '0.0.0.0');
+
+      server.once('listening', () => {
+        const address = server.address();
+        const activePort = address && typeof address === 'object' ? address.port : port;
+        console.log(`STBB Books server running on port ${activePort}`);
+        resolve();
+      });
+
+      server.once('error', (error: Error & { code?: string }) => {
+        // Only auto-select another port when no explicit deployment PORT was set.
+        if (error.code === 'EADDRINUSE' && attempts > 0 && !process.env.PORT) {
+          const nextPort = port + 1;
+          console.warn(`Port ${port} is already in use; trying port ${nextPort}.`);
+          resolve(listenWithFallback(nextPort, attempts - 1));
+          return;
+        }
+
+        reject(error);
+      });
+    });
+
+  await listenWithFallback(PORT, process.env.PORT ? 0 : 10);
 }
 
 startServer().catch((err) => {
