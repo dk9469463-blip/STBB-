@@ -499,7 +499,7 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
   };
 
   return (
-    <aside className="w-full md:w-96 lg:w-[420px] bg-slate-900 border-l border-slate-800 flex flex-col h-full shadow-2xl z-40 animate-in slide-in-from-right duration-200">
+    <aside className="w-full md:w-96 lg:w-[420px] shrink-0 min-w-0 bg-slate-900 border-l border-slate-800 flex flex-col h-full shadow-2xl z-40 animate-in slide-in-from-right duration-200">
       {/* Panel Header */}
       <div className="p-3 bg-slate-950 border-b border-slate-800 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2 min-w-0">
