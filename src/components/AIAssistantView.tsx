@@ -219,6 +219,9 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
     setAttachedImage(null);
 
     const bookContext = {
+      bookId: currentSelectedBook?.id,
+      officialId: currentSelectedBook?.officialId,
+      medium: currentSelectedBook?.medium,
       classNumber: selectedClass || undefined,
       subjectName: currentSelectedBook?.subjectName,
       bookTitle: currentSelectedBook?.title,
@@ -463,6 +466,7 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         language: selectedLanguage,
         followUps: data.followUps || [],
+        sources: Array.isArray(data.sources) ? data.sources : [],
       };
 
       // Append assistant message in chronological order
@@ -838,6 +842,25 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
                 >
                   {msg.content}
                 </div>
+
+                {/* Official textbook sources returned by the server-side catalogue lookup */}
+                {isAssistant && !msg.isError && msg.sources && msg.sources.length > 0 && (
+                  <div className="mt-3 w-full rounded-xl border border-slate-700 bg-slate-900/60 p-3 space-y-2" dir="ltr">
+                    <p className="text-[10px] font-extrabold uppercase tracking-wider text-amber-300">Textbook sources</p>
+                    {msg.sources.map((source, sourceIndex) => (
+                      <a
+                        key={msg.id + '-source-' + sourceIndex}
+                        href={source.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block rounded-lg px-2 py-2 hover:bg-slate-800 transition"
+                      >
+                        <span className="block text-xs font-bold text-blue-200 underline underline-offset-2">{source.title}</span>
+                        {source.detail && <span className="mt-0.5 block text-[10px] text-slate-400">{source.detail}</span>}
+                      </a>
+                    ))}
+                  </div>
+                )}
 
                 {/* Retry Button if message was an error */}
                 {msg.isError && failedPrompt && (
