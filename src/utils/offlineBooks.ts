@@ -165,7 +165,14 @@ export async function saveBookForOffline(
       reader.releaseLock();
     }
 
-    blob = new Blob(chunks, { type: 'application/pdf' });
+    // Copy into ArrayBuffer-backed parts so strict TypeScript and browsers that
+    // use SharedArrayBuffer-capable typed arrays agree on the BlobPart type.
+    const blobParts: BlobPart[] = chunks.map((chunk) => {
+      const copy = new Uint8Array(chunk.byteLength);
+      copy.set(chunk);
+      return copy.buffer;
+    });
+    blob = new Blob(blobParts, { type: 'application/pdf' });
     if (blob.size < 4) throw new Error('The downloaded file is empty or incomplete.');
 
     const signature = new Uint8Array(await blob.slice(0, 4).arrayBuffer());
