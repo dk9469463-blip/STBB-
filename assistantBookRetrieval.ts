@@ -348,7 +348,6 @@ export async function retrieveTextbookMaterial(
       rangeChunkSize: 64 * 1024,
       disableAutoFetch: true,
       disableStream: true,
-      isEvalSupported: false,
     });
     pdfDocument = await loadingTask.promise;
 
