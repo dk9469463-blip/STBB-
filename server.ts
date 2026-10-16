@@ -880,7 +880,7 @@ app.post('/api/ai/study-assist', async (req: Request, res: Response) => {
 
     const genAI = new GoogleGenAI({ apiKey: geminiApiKey });
     let aiText = '';
-    let successfulModel = geminiModel.replace(/^models\//, '');
+    let lastTriedModel = geminiModel.replace(/^models\//, '');
     let lastGeminiFailure: { status: number; message: string } = { status: 0, message: '' };
 
     // Use live models available to this key. If discovery is temporarily down,
@@ -909,6 +909,7 @@ app.post('/api/ai/study-assist', async (req: Request, res: Response) => {
 
     let shouldStop = false;
     for (const modelName of modelsToTry) {
+      lastTriedModel = modelName;
       // A provider 503 can be temporary. Retry the current model once, then
       // automatically fail over to another model available to this API key.
       for (let attempt = 0; attempt < 2; attempt += 1) {
@@ -924,7 +925,6 @@ app.post('/api/ai/study-assist', async (req: Request, res: Response) => {
           });
           aiText = (response.text || '').trim();
           if (aiText) {
-            successfulModel = modelName;
             shouldStop = true;
             break;
           }
@@ -982,7 +982,7 @@ app.post('/api/ai/study-assist', async (req: Request, res: Response) => {
       console.warn(
         'All Gemini models failed. Last status: ' +
         (lastGeminiFailure.status || 'unknown') +
-        '; model: ' + successfulModel + '.'
+        '; last attempted model: ' + lastTriedModel + '.'
       );
 
       if (lastGeminiFailure.status === 429 ||
