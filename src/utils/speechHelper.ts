@@ -80,7 +80,7 @@ export function createSpeechRecognizer(options: {
       if (!event.results[i]?.isFinal) allResultsFinal = false;
     }
 
-    const output = chunks.join(' ').replace(/\\s+/g, ' ').trim();
+    const output = chunks.join(' ').replace(/\s+/g, ' ').trim();
     if (output) {
       options.onResult(output, allResultsFinal);
     }
