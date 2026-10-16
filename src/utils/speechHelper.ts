@@ -67,21 +67,22 @@ export function createSpeechRecognizer(options: {
   recognizer.lang = langCode;
 
   recognizer.onresult = (event: any) => {
-    let interimTranscript = '';
-    let finalTranscript = '';
+    // The Web Speech API result list contains the whole current utterance,
+    // including previous final chunks and the latest interim chunk. Return
+    // the complete utterance so callers can replace the draft instead of
+    // appending the same words repeatedly.
+    const chunks: string[] = [];
+    let allResultsFinal = event.results.length > 0;
 
-    for (let i = event.resultIndex; i < event.results.length; i++) {
-      const transcript = event.results[i][0].transcript;
-      if (event.results[i].isFinal) {
-        finalTranscript += transcript;
-      } else {
-        interimTranscript += transcript;
-      }
+    for (let i = 0; i < event.results.length; i++) {
+      const chunk = String(event.results[i]?.[0]?.transcript || '').trim();
+      if (chunk) chunks.push(chunk);
+      if (!event.results[i]?.isFinal) allResultsFinal = false;
     }
 
-    const output = finalTranscript || interimTranscript;
+    const output = chunks.join(' ').replace(/\\s+/g, ' ').trim();
     if (output) {
-      options.onResult(output, !!finalTranscript);
+      options.onResult(output, allResultsFinal);
     }
   };
 
