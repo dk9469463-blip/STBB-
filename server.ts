@@ -23,7 +23,7 @@ const PORT = parseInt(process.env.PORT || '3000', 10);
 
 // Gemini is called only on the server; the API key is never sent to the browser.
 const geminiApiKey = process.env.GEMINI_API_KEY?.trim();
-const geminiModel = process.env.GEMINI_MODEL?.trim() || 'gemini-2.5-flash';
+const geminiModel = process.env.GEMINI_MODEL?.trim() || 'gemini-3.8-flash';
 
 if (!geminiApiKey) {
   console.info('GEMINI_API_KEY is not set. The textbook library will run; AI assistance will remain disabled.');
