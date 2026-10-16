@@ -392,8 +392,11 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
       bookTitle: currentSelectedBook?.title,
       chapter: chapterInput.trim() || undefined,
       exercise: exerciseInput.trim() || undefined,
-      // Page number is optional. Keep it only when supplied by a reader deep-link.
-      pageNumber: pageInput ? parseInt(pageInput, 10) : undefined,
+      // Chapter/exercise lookup takes priority over any old page value inherited
+      // from a reader deep-link. A page number is never required for this action.
+      pageNumber: !chapterInput.trim() && !exerciseInput.trim() && pageInput
+        ? parseInt(pageInput, 10)
+        : undefined,
       questionNumber: questionInput.trim() || undefined,
     };
 
