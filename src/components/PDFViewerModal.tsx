@@ -43,6 +43,8 @@ import { PDFPageItem } from './PDFPageItem';
 import { PDFAnnotationToolbar } from './PDFAnnotationToolbar';
 import { AIReaderPanel } from './AIReaderPanel';
 import { saveReadingProgress } from '../utils/readingProgress';
+import { useAppPreferences } from '../utils/appPreferences';
+import { getOfflineBookBlob } from '../utils/offlineBooks';
 
 // Configure self-hosted worker from public directory
 if (typeof window !== 'undefined') {
@@ -72,6 +74,8 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
   const [loadingPercent, setLoadingPercent] = useState<number | null>(null);
   const [docError, setDocError] = useState<string | null>(null);
   const [errorDetails, setErrorDetails] = useState<string | null>(null);
+  const [usingOfflineCopy, setUsingOfflineCopy] = useState(false);
+  const { preferences } = useAppPreferences();
 
   // In-Reader AI Side Panel State
   const [isAiPanelOpen, setIsAiPanelOpen] = useState<boolean>(false);
@@ -110,8 +114,19 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
   const pdfLoadingTaskRef = useRef<ReturnType<typeof pdfjsLib.getDocument> | null>(null);
   const loadRequestIdRef = useRef(0);
   const pageJumpTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const offlineObjectUrlRef = useRef<string | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const isProgrammaticScrollRef = useRef<boolean>(false);
+
+  // Lower rendering resolution for slow connections; settings persist across books.
+  useEffect(() => {
+    if (!book) return;
+    setScale(
+      preferences.lowDataMode
+        ? (window.innerWidth < 640 ? 0.7 : 0.9)
+        : (window.innerWidth < 640 ? 0.9 : 1.25)
+    );
+  }, [book?.id, preferences.lowDataMode]);
 
   // 1. Reset & initialize when book opens
   useEffect(() => {
@@ -155,12 +170,16 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
 
       const loadingTask = pdfLoadingTaskRef.current;
       const currentDocument = pdfDocRef.current;
+      const offlineObjectUrl = offlineObjectUrlRef.current;
       pdfLoadingTaskRef.current = null;
       pdfDocRef.current = null;
+      offlineObjectUrlRef.current = null;
 
       if (loadingTask) {
         void loadingTask.destroy().catch(() => {
           // Cancellation during book switching is expected.
+        }).finally(() => {
+          if (offlineObjectUrl) URL.revokeObjectURL(offlineObjectUrl);
         });
       } else if (currentDocument) {
         const destroyDocument = (
@@ -172,8 +191,14 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
         if (typeof destroyDocument === 'function') {
           void Promise.resolve(destroyDocument.call(currentDocument)).catch(() => {
             // The document may already have been closed by PDF.js.
+          }).finally(() => {
+            if (offlineObjectUrl) URL.revokeObjectURL(offlineObjectUrl);
           });
+        } else if (offlineObjectUrl) {
+          URL.revokeObjectURL(offlineObjectUrl);
         }
+      } else if (offlineObjectUrl) {
+        URL.revokeObjectURL(offlineObjectUrl);
       }
     };
   }, [book, initialPageNumber]);
@@ -186,12 +211,16 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
     const loadId = ++loadRequestIdRef.current;
     const previousTask = pdfLoadingTaskRef.current;
     const previousDocument = pdfDocRef.current;
+    const previousOfflineUrl = offlineObjectUrlRef.current;
     pdfLoadingTaskRef.current = null;
     pdfDocRef.current = null;
+    offlineObjectUrlRef.current = null;
 
     if (previousTask) {
       void previousTask.destroy().catch(() => {
         // Replacing a loading textbook is expected cancellation.
+      }).finally(() => {
+        if (previousOfflineUrl) URL.revokeObjectURL(previousOfflineUrl);
       });
     } else if (previousDocument) {
       const destroyDocument = (
@@ -203,8 +232,14 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
       if (typeof destroyDocument === 'function') {
         void Promise.resolve(destroyDocument.call(previousDocument)).catch(() => {
           // Ignore repeated cleanup if PDF.js already closed the document.
+        }).finally(() => {
+          if (previousOfflineUrl) URL.revokeObjectURL(previousOfflineUrl);
         });
+      } else if (previousOfflineUrl) {
+        URL.revokeObjectURL(previousOfflineUrl);
       }
+    } else if (previousOfflineUrl) {
+      URL.revokeObjectURL(previousOfflineUrl);
     }
 
     if (pageJumpTimeoutRef.current !== null) {
@@ -216,6 +251,7 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
     setDocError(null);
     setErrorDetails(null);
     setLoadingPercent(null);
+    setUsingOfflineCopy(false);
     setNumPages(0);
     setPageAnnotations({});
     setUndoHistory({});
@@ -230,15 +266,28 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
     let loadingTask: ReturnType<typeof pdfjsLib.getDocument> | null = null;
 
     try {
-      // A 256 KiB chunk avoids excessive range requests on slower connections.
+      // Prefer the copy stored in this browser; only request the network when needed.
+      const offlineBlob = await getOfflineBookBlob(book.id).catch(() => null);
+      if (loadId !== loadRequestIdRef.current) return;
+
+      let sourceUrl = streamUrl;
+      if (offlineBlob) {
+        sourceUrl = URL.createObjectURL(offlineBlob);
+        offlineObjectUrlRef.current = sourceUrl;
+        setUsingOfflineCopy(true);
+        setLoadingPercent(100);
+      }
+
+      // Low-data mode keeps PDF.js on smaller byte-range requests and avoids
+      // fetching unused pages; normal mode uses larger chunks to reduce round trips.
       loadingTask = pdfjsLib.getDocument({
-        url: streamUrl,
+        url: sourceUrl,
         withCredentials: false,
         cMapUrl: '/cmaps/',
         cMapPacked: true,
         disableAutoFetch: true,
         disableStream: false,
-        rangeChunkSize: 256 * 1024,
+        rangeChunkSize: preferences.lowDataMode ? 64 * 1024 : 256 * 1024,
       });
       pdfLoadingTaskRef.current = loadingTask;
 
@@ -951,9 +1000,11 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
                   )}
                 </div>
                 <div className="space-y-1">
-                  <p className="text-base font-bold text-white">Loading Official STBB Textbook...</p>
+                  <p className="text-base font-bold text-white">
+                    {usingOfflineCopy ? 'Opening Saved Offline Textbook...' : 'Loading Official STBB Textbook...'}
+                  </p>
                   <p className="text-xs text-slate-400">
-                    Streaming verified document from Sindh Textbook Board (portal.stbb.edu.pk)
+                    {usingOfflineCopy ? 'Reading the copy saved on this device.' : 'Streaming verified document from Sindh Textbook Board (portal.stbb.edu.pk)'}
                     {loadingPercent === null ? '' : ` — ${loadingPercent}% loaded`}
                   </p>
                 </div>
@@ -1026,6 +1077,7 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
                     isBookmarked={bookmarks.includes(pageNum)}
                     onToggleBookmark={handleToggleBookmark}
                     isDarkMode={isDarkMode}
+                    lowDataMode={preferences.lowDataMode}
                     onAskAiPage={handleAskAiAboutPage}
                     onSelectionChange={setFloatingSelection}
                   />
