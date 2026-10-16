@@ -784,10 +784,26 @@ app.post('/api/ai/study-assist', async (req: Request, res: Response) => {
     if (Array.isArray(history)) {
       for (const turn of history.filter((item) => item && item.content).slice(-8)) {
         const role = turn.role === 'assistant' || turn.role === 'model' ? 'model' : 'user';
-        contents.push({ role, parts: [{ text: String(turn.content).slice(0, 12000) }] });
+        const textPart = { text: String(turn.content).slice(0, 12000) };
+
+        // Gemini conversation history must start with a user turn and alternate roles.
+        if (!contents.length && role === 'model') continue;
+        const previous = contents[contents.length - 1];
+        if (previous?.role === role) {
+          previous.parts.push(textPart);
+        } else {
+          contents.push({ role, parts: [textPart] });
+        }
       }
     }
-    contents.push({ role: 'user', parts: userParts });
+
+    // If saved history ends on a user turn, merge the current prompt into it so roles alternate.
+    const lastContent = contents[contents.length - 1];
+    if (lastContent?.role === 'user') {
+      lastContent.parts.push(...userParts);
+    } else {
+      contents.push({ role: 'user', parts: userParts });
+    }
 
     const genAI = new GoogleGenAI({ apiKey: geminiApiKey });
     let aiText = '';
