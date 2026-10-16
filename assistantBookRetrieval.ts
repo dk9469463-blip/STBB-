@@ -270,25 +270,40 @@ export function resolveAssistantBook(
   return { book: null, candidates: candidates.slice(0, 8) };
 }
 
-function getSafeBookPdfUrl(book: Book): string | null {
+function getSafeBookPdfUrls(book: Book): string[] {
+  const urls: string[] = [];
+
+  // Prefer the official STBB portal, then use the same public Drive mirror that
+  // the in-app reader can already stream. This prevents a portal hiccup from
+  // making the reader's AI appear unable to access an otherwise available book.
   if (book.officialId && /^\d+$/.test(book.officialId)) {
-    return 'https://portal.stbb.edu.pk/ebooks/pdf_proxy.php?id=' +
-      encodeURIComponent(book.officialId) + '&download=1';
+    urls.push(
+      'https://portal.stbb.edu.pk/ebooks/pdf_proxy.php?id=' +
+      encodeURIComponent(book.officialId) + '&download=1'
+    );
   }
 
   if (book.pdfUrl) {
     try {
       const parsed = new URL(book.pdfUrl);
-      if (!OFFICIAL_HOSTS.has(parsed.hostname.toLowerCase()) ||
-          (parsed.protocol !== 'https:' && parsed.protocol !== 'http:')) {
-        return null;
+      if (
+        OFFICIAL_HOSTS.has(parsed.hostname.toLowerCase()) &&
+        (parsed.protocol === 'https:' || parsed.protocol === 'http:')
+      ) {
+        urls.push(book.pdfUrl.replace('https://ebooks.stbb.edu.pk/', 'https://portal.stbb.edu.pk/ebooks/'));
       }
-      return book.pdfUrl.replace('https://ebooks.stbb.edu.pk/', 'https://portal.stbb.edu.pk/ebooks/');
     } catch {
-      return null;
+      // Ignore invalid catalogue URLs and continue with another verified source.
     }
   }
-  return null;
+
+  if (book.driveFileId && /^[A-Za-z0-9_-]{10,200}$/.test(book.driveFileId)) {
+    const id = encodeURIComponent(book.driveFileId);
+    urls.push('https://drive.usercontent.google.com/download?id=' + id + '&export=download&confirm=t');
+    urls.push('https://drive.google.com/uc?export=download&confirm=t&id=' + id);
+  }
+
+  return [...new Set(urls)];
 }
 
 function getAssistantBookCache(bookId: string): CachedBookText {
@@ -413,23 +428,51 @@ export async function retrieveTextbookMaterial(
     exercise: context?.exercise || inferredExercise,
     questionNumber: context?.questionNumber || inferredQuestion,
   };
-  const sourceUrl = getSafeBookPdfUrl(book);
-  if (!sourceUrl) {
-    return { pages: [], pageCount: 0, error: 'No official PDF stream is available for this catalogue record.' };
+  const sourceUrls = getSafeBookPdfUrls(book);
+  if (!sourceUrls.length) {
+    return { pages: [], pageCount: 0, error: 'No usable PDF source is listed for this catalogue record.' };
   }
 
   let loadingTask: any = null;
   let pdfDocument: any = null;
 
   try {
-    // PDF.js uses byte-range requests where the official source supports them.
-    loadingTask = pdfjsLib.getDocument({
-      url: sourceUrl,
-      rangeChunkSize: 64 * 1024,
-      disableAutoFetch: true,
-      disableStream: true,
-    });
-    pdfDocument = await withTimeout(loadingTask.promise, 4500, 'The official textbook PDF took too long to open.');
+    // Try the official STBB portal first, then its verified public Drive mirror.
+    // Give each source a bounded opening window so one dead host cannot block all help.
+    const sourceErrors: string[] = [];
+    for (const sourceUrl of sourceUrls) {
+      let candidateTask: any = null;
+      try {
+        candidateTask = pdfjsLib.getDocument({
+          url: sourceUrl,
+          rangeChunkSize: 64 * 1024,
+          disableAutoFetch: true,
+          disableStream: true,
+        });
+        const candidateDocument = await withTimeout(
+          candidateTask.promise,
+          3500,
+          'This PDF source took too long to open.'
+        );
+        if (Number(candidateDocument.numPages) > 0) {
+          loadingTask = candidateTask;
+          pdfDocument = candidateDocument;
+          break;
+        }
+        sourceErrors.push('Source returned no PDF pages.');
+        try { await candidateTask.destroy(); } catch { /* try the next source */ }
+      } catch (sourceError) {
+        const message = sourceError instanceof Error ? sourceError.message : 'Unknown PDF source error';
+        sourceErrors.push(message.slice(0, 120));
+        if (candidateTask) {
+          try { await candidateTask.destroy(); } catch { /* expected when opening failed */ }
+        }
+      }
+    }
+
+    if (!pdfDocument) {
+      throw new Error('No PDF source could be opened. ' + sourceErrors.join(' | '));
+    }
 
     const pageCount = Number(pdfDocument.numPages) || 0;
     getAssistantBookCache(book.id).pageCount = pageCount;
