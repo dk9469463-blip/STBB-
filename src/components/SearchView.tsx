@@ -49,7 +49,8 @@ export const SearchView: React.FC<SearchViewProps> = ({
   });
 
   const recentIds = getRecentlyViewedBookIds();
-  const recentOrder = new Map(recentIds.map((id, index) => [id, index]));
+  const recentOrder = new Map<string, number>();
+  recentIds.forEach((id, index) => recentOrder.set(id, index));
   const sortedBooks = [...filteredBooks].sort((a, b) => {
     switch (sortBy) {
       case 'title':
