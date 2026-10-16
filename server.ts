@@ -384,11 +384,13 @@ function isValidDriveFileId(fileId: string): boolean {
   return /^[A-Za-z0-9_-]{10,200}$/.test(fileId);
 }
 
+type UpstreamFetchResponse = Awaited<ReturnType<typeof fetch>>;
+
 async function fetchPublicDrivePdf(
   fileId: string,
   headers: Record<string, string>,
   timeoutMs: number
-): Promise<Response> {
+): Promise<UpstreamFetchResponse> {
   const targets = [
     'https://drive.usercontent.google.com/download?id=' + encodeURIComponent(fileId) + '&export=download&confirm=t',
     'https://drive.google.com/uc?export=download&confirm=t&id=' + encodeURIComponent(fileId),
