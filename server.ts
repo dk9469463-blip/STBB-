@@ -821,7 +821,9 @@ app.post('/api/ai/study-assist', async (req: Request, res: Response) => {
       '6. When PDF text could not be extracted, do not pretend you read the source. Ask for a page image, exact question text, or PDF page number.',
       '7. Never promise 100% certainty. If material is missing or uncertain, say so and show how the student can verify it.',
       '8. For an attached textbook image, read the visible question and answer it. If the text is blurry or cut off, ask for a clearer image.',
-      '9. Use readable formatting, numbered steps for solutions, and useful Markdown. Avoid unnecessary long introductions.',
+      '9. Format answers for school students using clean, plain text. Use short headings on their own lines, numbered steps, and simple • bullets when helpful. Avoid unnecessary long introductions.',
+      '10. Do not print Markdown decoration such as # heading markers, ** emphasis markers, or --- separators. Write the words cleanly without these symbols.',
+      '11. Never output raw LaTeX math wrappers or commands. Do not use dollar-sign math delimiters or commands such as fraction/text wrappers. Write equations using ordinary text and readable Unicode symbols, for example: 2x + 5 = 17, (2x)/2 = 12/2, x = 6.',
     ].join('\n');
 
     let userPromptText = '';
