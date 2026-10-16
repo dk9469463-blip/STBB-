@@ -509,7 +509,10 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
       setConversations(updatedWithAI);
     } catch (err: any) {
       console.error('AI Request Failed:', err);
-      const errMsg = err.message || 'Unable to connect to AI Study Assistant.';
+      const rawError = err instanceof Error ? err.message : '';
+      const errMsg = /failed to fetch|networkerror|load failed/i.test(rawError)
+        ? 'The AI server connection was lost. In Codespaces, check that the terminal still shows the STBB Books server running. If it stopped or reports a port conflict, press Ctrl+C and run npm run dev once, then retry.'
+        : rawError || 'Unable to connect to AI Study Assistant.';
       setErrorNotice(errMsg);
       setFailedPrompt(promptToSend);
 
