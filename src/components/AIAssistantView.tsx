@@ -367,14 +367,18 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
     ].filter(Boolean).join('\n');
 
     const generatedLocatorPrompt = locatorPrompt
-      ? 'Please find and solve the selected textbook exercise using the official book content.\n' +
+      ? (pageInput.trim() && !chapterInput.trim() && !exerciseInput.trim()
+          ? 'Please read and solve the questions visible on the selected textbook PDF page.\n'
+          : 'Please find and solve the selected textbook exercise using the official book content.\n') +
         (currentSelectedBook
           ? 'Book: ' + currentSelectedBook.title + ' (Class ' + currentSelectedBook.classNumber + ', ' + currentSelectedBook.subjectName + ', ' + currentSelectedBook.medium + ' medium).\n'
           : 'Class: ' + (selectedClass || 'not selected') + '. Subject/book: identify from the selected class and clues.\n') +
         locatorPrompt + '\n' +
         (questionInput.trim()
           ? 'Solve the specified question clearly, step by step.'
-          : 'Solve all questions in this exercise in their original order.') +
+          : pageInput.trim() && !exerciseInput.trim()
+            ? 'Solve all visible questions on this PDF page step by step.'
+            : 'Solve all questions in this exercise in their original order.') +
         (pageInput.trim()
           ? ' Use the specified PDF page first and solve the visible questions on that page.'
           : ' Search the selected book by chapter and exercise. Use the best matching extracted textbook pages, and do not invent any question that is not visible in the provided book text.')
@@ -817,7 +821,7 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
           </div>
           <div className="sm:col-span-2 lg:col-span-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1">
             <p className="text-[11px] text-slate-400">
-              Enter a PDF page number to go directly to that page, or leave it blank to search by chapter and exercise.
+              Enter a PDF page number to send that page image to the AI, or leave it blank to search by chapter and exercise.
             </p>
             <button
               type="button"
