@@ -396,6 +396,16 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
     setFailedPrompt(null);
     setIsLoading(true);
 
+    // A page may be typed naturally in chat (for example, "solve Exercise 7.1 on page 199")
+    // rather than entered in the locator. Detect that page too so the browser can send
+    // an image of scanned PDFs to the AI instead of relying on selectable PDF text.
+    const typedPromptPageMatch = typedPrompt.match(/\b(?:pdf\s*)?page(?:\s*(?:number|no\.?)\s*)?[:#-]?\s*(\d{1,4})\b/i) ||
+      typedPrompt.match(/\bp\.?\s*(\d{1,4})\b/i);
+    const typedPromptPageNumber = typedPromptPageMatch ? Number(typedPromptPageMatch[1]) : undefined;
+    const locatorPageNumber = pageInput.trim() && Number.isInteger(Number(pageInput)) && Number(pageInput) > 0
+      ? Number(pageInput)
+      : typedPromptPageNumber;
+
     const selectedBookContext = {
       bookId: currentSelectedBook?.id,
       officialId: currentSelectedBook?.officialId,
@@ -405,10 +415,8 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
       bookTitle: currentSelectedBook?.title,
       chapter: chapterInput.trim() || undefined,
       exercise: exerciseInput.trim() || undefined,
-      // A supplied PDF page number takes priority over chapter/exercise scanning.
-      pageNumber: pageInput.trim() && Number.isInteger(Number(pageInput)) && Number(pageInput) > 0
-        ? Number(pageInput)
-        : undefined,
+      // A supplied or naturally typed PDF page number takes priority over exercise scanning.
+      pageNumber: locatorPageNumber,
       questionNumber: questionInput.trim() || undefined,
     };
     const bookContext = answerMode === 'textbook' ? selectedBookContext : undefined;
@@ -483,7 +491,10 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
         body: JSON.stringify({
           prompt: promptToSend,
           language: selectedLanguage,
-          mode: answerMode === 'textbook' && exerciseInput ? 'solve-exercise' : 'general',
+          mode: answerMode === 'textbook' && (
+            Boolean(exerciseInput.trim()) ||
+            /\b(?:review\s+exercise|exercise|review\s+questions?)\s*(?:no\.?\s*)?\d+(?:\.\d+)?/i.test(typedPrompt)
+          ) ? 'solve-exercise' : 'general',
           useTextbook: answerMode === 'textbook',
           bookContext,
           imageBase64: currentAttachment,
