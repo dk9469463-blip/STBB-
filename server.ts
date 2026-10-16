@@ -814,7 +814,7 @@ async function startServer() {
       });
     });
 
-  await listenWithFallback(PORT, process.env.PORT ? 0 : 10);
+  await listenWithFallback(PORT, isDev ? 10 : 0);
 }
 
 startServer().catch((err) => {
