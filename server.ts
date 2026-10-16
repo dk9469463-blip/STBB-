@@ -49,7 +49,7 @@ async function getAvailableGeminiTextModels(apiKey: string): Promise<string[]> {
     'https://generativelanguage.googleapis.com/v1beta/models?pageSize=100',
     {
       headers: { 'x-goog-api-key': apiKey },
-      signal: AbortSignal.timeout(12000),
+      signal: AbortSignal.timeout(2500),
     }
   );
 
@@ -914,14 +914,14 @@ app.post('/api/ai/study-assist', async (req: Request, res: Response) => {
       configuredModel,
       ...discoveredModels,
       ...fallbackModels,
-    ])).filter(Boolean).slice(0, 5);
+    ])).filter(Boolean).slice(0, 3);
 
     let shouldStop = false;
     for (const modelName of modelsToTry) {
       lastTriedModel = modelName;
       // A provider 503 can be temporary. Retry the current model once, then
       // automatically fail over to another model available to this API key.
-      for (let attempt = 0; attempt < 2; attempt += 1) {
+      for (let attempt = 0; attempt < 1; attempt += 1) {
         try {
           const response = await genAI.models.generateContent({
             model: modelName,
@@ -965,12 +965,6 @@ app.post('/api/ai/study-assist', async (req: Request, res: Response) => {
             /RESOURCE_EXHAUSTED|quota exceeded|rate.?limit|too many requests/i.test(detail.message);
           const modelUnavailable = detail.status === 404 ||
             /not found|no longer available|unsupported model|unknown model/i.test(detail.message);
-
-          // Retry one transient 503 on the same model, with a brief delay.
-          if (overloaded && attempt === 0) {
-            await new Promise((resolve) => setTimeout(resolve, 700));
-            continue;
-          }
 
           // Quota/rate limits and model availability can differ by model. Try
           // the next eligible model instead of failing the whole student query.
