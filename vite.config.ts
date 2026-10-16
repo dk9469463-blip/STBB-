@@ -47,8 +47,26 @@ export default defineConfig(() => {
           ],
         },
         workbox: {
-          globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+          // Include the self-hosted PDF.js worker so saved books can open without
+          // downloading another script when the device is offline.
+          globPatterns: ['**/*.{js,mjs,css,html,ico,png,svg,woff,woff2}'],
           runtimeCaching: [
+            {
+              // Cache only the CMap files actually requested by PDF.js, rather than
+              // pre-downloading every language map on a limited data plan.
+              urlPattern: /\\/cmaps\\/[^/]+\\.bcmap$/i,
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'stbb-pdf-cmaps',
+                expiration: {
+                  maxEntries: 200,
+                  maxAgeSeconds: 60 * 60 * 24 * 365,
+                },
+                cacheableResponse: {
+                  statuses: [0, 200],
+                },
+              },
+            },
             {
               urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
               handler: 'CacheFirst',
