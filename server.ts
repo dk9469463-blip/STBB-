@@ -60,7 +60,7 @@ async function getAvailableGeminiTextModels(apiKey: string): Promise<string[]> {
   const data = await response.json() as { models?: GeminiListedModel[] };
   const listed = (Array.isArray(data.models) ? data.models : [])
     .filter((model) => {
-      const name = String(model.name || '').replace(/^models\\//, '');
+      const name = String(model.name || '').replace(/^models\//, '');
       const methods = model.supportedGenerationMethods || model.supportedActions || [];
       return (
         name.startsWith('gemini-') &&
@@ -68,10 +68,10 @@ async function getAvailableGeminiTextModels(apiKey: string): Promise<string[]> {
         !/(embedding|imagen|veo|audio|tts|live|robotics|computer-use|deep-research|aqa)/i.test(name)
       );
     })
-    .map((model) => String(model.name || '').replace(/^models\\//, ''));
+    .map((model) => String(model.name || '').replace(/^models\//, ''));
 
   const versionScore = (name: string): number => {
-    const match = name.match(/^gemini-(\\d+)(?:\\.(\\d+))?/i);
+    const match = name.match(/^gemini-(\d+)(?:\.(\d+))?/i);
     return match ? Number(match[1]) * 100 + Number(match[2] || 0) : 0;
   };
 
@@ -97,7 +97,7 @@ function getGeminiErrorDetails(error: unknown): { status: number; message: strin
     status,
     message: message
       .replace(/AIza[0-9A-Za-z_-]{20,}/g, '[REDACTED_API_KEY]')
-      .replace(/\\s+/g, ' ')
+      .replace(/\s+/g, ' ')
       .slice(0, 300),
   };
 }
@@ -880,7 +880,7 @@ app.post('/api/ai/study-assist', async (req: Request, res: Response) => {
 
     const genAI = new GoogleGenAI({ apiKey: geminiApiKey });
     let aiText = '';
-    let successfulModel = geminiModel.replace(/^models\\//, '');
+    let successfulModel = geminiModel.replace(/^models\//, '');
     let lastGeminiFailure: { status: number; message: string } = { status: 0, message: '' };
 
     // Use live models available to this key. If discovery is temporarily down,
@@ -894,7 +894,7 @@ app.post('/api/ai/study-assist', async (req: Request, res: Response) => {
         (detail.status ? ' with HTTP ' + detail.status : '') + '. Trying configured model and safe fallbacks.');
     }
 
-    const configuredModel = geminiModel.replace(/^models\\//, '');
+    const configuredModel = geminiModel.replace(/^models\//, '');
     const fallbackModels = [
       'gemini-3.8-flash-lite',
       'gemini-3.8-flash',
