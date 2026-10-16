@@ -290,6 +290,9 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
       language,
       imageBase64: capturedImage || undefined,
       bookContext: {
+        bookId: book.id,
+        officialId: book.officialId,
+        medium: book.medium,
         classNumber: book.classNumber,
         subjectName: book.subjectName,
         bookTitle: book.title,
@@ -342,6 +345,7 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         language,
         followUps: data.followUps || [],
+        sources: Array.isArray(data.sources) ? data.sources : [],
       };
 
       const finalMessages = [...nextMessages, assistantMsg];
@@ -602,6 +606,25 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
                 >
                   {msg.content}
                 </div>
+
+                {/* Official textbook sources returned by the assistant */}
+                {isAssistant && !msg.isError && msg.sources && msg.sources.length > 0 && (
+                  <div className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-900/60 p-2.5 space-y-1.5" dir="ltr">
+                    <p className="text-[10px] font-extrabold uppercase tracking-wider text-amber-300">Textbook sources</p>
+                    {msg.sources.map((source, sourceIndex) => (
+                      <a
+                        key={msg.id + '-source-' + sourceIndex}
+                        href={source.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block rounded-lg px-2 py-1.5 hover:bg-slate-800 transition"
+                      >
+                        <span className="block text-[11px] font-bold text-blue-200 underline underline-offset-2">{source.title}</span>
+                        {source.detail && <span className="mt-0.5 block text-[10px] text-slate-400">{source.detail}</span>}
+                      </a>
+                    ))}
+                  </div>
+                )}
 
                 {/* Toolbar for Assistant answers */}
                 {isAssistant && !msg.isError && (
