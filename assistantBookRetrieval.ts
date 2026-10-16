@@ -488,10 +488,18 @@ export async function retrieveTextbookMaterial(
 
     const requestedPage = Number(lookupContext.pageNumber);
     let selectedPageNumbers: number[] = [];
+    const wantsWholeExercise =
+      /\b(?:whole|complete|entire)\s+(?:of\s+)?(?:the\s+)?exercise\b/i.test(prompt) ||
+      /\bsolve\s+(?:all|every)\s+(?:the\s+)?questions\b/i.test(prompt);
 
     if (Number.isInteger(requestedPage) && requestedPage >= 1 && requestedPage <= pageCount) {
-      // The neighbouring pages help when an exercise continues over a page break.
-      selectedPageNumbers = [requestedPage - 1, requestedPage, requestedPage + 1]
+      // For a whole exercise, include more pages around the reader's current
+      // page; exercises often start or continue on adjacent pages.
+      const nearbyPageOffsets = wantsWholeExercise
+        ? [-2, -1, 0, 1, 2, 3, 4, 5]
+        : [-1, 0, 1];
+      selectedPageNumbers = nearbyPageOffsets
+        .map((offset) => requestedPage + offset)
         .filter((page) => page >= 1 && page <= pageCount);
     } else {
       // Searching every PDF page sequentially can exceed the web preview's request
