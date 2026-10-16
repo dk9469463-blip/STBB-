@@ -311,11 +311,15 @@ export const BookCard: React.FC<BookCardProps> = ({ book, onViewBook }) => {
               )}
               <span>
                 {isSavingOffline
-                  ? offlineProgress?.percent !== null && offlineProgress?.percent !== undefined
-                    ? `Saving for offline… ${offlineProgress.percent}%`
-                    : offlineProgress?.loaded
-                      ? `Saving for offline… ${Math.ceil(offlineProgress.loaded / (1024 * 1024))} MB`
-                      : 'Saving for offline…'
+                  ? (offlineProgress?.attempt || 1) > 1
+                    ? offlineProgress?.percent !== null && offlineProgress?.percent !== undefined
+                      ? `Connection slow — retrying (${offlineProgress?.attempt}/3)… ${offlineProgress.percent}%`
+                      : `Connection interrupted — retrying (${offlineProgress?.attempt}/3)…`
+                    : offlineProgress?.percent !== null && offlineProgress?.percent !== undefined
+                      ? `Saving for offline… ${offlineProgress.percent}%`
+                      : offlineProgress?.loaded
+                        ? `Saving for offline… ${Math.ceil(offlineProgress.loaded / (1024 * 1024))} MB`
+                        : 'Preparing offline copy…'
                   : 'Save for Offline'}
               </span>
             </button>
