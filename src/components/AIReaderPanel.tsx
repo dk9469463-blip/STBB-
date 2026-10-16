@@ -66,6 +66,7 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
   const [isListening, setIsListening] = useState<boolean>(false);
   const [speechError, setSpeechError] = useState<string | null>(null);
   const recognizerRef = useRef<SpeechRecognizerHandle | null>(null);
+  const voiceBaseInputRef = useRef<string>('');
   const [speakingId, setSpeakingId] = useState<string | null>(null);
   const [isSpeechPaused, setIsSpeechPaused] = useState<boolean>(false);
 
@@ -135,10 +136,15 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
       return;
     }
 
+    // Preserve anything the student already typed; replace the voice draft
+    // on each partial recognition update so interim words never stack up.
+    voiceBaseInputRef.current = inputQuery.trim();
+
     const rec = createSpeechRecognizer({
       language,
       onResult: (transcript) => {
-        setInputQuery((prev) => (prev ? `${prev} ${transcript}` : transcript));
+        const base = voiceBaseInputRef.current;
+        setInputQuery([base, transcript.trim()].filter(Boolean).join(' '));
       },
       onError: (err) => {
         setSpeechError(err);
