@@ -53,6 +53,7 @@ import {
   stopSpeech,
 } from '../utils/speechHelper';
 import { formatStudyAnswer } from '../utils/formatStudyAnswer';
+import { captureBookPdfPage } from '../utils/pdfPageCapture';
 
 interface AIAssistantViewProps {
   initialBook?: Book | null;
@@ -436,7 +437,7 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
     setConversations(updatedWithUser);
 
     setUserInput('');
-    const currentAttachment = attachedImage;
+    let currentAttachment = attachedImage;
     setAttachedImage(null);
     setImageFileName(null);
 
@@ -451,6 +452,19 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
       }));
 
     try {
+      // A supplied page number lets the browser render the real textbook page
+      // and send it as an image too, so scanned PDFs can still be read by Gemini.
+      if (!currentAttachment && bookContext.pageNumber && currentSelectedBook) {
+        try {
+          currentAttachment = await captureBookPdfPage(currentSelectedBook, bookContext.pageNumber);
+        } catch (captureError) {
+          console.warn(
+            'Could not render the selected textbook page for AI vision:',
+            captureError instanceof Error ? captureError.message : 'unknown error'
+          );
+        }
+      }
+
       const response = await fetch('/api/ai/study-assist', {
         method: 'POST',
         headers: {
