@@ -4,12 +4,11 @@ import { fileURLToPath } from 'url';
 import dns from 'dns';
 import { Readable } from 'node:stream';
 import {
-  AssistantBookContext,
-  AssistantSource,
   resolveAssistantBook,
   retrieveTextbookMaterial,
   formatBookCatalogEntry,
 } from './assistantBookRetrieval';
+import type { AssistantBookContext, AssistantSource } from './assistantBookRetrieval';
 
 // Force IPv4 first DNS lookup to prevent dual-stack hangs
 dns.setDefaultResultOrder('ipv4first');
