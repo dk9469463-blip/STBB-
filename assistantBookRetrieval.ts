@@ -113,7 +113,7 @@ function inferSubjectFromPrompt(prompt: string): string | undefined {
     { subject: 'English', pattern: /\benglish\s+(?:book|textbook|subject|chapter|exercise|grammar|reader)\b|\b(?:book|textbook|subject|chapter|exercise)\s+(?:of\s+)?english\b|\b(?:class\s*)?(?:1[0-2]|[1-9])\s+english\b/i },
     { subject: 'Urdu', pattern: /\burdu\s+(?:book|textbook|subject|chapter|exercise)\b|\b(?:book|textbook|subject|chapter|exercise)\s+(?:of\s+)?urdu\b|\b(?:class\s*)?(?:1[0-2]|[1-9])\s+urdu\b/i },
     { subject: 'Sindhi', pattern: /\bsindhi\s+(?:book|textbook|subject|chapter|exercise)\b|\b(?:book|textbook|subject|chapter|exercise)\s+(?:of\s+)?sindhi\b|\b(?:class\s*)?(?:1[0-2]|[1-9])\s+sindhi\b/i },
-    { subject: 'Islamiat', pattern: /\b(?:islamiat|islamiyat|islamic studies)\b/i },
+    { subject: 'Islamiat / Ethics', pattern: /\b(?:islamiat|islamiyat|islamic studies)\b/i },
     { subject: 'Pakistan Studies', pattern: /\b(?:pakistan studies|pak studies)\b/i },
     { subject: 'General Science', pattern: /\bgeneral science\b/i },
     { subject: 'Social Studies', pattern: /\bsocial studies\b/i },
