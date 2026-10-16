@@ -29,6 +29,7 @@ interface PDFPageItemProps {
   isBookmarked: boolean;
   onToggleBookmark: (pageNumber: number) => void;
   isDarkMode: boolean;
+  lowDataMode: boolean;
   onAskAiPage?: (pageNumber: number) => void;
   onSelectionChange?: (
     selection: { text: string; pageNumber: number; clientX: number; clientY: number } | null
@@ -51,6 +52,7 @@ export const PDFPageItem: React.FC<PDFPageItemProps> = ({
   isBookmarked,
   onToggleBookmark,
   isDarkMode,
+  lowDataMode,
   onAskAiPage,
   onSelectionChange,
 }) => {
@@ -145,7 +147,7 @@ export const PDFPageItem: React.FC<PDFPageItemProps> = ({
       if (!canvas) return;
 
       const viewport = page.getViewport({ scale, rotation });
-      const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+      const pixelRatio = Math.min(window.devicePixelRatio || 1, lowDataMode ? 1 : 2);
 
       canvas.width = Math.floor(viewport.width * pixelRatio);
       canvas.height = Math.floor(viewport.height * pixelRatio);
@@ -195,7 +197,7 @@ export const PDFPageItem: React.FC<PDFPageItemProps> = ({
         console.error(`Page ${pageNumber} render error:`, err);
       }
     }
-  }, [isInViewport, pdfDoc, pageNumber, scale, rotation]);
+  }, [isInViewport, pdfDoc, pageNumber, scale, rotation, lowDataMode]);
 
   useEffect(() => {
     if (isInViewport) {
