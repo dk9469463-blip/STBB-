@@ -96,8 +96,11 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
   const [questionInput, setQuestionInput] = useState<string>('');
   const [showAdvancedLocator, setShowAdvancedLocator] = useState<boolean>(false);
 
+  // Keep highlighted textbook text as separate context. Never auto-fill the student's message box.
+  const [selectedPassage, setSelectedPassage] = useState<string>(initialSelectedText || '');
+
   // Message Input & Image Attachment
-  const [userInput, setUserInput] = useState<string>(initialSelectedText || '');
+  const [userInput, setUserInput] = useState<string>('');
   const [attachedImage, setAttachedImage] = useState<string | null>(null);
   const [imageFileName, setImageFileName] = useState<string | null>(null);
 
@@ -169,9 +172,7 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
       setSelectedClass(initialBook.classNumber);
       setSelectedBookId(initialBook.id);
     }
-    if (initialSelectedText) {
-      setUserInput(initialSelectedText);
-    }
+    setSelectedPassage(initialSelectedText || '');
     if (initialPageNumber) {
       setPageInput(initialPageNumber.toString());
       setShowAdvancedLocator(true);
@@ -418,8 +419,13 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
       // A supplied or naturally typed PDF page number takes priority over exercise scanning.
       pageNumber: locatorPageNumber,
       questionNumber: questionInput.trim() || undefined,
+      selectedText: selectedPassage.trim() || undefined,
     };
-    const bookContext = answerMode === 'textbook' ? selectedBookContext : undefined;
+    // Selected text is always useful context, even in Direct Answer mode, but it
+    // must never force textbook retrieval or be inserted into the message box.
+    const bookContext = answerMode === 'textbook'
+      ? selectedBookContext
+      : selectedPassage.trim() ? { selectedText: selectedPassage.trim() } : undefined;
 
     const userMsg: ChatMessage = {
       id: `user-${Date.now()}`,
@@ -472,7 +478,7 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
     try {
       // A supplied page number lets the browser render the real textbook page
       // and send it as an image too, so scanned PDFs can still be read by Gemini.
-      if (!currentAttachment && bookContext?.pageNumber && currentSelectedBook) {
+      if (!currentAttachment && bookContext?.pageNumber && currentSelectedBook && !bookContext?.selectedText) {
         try {
           currentAttachment = await captureBookPdfPage(currentSelectedBook, bookContext.pageNumber);
         } catch (captureError) {
@@ -829,6 +835,24 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
               : 'Search Textbook: the AI will look for a relevant book in the selected class based on your question.'}
         </div>
       </div>
+
+      {selectedPassage && (
+        <div className="px-4 py-2 bg-blue-950/50 border-b border-blue-900/60 shrink-0 flex items-start gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] uppercase tracking-wide font-bold text-amber-300 mb-1">Selected text context</p>
+            <p className="text-xs text-blue-100 whitespace-pre-wrap break-words line-clamp-3">{selectedPassage}</p>
+            <p className="text-[10px] text-slate-400 mt-1">This passage is provided separately; it has not been typed into your message.</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSelectedPassage('')}
+            className="shrink-0 rounded-lg px-2 py-1 text-[10px] text-slate-300 hover:bg-slate-800 hover:text-white"
+            title="Remove selected passage context"
+          >
+            Clear
+          </button>
+        </div>
+      )}
 
       {/* Chapter, exercise, PDF page and question locator. */}
       {showAdvancedLocator && (
