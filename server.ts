@@ -802,8 +802,8 @@ async function startServer() {
       });
 
       server.once('error', (error: Error & { code?: string }) => {
-        // Only auto-select another port when no explicit deployment PORT was set.
-        if (error.code === 'EADDRINUSE' && attempts > 0 && !process.env.PORT) {
+        // Allow port fallback during development, including when Codespaces sets PORT.
+        if (error.code === 'EADDRINUSE' && attempts > 0 && isDev) {
           const nextPort = port + 1;
           console.warn(`Port ${port} is already in use; trying port ${nextPort}.`);
           resolve(listenWithFallback(nextPort, attempts - 1));
