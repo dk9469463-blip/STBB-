@@ -61,10 +61,21 @@ function runTransaction<T>(
   return openDatabase().then((database) => new Promise<T>((resolve, reject) => {
     const transaction = database.transaction(BOOKS_STORE, mode);
     const request = action(transaction.objectStore(BOOKS_STORE));
+    let result: T;
 
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error || new Error('Offline storage operation failed.'));
-    transaction.onabort = () => reject(transaction.error || new Error('Offline storage operation was cancelled.'));
+    request.onsuccess = () => {
+      result = request.result;
+    };
+    request.onerror = () => {
+      reject(request.error || new Error('Offline storage operation failed.'));
+    };
+    transaction.oncomplete = () => resolve(result);
+    transaction.onerror = () => {
+      reject(transaction.error || request.error || new Error('Offline storage operation failed.'));
+    };
+    transaction.onabort = () => {
+      reject(transaction.error || new Error('Offline storage operation was cancelled.'));
+    };
   }));
 }
 
