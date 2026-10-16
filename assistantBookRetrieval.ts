@@ -457,7 +457,7 @@ export async function retrieveTextbookMaterial(
           disableAutoFetch: true,
           disableStream: true,
         });
-        const candidateDocument = await withTimeout(
+        const candidateDocument = await withTimeout<pdfjsLib.PDFDocumentProxy>(
           candidateTask.promise,
           Math.min(3500, sourceTimeLeft),
           'This PDF source took too long to open.'
