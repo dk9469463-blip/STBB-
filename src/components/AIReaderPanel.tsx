@@ -289,13 +289,30 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
     setErrorMsg(null);
     setSpeechError(null);
 
+    // The reader already knows the exact PDF page. Attach a snapshot automatically
+    // so scanned/image-only textbook pages can be read by Gemini Vision. Students
+    // should not need to press the camera button or re-upload a page manually.
+    let attachmentForRequest = capturedImage;
+    if (!attachmentForRequest && onCapturePageImage) {
+      try {
+        attachmentForRequest = (await onCapturePageImage()) || null;
+      } catch (captureError) {
+        // Keep solving with the selected text and page metadata if canvas capture
+        // is unavailable; a failed snapshot must never block the student's query.
+        console.warn(
+          'Automatic textbook page capture failed; continuing with text context:',
+          captureError instanceof Error ? captureError.message : 'unknown error'
+        );
+      }
+    }
+
     const userMsg: ChatMessage = {
       id: `user-${Date.now()}`,
       role: 'user',
       content: finalPrompt || (selectedText ? `Explain this textbook passage:\n"${selectedText}"` : `Explain Page ${currentPage}`),
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       language,
-      imageBase64: capturedImage || undefined,
+      imageBase64: attachmentForRequest || undefined,
       bookContext: {
         bookId: book.id,
         officialId: book.officialId,
@@ -314,7 +331,7 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
     saveStoredReaderMessages(book.id, nextMessages);
 
     setInputQuery('');
-    const currentAttachment = capturedImage;
+    const currentAttachment = attachmentForRequest;
     setCapturedImage(null);
 
     // Multi-turn history (excluding the current user message)
