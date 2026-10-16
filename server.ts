@@ -4,6 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import dns from 'dns';
 import { Readable } from 'node:stream';
+import { GoogleGenAI } from '@google/genai';
 import {
   resolveAssistantBook,
   retrieveTextbookMaterial,
@@ -20,12 +21,12 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = parseInt(process.env.PORT || '3000', 10);
 
-// AI is provided through a server-side API key. The key is never sent to the browser.
-const openAiApiKey = process.env.OPENAI_API_KEY?.trim();
-const openAiModel = process.env.OPENAI_MODEL?.trim() || 'gpt-4o-mini';
+// Gemini is called only on the server; the API key is never sent to the browser.
+const geminiApiKey = process.env.GEMINI_API_KEY?.trim();
+const geminiModel = process.env.GEMINI_MODEL?.trim() || 'gemini-2.5-flash';
 
-if (!openAiApiKey) {
-  console.info('OPENAI_API_KEY is not set. The textbook library will run; AI assistance will remain disabled.');
+if (!geminiApiKey) {
+  console.info('GEMINI_API_KEY is not set. The textbook library will run; AI assistance will remain disabled.');
 }
 
 // Lightweight per-process guard against accidental or automated AI request bursts.
@@ -630,7 +631,7 @@ app.get('/api/image/proxy', async (req: Request, res: Response) => {
 // The application uses STBB branding; the AI API key and model request remain server-side.
 app.post('/api/ai/study-assist', async (req: Request, res: Response) => {
   try {
-    if (!openAiApiKey) {
+    if (!geminiApiKey) {
       return res.status(503).json({
         error: 'The AI Study Assistant is not configured yet. Please contact the app administrator.',
       });
@@ -760,79 +761,80 @@ app.post('/api/ai/study-assist', async (req: Request, res: Response) => {
       userPromptText = prompt?.trim() || 'Please answer based on the attached textbook page.';
     }
 
-    const userContent: Array<Record<string, unknown>> = [{
-      type: 'text',
+    const userParts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> = [{
       text: contextHeader + sourceContext + '\n' + userPromptText,
     }];
 
     if (imageBase64) {
-      const cleanImage = String(imageBase64).trim();
-      const imageUrl = cleanImage.startsWith('data:')
-        ? cleanImage
-        : 'data:' + (imageMimeType || 'image/jpeg') + ';base64,' +
-          cleanImage.replace(/^data:[^;]+;base64,/, '');
-      userContent.push({
-        type: 'image_url',
-        image_url: {
-          url: imageUrl,
-          detail: 'high',
+      const rawImage = String(imageBase64).trim();
+      const imageData = rawImage.replace(/^data:[^;]+;base64,/, '');
+      userParts.push({
+        inlineData: {
+          mimeType: imageMimeType || 'image/jpeg',
+          data: imageData,
         },
       });
     }
 
-    const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: any }> = [
-      { role: 'system', content: systemInstruction },
-    ];
+    const contents: Array<{
+      role: 'user' | 'model';
+      parts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }>;
+    }> = [];
 
     if (Array.isArray(history)) {
       for (const turn of history.filter((item) => item && item.content).slice(-8)) {
-        const role = turn.role === 'assistant' || turn.role === 'model' ? 'assistant' : 'user';
-        messages.push({ role, content: String(turn.content).slice(0, 12000) });
+        const role = turn.role === 'assistant' || turn.role === 'model' ? 'model' : 'user';
+        contents.push({ role, parts: [{ text: String(turn.content).slice(0, 12000) }] });
       }
     }
-    messages.push({ role: 'user', content: userContent });
+    contents.push({ role: 'user', parts: userParts });
 
-    const apiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: 'Bearer ' + openAiApiKey,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: openAiModel,
-        messages,
-        temperature: 0.2,
-        max_tokens: 5000,
-      }),
-      signal: AbortSignal.timeout(90000),
-    });
+    const genAI = new GoogleGenAI({ apiKey: geminiApiKey });
+    let aiText = '';
+    try {
+      const response = await genAI.models.generateContent({
+        model: geminiModel,
+        contents,
+        config: {
+          systemInstruction,
+          temperature: 0.2,
+          maxOutputTokens: 5000,
+        },
+      });
+      aiText = (response.text || '').trim();
+    } catch (providerError: unknown) {
+      const provider = providerError as { message?: string; status?: number | string; code?: number | string };
+      const providerMessage = String(provider?.message || '');
+      const providerStatus = Number(provider?.status || provider?.code || 0);
+      console.warn('Gemini provider request failed' +
+        (providerStatus ? ' with HTTP ' + providerStatus : '') + '.');
 
-    const apiData = await apiResponse.json().catch(() => ({})) as {
-      error?: { message?: string; code?: string; type?: string };
-      choices?: Array<{ message?: { content?: string | Array<{ type?: string; text?: string }> } }>;
-    };
-
-    if (!apiResponse.ok) {
-      console.warn('AI provider request failed with HTTP ' + apiResponse.status +
-        (apiData.error?.code ? ' (' + apiData.error.code + ')' : '') + '.');
-      if (apiResponse.status === 401 || apiResponse.status === 403) {
-        return res.status(503).json({ error: 'The AI assistant needs an administrator to check its secure configuration.' });
+      if (
+        providerStatus === 401 ||
+        providerStatus === 403 ||
+        /API_KEY_INVALID|invalid api key|permission denied|forbidden/i.test(providerMessage)
+      ) {
+        return res.status(503).json({
+          error: 'The AI assistant needs an administrator to check its Gemini API key and permissions.',
+        });
       }
-      if (apiResponse.status === 429) {
-        return res.status(429).json({ error: 'The AI assistant is temporarily busy. Please try again shortly.' });
+      if (
+        providerStatus === 429 ||
+        /RESOURCE_EXHAUSTED|quota exceeded|rate.?limit|too many requests/i.test(providerMessage)
+      ) {
+        return res.status(429).json({
+          error: 'The Gemini API usage limit has been reached. Please wait for the free quota to reset or check your Google AI Studio project limits.',
+        });
       }
-      if (apiResponse.status >= 500) {
-        return res.status(502).json({ error: 'The AI assistant service is temporarily unavailable. Please try again.' });
+      if (providerStatus >= 500 || /internal error|service unavailable/i.test(providerMessage)) {
+        return res.status(502).json({
+          error: 'The Gemini service is temporarily unavailable. Please try again.',
+        });
       }
-      return res.status(502).json({ error: 'The AI assistant could not complete this request. Please try again.' });
+      return res.status(502).json({
+        error: 'The AI assistant could not complete this request. Please check the Gemini model setting and try again.',
+      });
     }
-
-    const answerContent = apiData.choices?.[0]?.message?.content;
-    const aiText = typeof answerContent === 'string'
-      ? answerContent.trim()
-      : Array.isArray(answerContent)
-        ? answerContent.map((part) => part.text || '').join('\n').trim()
-        : '';
 
     if (!aiText) {
       return res.status(502).json({ error: 'The AI assistant did not return a readable answer. Please try again.' });
