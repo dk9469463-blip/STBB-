@@ -345,6 +345,22 @@ function scoreAssistantPage(
   return score;
 }
 
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(message)), timeoutMs);
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        clearTimeout(timer);
+        reject(error);
+      }
+    );
+  });
+}
+
 export async function retrieveTextbookMaterial(
   book: Book,
   context: AssistantBookContext | undefined,
@@ -379,7 +395,7 @@ export async function retrieveTextbookMaterial(
       disableAutoFetch: true,
       disableStream: true,
     });
-    pdfDocument = await loadingTask.promise;
+    pdfDocument = await withTimeout(loadingTask.promise, 4500, 'The official textbook PDF took too long to open.');
 
     const pageCount = Number(pdfDocument.numPages) || 0;
     getAssistantBookCache(book.id).pageCount = pageCount;
