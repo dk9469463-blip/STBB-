@@ -54,7 +54,7 @@ export default defineConfig(() => {
             {
               // Cache only the CMap files actually requested by PDF.js, rather than
               // pre-downloading every language map on a limited data plan.
-              urlPattern: /\\/cmaps\\/[^/]+\\.bcmap$/i,
+              urlPattern: /\/cmaps\/[^/]+\.bcmap$/i,
               handler: 'CacheFirst',
               options: {
                 cacheName: 'stbb-pdf-cmaps',
