@@ -11,6 +11,7 @@ import { PDFViewerModal } from './components/PDFViewerModal';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { Book } from './types';
 import { getStoredReadingPage } from './utils/readingProgress';
+import { recordRecentlyViewedBook } from './utils/recentlyViewed';
 
 const STORAGE_LAST_CLASS_KEY = 'stbb_last_selected_class';
 
@@ -83,6 +84,7 @@ export default function App() {
   };
 
   const handleOpenBook = (book: Book, pageNumber?: number) => {
+    recordRecentlyViewedBook(book);
     const savedPage = pageNumber ?? getStoredReadingPage(book.id) ?? 1;
     setInitialPageForModal(savedPage);
     setActiveBookForModal(book);
