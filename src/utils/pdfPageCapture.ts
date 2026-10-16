@@ -56,6 +56,7 @@ export async function captureBookPdfPage(
     }
 
     await page.render({
+      canvas,
       canvasContext: context,
       viewport,
     }).promise;
