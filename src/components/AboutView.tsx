@@ -44,14 +44,12 @@ export const AboutView: React.FC = () => {
 
           <div className="pt-4 border-t border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <img
-                src="/government-sindh-logo.svg"
-                alt="Government of Sindh"
-                className="w-12 h-12 object-contain rounded-2xl bg-white/10 p-1"
-              />
+              <div className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white/10 border border-amber-400/20 text-amber-300">
+                <BookOpen className="w-6 h-6" aria-label="Textbook source" />
+              </div>
               <div>
                 <span className="text-xs uppercase tracking-wider text-slate-400 font-medium">
-                  Curriculum Authority
+                  Textbook Source
                 </span>
                 <p className="text-base font-bold text-amber-300">
                   Sindh Textbook Board, Jamshoro
@@ -67,11 +65,11 @@ export const AboutView: React.FC = () => {
         </div>
       </div>
 
-      {/* Official Data Source & Verification Audit */}
+      {/* Textbook Source & App Architecture */}
       <div className="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-xs space-y-4">
         <div className="flex items-center gap-2.5 text-blue-900 font-bold text-lg">
           <Database className="w-6 h-6 text-blue-700" />
-          <span>Official Data Source & Architecture</span>
+          <span>Textbook Source & App Architecture</span>
         </div>
         <p className="text-sm text-slate-600 leading-relaxed">
           All textbook records, titles, subject mappings, covers, and PDF streams in this application are directly indexed from the official portal of the Sindh Textbook Board:
@@ -106,6 +104,23 @@ export const AboutView: React.FC = () => {
           All digital textbooks, syllabi, covers, and learning materials remain the intellectual property of the <strong>Sindh Textbook Board (STBB), Jamshoro, Sindh, Pakistan</strong>.
           This independent web application facilitates non-commercial educational access for students, teachers, and parents in Sindh.
         </p>
+      </div>
+
+      {/* Project creators */}
+      <div className="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-xs">
+        <div className="flex items-start gap-4">
+          <div className="w-12 h-12 shrink-0 rounded-2xl bg-gradient-to-br from-blue-700 to-indigo-950 text-amber-300 flex items-center justify-center border border-amber-400/30">
+            <Sparkles className="w-6 h-6" />
+          </div>
+          <div>
+            <p className="text-xs font-bold uppercase tracking-widest text-blue-700">Project Creators</p>
+            <h3 className="mt-1 text-xl font-black text-slate-900">D&amp;A Brothers</h3>
+            <p className="mt-1 text-sm font-semibold text-slate-700">Developed by Dileep Kumar &amp; Ajeet Kumar</p>
+            <p className="mt-2 text-sm text-slate-600 leading-relaxed">
+              An independent educational project built to make textbook access easier for students.
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* PWA Install Notice */}
