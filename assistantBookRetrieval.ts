@@ -410,7 +410,16 @@ export async function retrieveTextbookMaterial(
           return /review\s+exercise/.test(normalized);
         }
         if (exerciseNumber) {
-          return /\bexercise\b/.test(normalized) && normalized.includes(exerciseNumber);
+          // Match the full exercise label so Exercise 7.1 does not accidentally
+          // match Exercise 7.10. Remove spaces around decimal points from PDF text
+          // because some PDFs split heading text into separate text items.
+          const compactText = normalized.replace(/\s*\.\s*/g, '.');
+          const escapedNumber = exerciseNumber.replace('.', '\\.');
+          const exactHeading = new RegExp(
+            '\\bexercise\\s*(?:no\\.?\\s*)?' + escapedNumber + '(?![\\d.])',
+            'i'
+          );
+          return exactHeading.test(compactText);
         }
         return normalized.includes(explicitExercise) && /\bexercise\b/.test(normalized);
       };
