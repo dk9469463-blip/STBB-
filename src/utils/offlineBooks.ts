@@ -174,13 +174,15 @@ export async function saveBookForOffline(
     });
     blob = new Blob(blobParts, { type: 'application/pdf' });
     if (blob.size < 4) throw new Error('The downloaded file is empty or incomplete.');
-
-    const signature = new Uint8Array(await blob.slice(0, 4).arrayBuffer());
-    if (String.fromCharCode(...signature) !== '%PDF') {
-      throw new Error('The downloaded content is not a valid PDF file.');
-    }
-    onProgress?.({ loaded: blob.size, total: blob.size, percent: 100 });
   }
+
+  // Validate both streaming and fallback paths before keeping anything offline.
+  if (blob.size < 4) throw new Error('The downloaded file is empty or incomplete.');
+  const signature = new Uint8Array(await blob.slice(0, 4).arrayBuffer());
+  if (String.fromCharCode(...signature) !== '%PDF') {
+    throw new Error('The downloaded content is not a valid PDF file.');
+  }
+  onProgress?.({ loaded: blob.size, total: blob.size, percent: 100 });
 
   const record: OfflineBookRecord = {
     bookId: book.id,
@@ -208,9 +210,12 @@ export async function getOfflineBooks(): Promise<OfflineBookRecord[]> {
 
 export async function isBookSavedOffline(bookId: string): Promise<boolean> {
   if (!savedBookIdsPromise) {
-    savedBookIdsPromise = getOfflineBooks().then(
-      (records) => new Set(records.map((record) => record.bookId))
-    );
+    savedBookIdsPromise = getOfflineBooks()
+      .then((records) => new Set(records.map((record) => record.bookId)))
+      .catch((error) => {
+        savedBookIdsPromise = null;
+        throw error;
+      });
   }
   return (await savedBookIdsPromise).has(bookId);
 }
