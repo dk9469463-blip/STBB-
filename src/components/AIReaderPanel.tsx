@@ -884,6 +884,20 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Always-available reader intent shortcuts. They remain accessible even in older saved chats. */}
+      {!isGenerating && !inputQuery.trim() && !pendingQuestionNumber && !pendingConceptTopic &&
+        !(messages.length === 1 && messages[0].role === 'assistant' && messages[0].id.startsWith('reader-welcome-')) && (
+          <div className="px-3 py-2 bg-slate-950/95 border-t border-slate-800 shrink-0">
+            <p className="text-[10px] uppercase tracking-wide font-bold text-slate-400 mb-1.5">What would you like to do?</p>
+            <div className="grid grid-cols-2 gap-1.5">
+              <button type="button" onClick={() => handleFollowUpClick('Solve the whole exercise')} className="rounded-lg border border-slate-700 bg-slate-900 px-2 py-2 text-left text-[11px] font-semibold text-slate-200 hover:border-amber-400/60 hover:text-amber-300">Solve whole exercise</button>
+              <button type="button" onClick={() => handleFollowUpClick('Solve a specific question')} className="rounded-lg border border-slate-700 bg-slate-900 px-2 py-2 text-left text-[11px] font-semibold text-slate-200 hover:border-amber-400/60 hover:text-amber-300">Solve specific question</button>
+              <button type="button" onClick={() => handleFollowUpClick('Learn a concept')} className="rounded-lg border border-slate-700 bg-slate-900 px-2 py-2 text-left text-[11px] font-semibold text-slate-200 hover:border-amber-400/60 hover:text-amber-300">Learn a concept</button>
+              <button type="button" onClick={() => handleFollowUpClick("Something else (I'll type)")} className="rounded-lg border border-slate-700 bg-slate-900 px-2 py-2 text-left text-[11px] font-semibold text-slate-200 hover:border-amber-400/60 hover:text-amber-300">Something else — I’ll type</button>
+            </div>
+          </div>
+        )}
+
       {/* Input Bar with Voice Input & Edit Before Send */}
       <div className="p-2.5 bg-slate-950 border-t border-slate-800 shrink-0">
         <form
