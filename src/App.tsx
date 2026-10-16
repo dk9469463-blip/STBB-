@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { lazy, Suspense, useState, useEffect } from 'react';
 import { Header, NavTab } from './components/Header';
 import { HomeView } from './components/HomeView';
 import { ClassesView } from './components/ClassesView';
@@ -7,7 +7,9 @@ import { SearchView } from './components/SearchView';
 import { AIAssistantView } from './components/AIAssistantView';
 import { AboutView } from './components/AboutView';
 import { Footer } from './components/Footer';
-import { PDFViewerModal } from './components/PDFViewerModal';
+const PDFViewerModal = lazy(() =>
+  import('./components/PDFViewerModal').then((module) => ({ default: module.PDFViewerModal }))
+);
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { Book } from './types';
 import { getStoredReadingPage } from './utils/readingProgress';
@@ -176,17 +178,36 @@ export default function App() {
         {currentTab === 'about' && <AboutView />}
       </main>
 
-      {/* In-App PDF Reader Modal */}
-      <PDFViewerModal
-        book={activeBookForModal}
-        initialPageNumber={initialPageForModal}
-        onClose={() => {
-          setActiveBookForModal(null);
-          setInitialPageForModal(undefined);
-          setReadingProgressVersion((version) => version + 1);
-        }}
-        onOpenUniversalAiAssistant={handleOpenAIAssistantFromReader}
-      />
+      {/* Load the heavy PDF.js reader only when the user opens a textbook.
+          This keeps the initial library bundle smaller on slow connections. */}
+      {activeBookForModal && (
+        <Suspense
+          fallback={
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 p-6 text-center text-white"
+              role="status"
+              aria-live="polite"
+            >
+              <div className="max-w-sm space-y-3">
+                <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-slate-600 border-t-amber-400" />
+                <p className="font-bold">Preparing textbook reader…</p>
+                <p className="text-xs text-slate-300">{activeBookForModal.title}</p>
+              </div>
+            </div>
+          }
+        >
+          <PDFViewerModal
+            book={activeBookForModal}
+            initialPageNumber={initialPageForModal}
+            onClose={() => {
+              setActiveBookForModal(null);
+              setInitialPageForModal(undefined);
+              setReadingProgressVersion((version) => version + 1);
+            }}
+            onOpenUniversalAiAssistant={handleOpenAIAssistantFromReader}
+          />
+        </Suspense>
+      )}
 
       {/* Professional Footer */}
       <Footer
