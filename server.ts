@@ -3,7 +3,13 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import dns from 'dns';
 import { Readable } from 'node:stream';
-import { GoogleGenAI } from '@google/genai';
+import {
+  AssistantBookContext,
+  AssistantSource,
+  resolveAssistantBook,
+  retrieveTextbookMaterial,
+  formatBookCatalogEntry,
+} from './assistantBookRetrieval';
 
 // Force IPv4 first DNS lookup to prevent dual-stack hangs
 dns.setDefaultResultOrder('ipv4first');
@@ -14,21 +20,12 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = parseInt(process.env.PORT || '3000', 10);
 
-// Keep the textbook library available even when no Gemini key is configured.
-const geminiApiKey = process.env.GEMINI_API_KEY?.trim();
-const ai = geminiApiKey
-  ? new GoogleGenAI({
-      apiKey: geminiApiKey,
-      httpOptions: {
-        headers: {
-          'User-Agent': 'aistudio-build',
-        },
-      },
-    })
-  : null;
+// AI is provided through a server-side API key. The key is never sent to the browser.
+const openAiApiKey = process.env.OPENAI_API_KEY?.trim();
+const openAiModel = process.env.OPENAI_MODEL?.trim() || 'gpt-4o-mini';
 
-if (!ai) {
-  console.info('GEMINI_API_KEY is not set. The textbook library will run; AI assistance will remain disabled.');
+if (!openAiApiKey) {
+  console.info('OPENAI_API_KEY is not set. The textbook library will run; AI assistance will remain disabled.');
 }
 
 // JSON & Body Parsing for AI chat & image attachments
@@ -595,12 +592,13 @@ app.get('/api/image/proxy', async (req: Request, res: Response) => {
   }
 });
 
-// UNIVERSAL AI STUDY ASSISTANT ENDPOINT
+// UNIVERSAL STBB AI STUDY ASSISTANT ENDPOINT.
+// The application uses STBB branding; the AI API key and model request remain server-side.
 app.post('/api/ai/study-assist', async (req: Request, res: Response) => {
   try {
-    if (!ai) {
+    if (!openAiApiKey) {
       return res.status(503).json({
-        error: 'The AI Study Assistant is unavailable until GEMINI_API_KEY is configured.',
+        error: 'The AI Study Assistant is not configured yet. Please contact the app administrator.',
       });
     }
 
@@ -612,144 +610,203 @@ app.post('/api/ai/study-assist', async (req: Request, res: Response) => {
       imageBase64,
       imageMimeType = 'image/jpeg',
       history = [],
-    } = req.body;
+    } = req.body as {
+      prompt?: string;
+      language?: string;
+      mode?: string;
+      bookContext?: AssistantBookContext;
+      imageBase64?: string | null;
+      imageMimeType?: string;
+      history?: Array<{ role?: string; content?: string }>;
+    };
 
-    if (!prompt && !imageBase64) {
-      return res.status(400).json({ error: 'Either question text or a page image is required.' });
+    if (!prompt?.trim() && !imageBase64) {
+      return res.status(400).json({ error: 'Write a question or attach a textbook page image first.' });
     }
 
-    // Determine Language Directive
     let languageDirective =
-      'Respond strictly in clear, plain English. Use simple, student-friendly explanations.';
+      'Respond in clear, plain English, with simple explanations suitable for school students.';
     if (language === 'urdu') {
       languageDirective =
-        'براہ کرم اپنا پورا جواب مکمل اور معیاری اردو رسم الخط میں تحریر کریں۔ اصطلاحات کی وضاحت اردو میں دیجیے۔';
+        'اپنا جواب آسان، واضح اور معیاری اردو رسم الخط میں دیں۔ ریاضی اور سائنس کی اصطلاحات کو آسان اردو میں سمجھائیں۔';
     } else if (language === 'sindhi') {
       languageDirective =
-        'مهرباني ڪري پنهنجو مڪمل جواب معياري سنڌي عربي رسم الخط ۾ تحرير ڪريو. اصطلاحن ۽ رياضياتي حل جي وضاحت سنڌي ٻوليءَ ۾ ڏيو.';
+        'جواب سادي، واضح ۽ معياري سنڌي عربي رسم الخط ۾ ڏيو. رياضي ۽ سائنس جون اصطلاحون سادي سنڌي ۾ سمجهايو.';
     }
 
-    // Context details from actual STBB catalog and current user selection
     const contextDetails: string[] = [];
-    if (bookContext?.classNumber) contextDetails.push(`Class: Class ${bookContext.classNumber}`);
-    if (bookContext?.subjectName) contextDetails.push(`Subject: ${bookContext.subjectName}`);
-    if (bookContext?.bookTitle) contextDetails.push(`Official Book: ${bookContext.bookTitle}`);
-    if (bookContext?.chapter) contextDetails.push(`Chapter/Unit: ${bookContext.chapter}`);
-    if (bookContext?.exercise) contextDetails.push(`Exercise: ${bookContext.exercise}`);
-    if (bookContext?.pageNumber) contextDetails.push(`Page Number: ${bookContext.pageNumber}`);
-    if (bookContext?.questionNumber) contextDetails.push(`Question Number: ${bookContext.questionNumber}`);
-    if (bookContext?.selectedText) contextDetails.push(`Textbook Excerpt: "${bookContext.selectedText}"`);
+    if (bookContext?.classNumber) contextDetails.push('Selected class: Class ' + bookContext.classNumber);
+    if (bookContext?.subjectName) contextDetails.push('Selected subject: ' + bookContext.subjectName);
+    if (bookContext?.bookTitle) contextDetails.push('Selected book: ' + bookContext.bookTitle);
+    if (bookContext?.chapter) contextDetails.push('Chapter or unit clue: ' + bookContext.chapter);
+    if (bookContext?.exercise) contextDetails.push('Exercise clue: ' + bookContext.exercise);
+    if (bookContext?.pageNumber) contextDetails.push('Requested PDF page: ' + bookContext.pageNumber);
+    if (bookContext?.questionNumber) contextDetails.push('Question number: ' + bookContext.questionNumber);
+    if (bookContext?.selectedText) contextDetails.push('Text selected in the reader: "' + bookContext.selectedText + '"');
 
-    const contextHeader =
-      contextDetails.length > 0
-        ? `[STBB Textbook Context]\n${contextDetails.join('\n')}\n`
-        : '';
+    const resolved = resolveAssistantBook(bookContext, prompt || '');
+    let retrievedPages: Array<{ pageNumber: number; text: string }> = [];
+    let retrievalError: string | undefined;
+    let pageCount = 0;
 
-    const systemInstruction = `
-You are the official AI Study Assistant for the Sindh Textbook Board (STBB), Jamshoro, Sindh, Pakistan.
-You support students and teachers from Class 1 through Class 12 across all STBB subjects (Mathematics, Biology, Physics, Chemistry, Computer Science, English, Urdu, Sindhi, General Science, Social Studies, Islamiat, Pakistan Studies).
+    const greetingOnly = /^(hi|hello|hey|salam|assalam(?:u|o)? alaikum|اسلام علیکم|السلام علیکم)[!. ]*$/i.test((prompt || '').trim());
+    if (resolved.book && !greetingOnly && (prompt?.trim() || bookContext?.pageNumber || bookContext?.exercise || bookContext?.chapter)) {
+      const retrieved = await retrieveTextbookMaterial(resolved.book, bookContext, prompt || '');
+      retrievedPages = retrieved.pages;
+      retrievalError = retrieved.error;
+      pageCount = retrieved.pageCount;
+    }
 
-Core Guidelines:
-1. Follow the user's specific request directly. Do not output generic summaries or unrelated introductions.
-2. Ground your answers strictly in the official Sindh Textbook Board curriculum. For textbook questions, use the provided textbook context (class, subject, book, chapter, exercise, page). Never invent textbook content, exercises, or citations.
-3. Language: ${languageDirective}
-4. Text Format: Use simple, readable plain text. Avoid decorative formatting, ASCII banners, complex Markdown tables, or unnecessary sample templates. Use numbered steps or mathematical equations only when useful for explaining a solution.
-5. If the user asks for a step-by-step solution, show the clear numbered steps and state the final result clearly.
-6. When an image of a textbook page is attached, read the specific question requested from the image and solve it directly.
-`.trim();
+    let sourceContext = '';
+    const responseSources: AssistantSource[] = [];
 
-    // Build multi-turn Gemini contents
-    const contents: Array<{ role: 'user' | 'model'; parts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> }> = [];
+    if (resolved.book) {
+      const book = resolved.book;
+      contextDetails.push('[Resolved catalogue record]');
+      contextDetails.push(formatBookCatalogEntry(book));
+      responseSources.push({
+        title: book.title,
+        url: book.officialPageUrl || book.pdfUrl || 'https://ebooks.stbb.edu.pk/',
+        detail: retrievedPages.length
+          ? 'Relevant PDF pages: ' + retrievedPages.map((page) => page.pageNumber).join(', ')
+          : 'Official textbook record',
+      });
 
-    // Add prior conversation history if provided
-    if (Array.isArray(history) && history.length > 0) {
-      // Limit to last 8 turns to stay focused and fast
-      const recentHistory = history.slice(-8);
-      for (const turn of recentHistory) {
-        if (!turn.content) continue;
-        const role = turn.role === 'assistant' || turn.role === 'model' ? 'model' : 'user';
-        contents.push({
-          role,
-          parts: [{ text: turn.content }],
+      if (retrievedPages.length) {
+        sourceContext = '\n[Text extracted from the selected textbook PDF. Use this source material before relying on general knowledge. PDF page numbers may differ from printed page numbers.]\n' +
+          retrievedPages.map((page) => '--- PDF page ' + page.pageNumber + ' ---\n' + page.text).join('\n\n');
+      } else if (retrievalError) {
+        sourceContext = '\n[Textbook retrieval note: ' + retrievalError +
+          ' Do not claim that you inspected the requested page or exercise. If exact wording is needed, ask the student to upload a clear page photo or tell you the PDF page number.]\n';
+      }
+    } else if (resolved.candidates.length) {
+      const catalogList = resolved.candidates.map((book) => formatBookCatalogEntry(book)).join('\n\n');
+      sourceContext = '\n[Possible matching STBB catalogue entries. The intended book is not uniquely identified; do not pretend one was selected. Ask a brief clarification if a specific book is needed.]\n' +
+        catalogList + '\n';
+      for (const book of resolved.candidates.slice(0, 5)) {
+        responseSources.push({
+          title: 'Class ' + book.classNumber + ' ' + book.subjectName + ' — ' + book.title + ' (' + book.medium + ')',
+          url: book.officialPageUrl || book.pdfUrl || 'https://ebooks.stbb.edu.pk/',
+          detail: 'Class ' + book.classNumber + ' • ' + book.medium + ' medium',
         });
       }
     }
 
-    // Build current user message parts
-    const currentParts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> = [];
+    const contextHeader = contextDetails.length
+      ? '\n[Student textbook context]\n' + contextDetails.join('\n') + '\n'
+      : '';
+
+    const systemInstruction = [
+      'You are STBB AI Study Assistant, an independent educational tutor inside the STBB Books app. Never claim to be the Sindh Textbook Board, a government office, or a human teacher. If asked, be honest that you are an AI assistant; do not volunteer internal API/model names.',
+      'You help Classes 1–12 across Mathematics, Physics, Biology, Chemistry, Computer Science, English, Urdu, Sindhi and other school subjects.',
+      'Language: ' + languageDirective,
+      'Accuracy and textbook rules:',
+      '1. Understand informal wording, Roman Urdu, typos, shorthand and mixed English/Urdu as best you can. If the request remains ambiguous, ask one short clarification instead of guessing.',
+      '2. When verified textbook text is provided, base textbook-specific answers on it. Do not invent chapter contents, exercise questions, page numbers, official links, or facts supposedly extracted from a book.',
+      '3. If a student asks for an entire exercise, solve each visible/retrieved question in order. If the retrieved material is incomplete or too long, clearly say which questions/pages you could answer and ask to continue with the rest; never claim to have completed unseen questions.',
+      '4. Solve Mathematics and Physics step by step, show formulas and substitutions, check final results when possible, and state units. For theory subjects, explain concepts in student-friendly language and distinguish textbook facts from extra explanation.',
+      '5. If a book or edition is ambiguous, ask which supplied catalogue match they mean. If the student asks where to get a book, provide an official page/download link supplied in context.',
+      '6. When PDF text could not be extracted, do not pretend you read the source. Ask for a page image, exact question text, or PDF page number.',
+      '7. Never promise 100% certainty. If material is missing or uncertain, say so and show how the student can verify it.',
+      '8. For an attached textbook image, read the visible question and answer it. If the text is blurry or cut off, ask for a clearer image.',
+      '9. Use readable formatting, numbered steps for solutions, and useful Markdown. Avoid unnecessary long introductions.',
+    ].join('\n');
+
+    let userPromptText = '';
+    if (mode === 'solve-exercise') {
+      userPromptText = 'Solve this textbook question or exercise step by step:\n' +
+        (prompt || 'Solve the question indicated in the supplied textbook context.');
+    } else if (mode === 'vocabulary') {
+      userPromptText = 'Explain the meaning and usage in the selected language:\n' + prompt;
+    } else {
+      userPromptText = prompt?.trim() || 'Please answer based on the attached textbook page.';
+    }
+
+    const userContent: Array<Record<string, unknown>> = [{
+      type: 'text',
+      text: contextHeader + sourceContext + '\n' + userPromptText,
+    }];
 
     if (imageBase64) {
-      const cleanBase64 = imageBase64.replace(/^data:[^;]+;base64,/, '');
-      currentParts.push({
-        inlineData: {
-          mimeType: imageMimeType,
-          data: cleanBase64,
+      const cleanImage = String(imageBase64).trim();
+      const imageUrl = cleanImage.startsWith('data:')
+        ? cleanImage
+        : 'data:' + (imageMimeType || 'image/jpeg') + ';base64,' +
+          cleanImage.replace(/^data:[^;]+;base64,/, '');
+      userContent.push({
+        type: 'image_url',
+        image_url: {
+          url: imageUrl,
+          detail: 'high',
         },
       });
     }
 
-    let userPromptText = '';
-    if (contextHeader) {
-      userPromptText += `${contextHeader}\n`;
-    }
+    const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: any }> = [
+      { role: 'system', content: systemInstruction },
+    ];
 
-    if (mode === 'solve-exercise') {
-      userPromptText += `Solve this textbook question with clear step-by-step method:\n${prompt || 'Solve the question indicated above.'}`;
-    } else if (mode === 'vocabulary') {
-      userPromptText += `Explain the meaning and usage of:\n${prompt}`;
-    } else {
-      userPromptText += prompt || 'Please answer my question based on the textbook context.';
-    }
-
-    currentParts.push({ text: userPromptText });
-
-    contents.push({
-      role: 'user',
-      parts: currentParts,
-    });
-
-    // Call Gemini with automatic model fallback for 429 quota or 503 demand spikes
-    const candidateModels = ['gemini-3.8-flash', 'gemini-3.1-flash-lite'];
-    let response;
-    let lastErr: Error | null = null;
-
-    for (const modelName of candidateModels) {
-      try {
-        response = await ai.models.generateContent({
-          model: modelName,
-          contents,
-          config: {
-            systemInstruction,
-            temperature: 0.3,
-          },
-        });
-        if (response?.text) break;
-      } catch (err: any) {
-        lastErr = err;
-        console.warn(`Model ${modelName} warning:`, err.message?.slice(0, 120));
+    if (Array.isArray(history)) {
+      for (const turn of history.filter((item) => item && item.content).slice(-8)) {
+        const role = turn.role === 'assistant' || turn.role === 'model' ? 'assistant' : 'user';
+        messages.push({ role, content: String(turn.content).slice(0, 12000) });
       }
     }
+    messages.push({ role: 'user', content: userContent });
 
-    if (!response || !response.text) {
-      throw lastErr || new Error('No response returned from the assistant service.');
+    const apiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        Authorization: 'Bearer ' + openAiApiKey,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: openAiModel,
+        messages,
+        temperature: 0.2,
+        max_tokens: 5000,
+      }),
+      signal: AbortSignal.timeout(90000),
+    });
+
+    const apiData = await apiResponse.json().catch(() => ({})) as {
+      error?: { message?: string; code?: string; type?: string };
+      choices?: Array<{ message?: { content?: string | Array<{ type?: string; text?: string }> } }>;
+    };
+
+    if (!apiResponse.ok) {
+      console.warn('AI provider request failed with HTTP ' + apiResponse.status +
+        (apiData.error?.code ? ' (' + apiData.error.code + ')' : '') + '.');
+      if (apiResponse.status === 401 || apiResponse.status === 403) {
+        return res.status(503).json({ error: 'The AI assistant needs an administrator to check its secure configuration.' });
+      }
+      if (apiResponse.status === 429) {
+        return res.status(429).json({ error: 'The AI assistant is temporarily busy. Please try again shortly.' });
+      }
+      if (apiResponse.status >= 500) {
+        return res.status(502).json({ error: 'The AI assistant service is temporarily unavailable. Please try again.' });
+      }
+      return res.status(502).json({ error: 'The AI assistant could not complete this request. Please try again.' });
     }
 
-    const aiText = response.text || 'No response generated.';
+    const answerContent = apiData.choices?.[0]?.message?.content;
+    const aiText = typeof answerContent === 'string'
+      ? answerContent.trim()
+      : Array.isArray(answerContent)
+        ? answerContent.map((part) => part.text || '').join('\n').trim()
+        : '';
 
-    // Follow-up suggestions in selected language
-    const followUps: string[] = [];
+    if (!aiText) {
+      return res.status(502).json({ error: 'The AI assistant did not return a readable answer. Please try again.' });
+    }
+
+    let followUps: string[];
     if (language === 'urdu') {
-      followUps.push('اس کی مزید وضاحت کریں');
-      followUps.push('اگلا سوال حل کریں');
-      followUps.push('اس سبق سے متعلق اہم نکات بتائیں');
+      followUps = ['اس کی مزید آسان وضاحت کریں', 'اگلا سوال حل کریں', 'اس سبق کے اہم نکات بتائیں'];
     } else if (language === 'sindhi') {
-      followUps.push('هن جي وڌيڪ آسان سمجهاڻي ڏيو');
-      followUps.push('ايندڙ سوال حل ڪريو');
-      followUps.push('هن سبق جا اهم نڪتا ٻڌايو');
+      followUps = ['هن کي وڌيڪ آسان نموني سمجهايو', 'اڳيون سوال حل ڪريو', 'هن سبق جا اهم نڪتا ٻڌايو'];
     } else {
-      followUps.push('Explain this in simpler terms');
-      followUps.push('Solve the next question');
-      followUps.push('List the key points from this section');
+      followUps = ['Explain this in simpler terms', 'Solve the next question', 'List the key points from this section'];
     }
 
     return res.json({
@@ -757,19 +814,23 @@ Core Guidelines:
       language,
       bookContext: bookContext || null,
       followUps,
+      sources: responseSources,
+      retrieval: resolved.book ? {
+        bookTitle: resolved.book.title,
+        extractedPages: retrievedPages.map((page) => page.pageNumber),
+        totalPdfPages: pageCount || undefined,
+        textAvailable: retrievedPages.length > 0,
+      } : undefined,
       timestamp: new Date().toISOString(),
     });
   } catch (error: unknown) {
     const err = error as Error;
-    console.error('Gemini Study Assistant Error:', err.message);
-
+    console.error('STBB AI Study Assistant request failed:', (err.message || 'unknown error').slice(0, 180));
     return res.status(500).json({
       error: 'The AI Study Assistant encountered a processing issue. Please try again.',
-      details: err.message.slice(0, 150),
     });
   }
 });
-
 // START EXPRESS SERVER WITH VITE INTEGRATION
 async function startServer() {
   const isDev = process.env.NODE_ENV !== 'production';
