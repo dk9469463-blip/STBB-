@@ -58,7 +58,6 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const [recentlyViewedBooks, setRecentlyViewedBooks] = React.useState<Book[]>([]);
 
   React.useEffect(() => {
-    let cancelled = false;
     const allBooks = getAllBooks();
     const validBookIds = new Set(allBooks.map((book) => book.id));
     const saved = getMostRecentReadingProgress(validBookIds);
@@ -74,10 +73,6 @@ export const HomeView: React.FC<HomeViewProps> = ({
         .filter((book): book is Book => Boolean(book))
         .slice(0, 4)
     );
-
-    return () => {
-      cancelled = true;
-    };
   }, [readingProgressVersion]);
 
   return (
