@@ -439,7 +439,7 @@ export const PDFPageItem: React.FC<PDFPageItemProps> = ({
       data-page-number={pageNumber}
       onMouseUp={handleCheckSelection}
       onTouchEnd={handleCheckSelection}
-      className="relative mb-6 rounded-md shadow-xl transition-all duration-150 mx-auto select-none group"
+      className="relative mb-6 rounded-md shadow-xl transition-all duration-150 mx-auto group"
       style={{
         width: `${Math.floor(pageDimensions.width)}px`,
         minHeight: `${Math.floor(pageDimensions.height)}px`,
