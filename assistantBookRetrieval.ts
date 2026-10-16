@@ -54,7 +54,7 @@ function inferClassNumber(prompt: string): number | undefined {
   const patterns = [
     /\b(?:class|grade|standard|std\.?)\s*(1[0-2]|[1-9])\b/i,
     /\b(1[0-2]|[1-9])(?:st|nd|rd|th)\s*(?:class|grade|standard)\b/i,
-    /\bclass\s+(?:i{1,3}|iv|v|vi{0,3}|ix|x|xi|xii)\b/i,
+    /\b(?:class|grade|standard)\s+(?:i{1,3}|iv|v|vi{0,3}|ix|x|xi|xii)\b/i,
   ];
 
   for (const pattern of patterns) {
@@ -68,9 +68,24 @@ function inferClassNumber(prompt: string): number | undefined {
     };
     if (romanMap[roman]) return romanMap[roman];
   }
-  return undefined;
-}
 
+  const wordClasses: Array<{ number: number; pattern: RegExp }> = [
+    { number: 1, pattern: /\b(?:class|grade|standard)\s+(?:one|first)\b|\b(?:one|first)\s+(?:class|grade|standard)\b/i },
+    { number: 2, pattern: /\b(?:class|grade|standard)\s+(?:two|second)\b|\b(?:two|second)\s+(?:class|grade|standard)\b/i },
+    { number: 3, pattern: /\b(?:class|grade|standard)\s+(?:three|third)\b|\b(?:three|third)\s+(?:class|grade|standard)\b/i },
+    { number: 4, pattern: /\b(?:class|grade|standard)\s+(?:four|fourth)\b|\b(?:four|fourth)\s+(?:class|grade|standard)\b/i },
+    { number: 5, pattern: /\b(?:class|grade|standard)\s+(?:five|fifth)\b|\b(?:five|fifth)\s+(?:class|grade|standard)\b/i },
+    { number: 6, pattern: /\b(?:class|grade|standard)\s+(?:six|sixth)\b|\b(?:six|sixth)\s+(?:class|grade|standard)\b/i },
+    { number: 7, pattern: /\b(?:class|grade|standard)\s+(?:seven|seventh)\b|\b(?:seven|seventh)\s+(?:class|grade|standard)\b/i },
+    { number: 8, pattern: /\b(?:class|grade|standard)\s+(?:eight|eighth)\b|\b(?:eight|eighth)\s+(?:class|grade|standard)\b/i },
+    { number: 9, pattern: /\b(?:class|grade|standard)\s+(?:nine|ninth)\b|\b(?:nine|ninth)\s+(?:class|grade|standard)\b|\b9th\b/i },
+    { number: 10, pattern: /\b(?:class|grade|standard)\s+(?:ten|tenth)\b|\b(?:ten|tenth)\s+(?:class|grade|standard)\b|\b10th\b/i },
+    { number: 11, pattern: /\b(?:class|grade|standard)\s+(?:eleven|eleventh)\b|\b(?:eleven|eleventh)\s+(?:class|grade|standard)\b|\b11th\b/i },
+    { number: 12, pattern: /\b(?:class|grade|standard)\s+(?:twelve|twelfth)\b|\b(?:twelve|twelfth)\s+(?:class|grade|standard)\b|\b12th\b/i },
+  ];
+
+  return wordClasses.find((entry) => entry.pattern.test(prompt))?.number;
+}
 function inferSubjectFromPrompt(prompt: string): string | undefined {
   const normalized = normalizeAssistantText(prompt);
   const aliases: Array<{ subject: string; pattern: RegExp }> = [
@@ -370,6 +385,13 @@ export async function retrieveTextbookMaterial(
       if (text) pages.push({ pageNumber, text: text.slice(0, 6500) });
     }
 
+    if (!pages.length) {
+      return {
+        pages: [],
+        pageCount,
+        error: 'No searchable text matching this clue was extracted. The PDF may be scanned, or the clue may not match the printed page numbering. Ask for a clear page photo or exact question text.',
+      };
+    }
     return { pages, pageCount };
   } catch (error) {
     const err = error as Error;
