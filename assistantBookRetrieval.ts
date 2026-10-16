@@ -333,6 +333,19 @@ export async function retrieveTextbookMaterial(
   context: AssistantBookContext | undefined,
   prompt: string
 ): Promise<RetrievedTextbookMaterial> {
+  // Pull simple references directly from natural-language questions too, so the
+  // student does not have to fill every locator field in the interface.
+  const inferredPage = prompt.match(/\b(?:page|p\.?)\s*(?:number\s*)?(\d{1,4})\b/i)?.[1];
+  const inferredChapter = prompt.match(/\b(?:chapter|unit|lesson)\s*(\d+(?:\.\d+)?)\b/i)?.[0];
+  const inferredExercise = prompt.match(/\b(?:review\s+exercise|exercise|review\s+questions?)\s*(?:no\.?\s*)?(\d+(?:\.\d+)?)?/i)?.[0];
+  const inferredQuestion = prompt.match(/\b(?:question|ques\.?|q\.?)\s*(?:no\.?\s*)?(\d+(?:\.\d+)?|[a-z])\b/i)?.[0];
+  const lookupContext: AssistantBookContext = {
+    ...context,
+    pageNumber: context?.pageNumber || (inferredPage ? Number(inferredPage) : undefined),
+    chapter: context?.chapter || inferredChapter,
+    exercise: context?.exercise || inferredExercise,
+    questionNumber: context?.questionNumber || inferredQuestion,
+  };
   const sourceUrl = getSafeBookPdfUrl(book);
   if (!sourceUrl) {
     return { pages: [], pageCount: 0, error: 'No official PDF stream is available for this catalogue record.' };
@@ -355,7 +368,7 @@ export async function retrieveTextbookMaterial(
     getAssistantBookCache(book.id).pageCount = pageCount;
     if (!pageCount) return { pages: [], pageCount: 0, error: 'The PDF did not report any pages.' };
 
-    const requestedPage = Number(context?.pageNumber);
+    const requestedPage = Number(lookupContext.pageNumber);
     let selectedPageNumbers: number[] = [];
 
     if (Number.isInteger(requestedPage) && requestedPage >= 1 && requestedPage <= pageCount) {
@@ -368,11 +381,11 @@ export async function retrieveTextbookMaterial(
       for (let pageNumber = 1; pageNumber <= scanLimit; pageNumber += 1) {
         const text = await getAssistantPageText(pdfDocument, book, pageNumber);
         if (!text) continue;
-        const score = scoreAssistantPage(text, prompt, context);
+        const score = scoreAssistantPage(text, prompt, lookupContext);
         if (score > 0) scoredPages.push({ pageNumber, text, score });
       }
 
-      const explicitExercise = normalizeAssistantText(context?.exercise);
+      const explicitExercise = normalizeAssistantText(lookupContext.exercise);
       if (explicitExercise) {
         const anchors = scoredPages
           .filter((page) => /exercise|review\s+exercise/.test(normalizeAssistantText(page.text)))
