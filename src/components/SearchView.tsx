@@ -13,6 +13,7 @@ import {
 import { searchBooksAndSubjects, CLASSES_LIST } from '../data/stbbData';
 import { Book, Subject, ClassInfo } from '../types';
 import { BookCard } from './BookCard';
+import { getRecentlyViewedBookIds } from '../utils/recentlyViewed';
 
 interface SearchViewProps {
   initialQuery?: string;
@@ -29,6 +30,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
   const [selectedMedium, setSelectedMedium] = useState<'All' | 'English' | 'Sindhi' | 'Urdu'>('All');
   const [selectedClassFilter, setSelectedClassFilter] = useState<number | 'All'>('All');
   const [onlyAvailablePdf, setOnlyAvailablePdf] = useState(false);
+  const [sortBy, setSortBy] = useState<'relevance' | 'title' | 'class-asc' | 'class-desc' | 'recent'>('relevance');
 
   useEffect(() => {
     if (initialQuery) {
@@ -44,6 +46,24 @@ export const SearchView: React.FC<SearchViewProps> = ({
     if (selectedClassFilter !== 'All' && b.classNumber !== selectedClassFilter) return false;
     if (onlyAvailablePdf && !b.isPdfAvailable) return false;
     return true;
+  });
+
+  const recentIds = getRecentlyViewedBookIds();
+  const recentOrder = new Map(recentIds.map((id, index) => [id, index]));
+  const sortedBooks = [...filteredBooks].sort((a, b) => {
+    switch (sortBy) {
+      case 'title':
+        return a.title.localeCompare(b.title);
+      case 'class-asc':
+        return a.classNumber - b.classNumber || a.title.localeCompare(b.title);
+      case 'class-desc':
+        return b.classNumber - a.classNumber || a.title.localeCompare(b.title);
+      case 'recent':
+        return (recentOrder.get(a.id) ?? Number.MAX_SAFE_INTEGER) -
+          (recentOrder.get(b.id) ?? Number.MAX_SAFE_INTEGER);
+      default:
+        return 0; // Preserve the catalog's relevance order.
+    }
   });
 
   const clearSearch = () => {
@@ -147,6 +167,23 @@ export const SearchView: React.FC<SearchViewProps> = ({
           ))}
         </div>
 
+        {/* Smart Sort */}
+        <label className="flex items-center gap-2 font-semibold text-slate-700">
+          <span>Sort:</span>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+            className="rounded-xl border border-slate-300 bg-white px-3 py-1.5 font-semibold text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-600"
+            aria-label="Sort search results"
+          >
+            <option value="relevance">Most relevant</option>
+            <option value="title">Title A–Z</option>
+            <option value="class-asc">Class low to high</option>
+            <option value="class-desc">Class high to low</option>
+            <option value="recent">Recently viewed first</option>
+          </select>
+        </label>
+
         {/* Availability Toggle */}
         <label className="flex items-center gap-1.5 ml-auto cursor-pointer font-medium text-slate-700">
           <input
@@ -186,10 +223,10 @@ export const SearchView: React.FC<SearchViewProps> = ({
         <div className="flex items-center justify-between text-sm text-slate-600">
           <span>
             {query.trim() === '' ? (
-              <>Showing all <strong>{filteredBooks.length}</strong> textbooks across syllabus</>
+              <>Showing all <strong>{sortedBooks.length}</strong> textbooks across syllabus</>
             ) : (
               <>
-                Found <strong>{filteredBooks.length}</strong> textbooks matching "{query}"
+                Found <strong>{sortedBooks.length}</strong> textbooks matching "{query}"
               </>
             )}
           </span>
@@ -215,6 +252,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
                 setSelectedMedium('All');
                 setSelectedClassFilter('All');
                 setOnlyAvailablePdf(false);
+                setSortBy('relevance');
               }}
               className="px-5 py-2.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white text-xs font-bold transition"
             >
@@ -223,7 +261,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredBooks.map((book) => (
+            {sortedBooks.map((book) => (
               <BookCard key={book.id} book={book} onViewBook={onViewBook} />
             ))}
           </div>
