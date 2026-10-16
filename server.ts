@@ -762,7 +762,14 @@ app.post('/api/ai/study-assist', async (req: Request, res: Response) => {
     let pageCount = 0;
 
     const greetingOnly = /^(hi|hello|hey|salam|assalam(?:u|o)? alaikum|اسلام علیکم|السلام علیکم)[!. ]*$/i.test((prompt || '').trim());
-    if (resolved.book && !greetingOnly && (prompt?.trim() || bookContext?.pageNumber || bookContext?.exercise || bookContext?.chapter)) {
+    // When a specific PDF page image is supplied from the browser, use that image
+    // directly instead of launching a second PDF scan that can delay the answer.
+    if (
+      resolved.book &&
+      !greetingOnly &&
+      !(imageBase64 && bookContext?.pageNumber) &&
+      (prompt?.trim() || bookContext?.pageNumber || bookContext?.exercise || bookContext?.chapter)
+    ) {
       const retrieved = await retrieveTextbookMaterial(resolved.book, bookContext, prompt || '');
       retrievedPages = retrieved.pages;
       retrievalError = retrieved.error;
