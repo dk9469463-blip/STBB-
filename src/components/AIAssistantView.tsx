@@ -792,6 +792,7 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
           <div>
             <label className="text-[11px] font-medium text-slate-400 block mb-1">
               Question Number (optional):
+            </label>
             <input
               type="text"
               placeholder="e.g. Q3 or All"
