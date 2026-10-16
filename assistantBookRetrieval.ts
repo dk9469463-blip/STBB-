@@ -100,10 +100,6 @@ function inferSubjectFromPrompt(prompt: string): string | undefined {
     { subject: 'Computer Science', pattern: /\b(?:algorithm|flowchart|programming language|binary number|computer network|database|python programming|html and css|operating system|input and output devices)\b/i },
     { subject: 'English', pattern: /\b(?:parts of speech|direct and indirect speech|active and passive voice|tenses|punctuation|comprehension passage|essay writing|letter writing|subject verb agreement)\b/i },
   ];
-  for (const entry of topicAliases) {
-    if (entry.pattern.test(normalized)) return entry.subject;
-  }
-
   const aliases: Array<{ subject: string; pattern: RegExp }> = [
     { subject: 'Biology', pattern: /\b(?:biology|bio)\b/i },
     { subject: 'Physics', pattern: /\bphysics\b/i },
@@ -121,6 +117,10 @@ function inferSubjectFromPrompt(prompt: string): string | undefined {
   ];
 
   for (const entry of aliases) {
+    if (entry.pattern.test(normalized)) return entry.subject;
+  }
+
+  for (const entry of topicAliases) {
     if (entry.pattern.test(normalized)) return entry.subject;
   }
 
