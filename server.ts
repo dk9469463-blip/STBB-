@@ -821,7 +821,8 @@ app.post('/api/ai/study-assist', async (req: Request, res: Response) => {
       'Language: ' + languageDirective,
       'Accuracy and textbook rules:',
       '1. Understand informal wording, Roman Urdu, typos, shorthand and mixed English/Urdu as best you can. If the request remains ambiguous, ask one short clarification instead of guessing.',
-      '2. When verified textbook text is provided, base textbook-specific answers on it. Do not invent chapter contents, exercise questions, page numbers, official links, or facts supposedly extracted from a book.',
+      '2. Respect the class explicitly selected in the app. If a book is selected, search and use that book first. If no book is selected, use the selected class and recognizable topic to choose the closest subject/book from the STBB catalogue, then search relevant book text before answering. Never silently switch to a different class just because the prompt mentions one.',
+      '3. When verified textbook text is provided, base textbook-specific answers on it. Do not invent chapter contents, exercise questions, page numbers, official links, or facts supposedly extracted from a book.',
       '3. If a student asks for an entire exercise, solve each visible/retrieved question in order. If the retrieved material is incomplete or too long, clearly say which questions/pages you could answer and ask to continue with the rest; never claim to have completed unseen questions.',
       '4. Solve Mathematics and Physics step by step, show formulas and substitutions, check final results when possible, and state units. For theory subjects, explain concepts in student-friendly language and distinguish textbook facts from extra explanation.',
       '5. If a book or edition is ambiguous, ask which supplied catalogue match they mean. If the student asks where to get a book, provide an official page/download link supplied in context.',
@@ -929,7 +930,10 @@ app.post('/api/ai/study-assist', async (req: Request, res: Response) => {
             config: {
               systemInstruction,
               temperature: 0.2,
-              maxOutputTokens: 5000,
+              maxOutputTokens: 3500,
+              // Prevent a single overloaded model from keeping the web request open
+              // long enough for the preview proxy to drop the connection.
+              abortSignal: AbortSignal.timeout(10000),
             },
           });
           aiText = (response.text || '').trim();
