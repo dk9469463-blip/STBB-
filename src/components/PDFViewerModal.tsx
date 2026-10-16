@@ -163,9 +163,17 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
           // Cancellation during book switching is expected.
         });
       } else if (currentDocument) {
-        void currentDocument.destroy().catch(() => {
-          // The document may already have been closed by PDF.js.
-        });
+        const destroyDocument = (
+          currentDocument as pdfjsLib.PDFDocumentProxy & {
+            destroy?: () => Promise<void> | void;
+          }
+        ).destroy;
+
+        if (typeof destroyDocument === 'function') {
+          void Promise.resolve(destroyDocument.call(currentDocument)).catch(() => {
+            // The document may already have been closed by PDF.js.
+          });
+        }
       }
     };
   }, [book, initialPageNumber]);
@@ -186,9 +194,17 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
         // Replacing a loading textbook is expected cancellation.
       });
     } else if (previousDocument) {
-      void previousDocument.destroy().catch(() => {
-        // Ignore repeated cleanup if PDF.js already closed the document.
-      });
+      const destroyDocument = (
+        previousDocument as pdfjsLib.PDFDocumentProxy & {
+          destroy?: () => Promise<void> | void;
+        }
+      ).destroy;
+
+      if (typeof destroyDocument === 'function') {
+        void Promise.resolve(destroyDocument.call(previousDocument)).catch(() => {
+          // Ignore repeated cleanup if PDF.js already closed the document.
+        });
+      }
     }
 
     if (pageJumpTimeoutRef.current !== null) {
