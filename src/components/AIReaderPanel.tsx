@@ -397,9 +397,20 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
     setErrorMsg(null);
     setSpeechError(null);
 
-    // Only send an image after the student explicitly clicks Capture Page.
-    // Highlighted PDF text is sent separately through bookContext.selectedText.
-    const attachmentForRequest = capturedImage;
+    // A highlighted passage is sent as text context only, never as a full-page image.
+    // If nothing was highlighted, use the current page image as a fallback so scanned
+    // PDFs are still readable by the AI. Explicit Capture Page always takes priority.
+    let attachmentForRequest = capturedImage;
+    if (!attachmentForRequest && !selectedText.trim() && onCapturePageImage) {
+      try {
+        attachmentForRequest = await onCapturePageImage();
+      } catch (captureError) {
+        console.warn(
+          'Could not capture the current reader page for AI context:',
+          captureError instanceof Error ? captureError.message : 'unknown error'
+        );
+      }
+    }
 
     const userMsg: ChatMessage = {
       id: `user-${Date.now()}`,
