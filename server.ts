@@ -28,6 +28,40 @@ if (!openAiApiKey) {
   console.info('OPENAI_API_KEY is not set. The textbook library will run; AI assistance will remain disabled.');
 }
 
+// Lightweight per-process guard against accidental or automated AI request bursts.
+// Production deployments serving large shared networks should also add platform-level quotas.
+const aiRequestWindows = new Map<string, { startedAt: number; count: number }>();
+const AI_REQUEST_WINDOW_MS = 60 * 1000;
+const AI_MAX_REQUESTS_PER_WINDOW = 40;
+
+function allowAiRequest(req: Request, res: Response): boolean {
+  const now = Date.now();
+  const key = req.ip || req.socket.remoteAddress || 'unknown';
+  let window = aiRequestWindows.get(key);
+
+  if (!window || now - window.startedAt >= AI_REQUEST_WINDOW_MS) {
+    window = { startedAt: now, count: 0 };
+  }
+
+  if (window.count >= AI_MAX_REQUESTS_PER_WINDOW) {
+    const retryAfter = Math.max(1, Math.ceil((AI_REQUEST_WINDOW_MS - (now - window.startedAt)) / 1000));
+    res.setHeader('Retry-After', String(retryAfter));
+    res.status(429).json({ error: 'Too many study questions were sent from this connection. Please wait a moment and try again.' });
+    return false;
+  }
+
+  window.count += 1;
+  aiRequestWindows.set(key, window);
+
+  // Discard expired entries when the map grows to keep memory use bounded.
+  if (aiRequestWindows.size > 5000) {
+    for (const [clientKey, entry] of aiRequestWindows) {
+      if (now - entry.startedAt >= AI_REQUEST_WINDOW_MS) aiRequestWindows.delete(clientKey);
+    }
+  }
+  return true;
+}
+
 // JSON & Body Parsing for AI chat & image attachments
 app.use(express.json({ limit: '25mb' }));
 app.use(express.urlencoded({ extended: true, limit: '25mb' }));
@@ -601,6 +635,7 @@ app.post('/api/ai/study-assist', async (req: Request, res: Response) => {
         error: 'The AI Study Assistant is not configured yet. Please contact the app administrator.',
       });
     }
+    if (!allowAiRequest(req, res)) return;
 
     const {
       prompt,
@@ -622,6 +657,9 @@ app.post('/api/ai/study-assist', async (req: Request, res: Response) => {
 
     if (!prompt?.trim() && !imageBase64) {
       return res.status(400).json({ error: 'Write a question or attach a textbook page image first.' });
+    }
+    if (typeof prompt === 'string' && prompt.length > 30000) {
+      return res.status(413).json({ error: 'Please send a shorter question or split this exercise into smaller parts.' });
     }
 
     let languageDirective =
