@@ -51,31 +51,43 @@ export const BookCard: React.FC<BookCardProps> = ({ book, onViewBook }) => {
 
   const handleSaveOffline = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (isSavingOffline) return;
+    if (isSavingOffline || isSavedOffline) return;
 
     setOfflineError(null);
-    if (isSavedOffline) {
-      try {
-        await removeOfflineBook(book.id);
-        setIsSavedOffline(false);
-        setOfflineProgress(null);
-      } catch (error) {
-        setOfflineError(error instanceof Error ? error.message : 'Could not remove the offline copy.');
-      }
-      return;
-    }
-
     setIsSavingOffline(true);
-    setOfflineProgress({ loaded: 0, total: 0, percent: null });
+    setOfflineProgress({ loaded: 0, total: 0, percent: null, attempt: 1 });
     try {
       await saveBookForOffline(book, setOfflineProgress);
       setIsSavedOffline(true);
-      setOfflineProgress({ loaded: 1, total: 1, percent: 100 });
+      setOfflineProgress({ loaded: 1, total: 1, percent: 100, attempt: 1 });
     } catch (error) {
       setOfflineError(error instanceof Error ? error.message : 'Could not save this book offline.');
     } finally {
       setIsSavingOffline(false);
     }
+  };
+
+  const handleRemoveOffline = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isSavedOffline || isSavingOffline) return;
+    const confirmed = window.confirm(
+      `Remove "${book.title}" from offline storage on this device?`
+    );
+    if (!confirmed) return;
+
+    setOfflineError(null);
+    try {
+      await removeOfflineBook(book.id);
+      setIsSavedOffline(false);
+      setOfflineProgress(null);
+    } catch (error) {
+      setOfflineError(error instanceof Error ? error.message : 'Could not remove the offline copy.');
+    }
+  };
+
+  const handleStudyOffline = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isSavedOffline) onViewBook(book);
   };
 
   const handleReportBrokenBook = (e: React.MouseEvent) => {
@@ -261,32 +273,53 @@ export const BookCard: React.FC<BookCardProps> = ({ book, onViewBook }) => {
             </div>
           )}
 
-          <button
-            type="button"
-            onClick={handleSaveOffline}
-            disabled={isSavingOffline || !canOpenPdf}
-            className={`mt-2 flex w-full items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-xs font-bold transition disabled:cursor-not-allowed disabled:opacity-60 ${isSavedOffline ? 'border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100' : 'border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:bg-blue-50'}`}
-            title={isSavedOffline ? 'Remove the saved offline copy from this browser' : 'Save this PDF inside STBB Books for offline reading on this device'}
-          >
-            {isSavingOffline ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : isSavedOffline ? (
-              <Trash2 className="h-4 w-4" />
-            ) : (
-              <DownloadCloud className="h-4 w-4" />
-            )}
-            <span>
-              {isSavingOffline
-                ? offlineProgress?.percent !== null && offlineProgress?.percent !== undefined
-                  ? `Saving for offline… ${offlineProgress.percent}%`
-                  : offlineProgress?.loaded
-                    ? `Saving for offline… ${Math.ceil(offlineProgress.loaded / (1024 * 1024))} MB`
-                    : 'Saving for offline…'
-                : isSavedOffline
-                  ? 'Saved Offline · Remove'
+          {isSavedOffline ? (
+            <div className="mt-2 grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+              <button
+                type="button"
+                onClick={handleStudyOffline}
+                className="flex min-w-0 items-center justify-center gap-2 rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2.5 text-xs font-extrabold text-emerald-800 transition hover:bg-emerald-100"
+                title={`Study ${book.title} from the saved offline copy`}
+              >
+                <BookOpen className="h-4 w-4 shrink-0" />
+                <span>Study Offline</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleRemoveOffline}
+                disabled={isSavingOffline}
+                className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-bold text-slate-600 transition hover:border-red-300 hover:bg-red-50 hover:text-red-700 disabled:opacity-50"
+                title={`Remove ${book.title} from offline storage`}
+                aria-label={`Remove ${book.title} from offline storage`}
+              >
+                <Trash2 className="h-4 w-4" />
+                <span className="hidden sm:inline">Remove</span>
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={handleSaveOffline}
+              disabled={isSavingOffline || !canOpenPdf}
+              className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-bold text-slate-700 transition hover:border-blue-300 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-60"
+              title="Save this PDF inside STBB Books for offline reading on this device"
+            >
+              {isSavingOffline ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <DownloadCloud className="h-4 w-4" />
+              )}
+              <span>
+                {isSavingOffline
+                  ? offlineProgress?.percent !== null && offlineProgress?.percent !== undefined
+                    ? `Saving for offline… ${offlineProgress.percent}%`
+                    : offlineProgress?.loaded
+                      ? `Saving for offline… ${Math.ceil(offlineProgress.loaded / (1024 * 1024))} MB`
+                      : 'Saving for offline…'
                   : 'Save for Offline'}
-            </span>
-          </button>
+              </span>
+            </button>
+          )}
           {offlineError && (
             <p role="status" className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-900">
               {offlineError}
