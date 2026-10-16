@@ -822,8 +822,17 @@ app.post('/api/ai/study-assist', async (req: Request, res: Response) => {
       const provider = providerError as { message?: string; status?: number | string; code?: number | string };
       const providerMessage = String(provider?.message || '');
       const providerStatus = Number(provider?.status || provider?.code || 0);
-      console.warn('Gemini provider request failed' +
-        (providerStatus ? ' with HTTP ' + providerStatus : '') + '.');
+      // Log a short, redacted diagnostic for developers; never log the API key.
+      const safeProviderMessage = providerMessage
+        .replace(/AIza[0-9A-Za-z_-]{20,}/g, '[REDACTED_API_KEY]')
+        .replace(/\s+/g, ' ')
+        .slice(0, 300);
+      console.warn(
+        'Gemini provider request failed' +
+        (providerStatus ? ' with HTTP ' + providerStatus : '') +
+        ' for model "' + geminiModel + '"' +
+        (safeProviderMessage ? ': ' + safeProviderMessage : '.')
+      );
 
       if (
         providerStatus === 401 ||
