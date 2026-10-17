@@ -419,12 +419,16 @@ export async function retrieveTextbookMaterial(
   context: AssistantBookContext | undefined,
   prompt: string
 ): Promise<RetrievedTextbookMaterial> {
-  // Pull simple references directly from natural-language questions too, so the
-  // student does not have to fill every locator field in the interface.
+  // Use both the typed request and the highlighted passage as clues. A generic
+  // phrase such as "solve the complete exercise" must NOT be mistaken for an
+  // exercise label; doing so can cause a random page to be treated as Exercise.
+  const locatorText = [prompt, context?.selectedText || ''].filter(Boolean).join(' ');
   const inferredPage = prompt.match(/\b(?:page|p\.?)\s*(?:number\s*)?(\d{1,4})\b/i)?.[1];
-  const inferredChapter = prompt.match(/\b(?:chapter|unit|lesson)\s*(\d+(?:\.\d+)?)\b/i)?.[0];
-  const inferredExercise = prompt.match(/\b(?:review\s+exercise|exercise|review\s+questions?)\s*(?:no\.?\s*)?(\d+(?:\.\d+)?)?/i)?.[0];
-  const inferredQuestion = prompt.match(/\b(?:question|ques\.?|q\.?)\s*(?:no\.?\s*)?(\d+(?:\.\d+)?|[a-z])\b/i)?.[0];
+  const inferredChapter = locatorText.match(/\b(?:chapter|unit|lesson)\s*(\d+(?:\.\d+)?)\b/i)?.[0];
+  const inferredExerciseMatch = locatorText.match(/\b(?:review\s+exercise|exercise|review\s+questions?)\s*(?:no\.?\s*)?(\d+(?:\s*\.\s*\d+)?)\b/i);
+  const inferredExercise = inferredExerciseMatch?.[0];
+  const inferredQuestion = prompt.match(/\b(?:question|ques\.?|q\.?)\s*(?:no\.?\s*)?(\d+(?:\.\d+)?(?:\s*\([a-z]\))?|[a-z])\b/i)?.[0] ||
+    context?.selectedText?.match(/\b(?:question|ques\.?|q\.?)\s*(?:no\.?\s*)?(\d+(?:\.\d+)?(?:\s*\([a-z]\))?|[a-z])\b/i)?.[0];
   const lookupContext: AssistantBookContext = {
     ...context,
     pageNumber: context?.pageNumber || (inferredPage ? Number(inferredPage) : undefined),
@@ -496,8 +500,10 @@ export async function retrieveTextbookMaterial(
       // For a whole exercise, include more pages around the reader's current
       // page; exercises often start or continue on adjacent pages.
       const nearbyPageOffsets = wantsWholeExercise
-        ? [-2, -1, 0, 1, 2, 3, 4, 5]
-        : [-1, 0, 1];
+        ? [-3, -2, -1, 0, 1, 2, 3, 4, 5, 6]
+        : lookupContext.questionNumber
+          ? [-2, -1, 0, 1, 2]
+          : [-1, 0, 1];
       selectedPageNumbers = nearbyPageOffsets
         .map((offset) => requestedPage + offset)
         .filter((page) => page >= 1 && page <= pageCount);
