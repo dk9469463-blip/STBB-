@@ -22,6 +22,8 @@ import { useOnlineStatus } from '../hooks/useOnlineStatus';
 
 export type NavTab = 'home' | 'classes' | 'search' | 'ai-assistant' | 'about';
 
+const GOVERNMENT_OF_SINDH_SEAL_URL = 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Seal_of_the_Sindh_Government.svg/1200px-Seal_of_the_Sindh_Government.svg.png';
+
 interface HeaderProps {
   currentTab: NavTab;
   onSelectTab: (tab: NavTab) => void;
@@ -56,7 +58,7 @@ export const Header: React.FC<HeaderProps> = ({
             <div className="relative w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center group-hover:scale-105 transition-transform">
               <img
                 src="/logo.svg"
-                alt="STBB Books Official Logo"
+                alt="STBB Books brand logo"
                 className="w-11 h-11 sm:w-12 sm:h-12 object-contain drop-shadow-md"
               />
             </div>
@@ -146,32 +148,41 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           </nav>
 
-          {/* RIGHT: Textbook source label */}
+          {/* RIGHT: Government of Sindh seal — the app remains an independent project */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-            {/* Use a neutral book icon until an authentic government emblem is verified */}
             <div className="hidden sm:flex items-center gap-2.5 pl-3 border-l border-slate-800 text-right">
               <div className="flex flex-col">
-                <span className="text-[11px] font-bold text-slate-200 leading-tight">
-                  Sindh Textbook Board
+                <span className="text-[11px] font-bold text-slate-100 leading-tight">
+                  Government of Sindh
                 </span>
-                <span className="text-[10px] text-emerald-400 font-medium">
-                  Textbook Library
+                <span className="text-[10px] text-emerald-300 font-medium">
+                  Sindh, Pakistan
                 </span>
               </div>
-              <div
-                className="w-10 h-10 flex items-center justify-center rounded-full bg-blue-500/10 border border-amber-400/30 text-amber-300"
-                title="Sindh Textbook Library"
-                aria-label="Sindh Textbook Library"
-              >
-                <BookOpen className="w-5 h-5" />
+              <div className="relative w-10 h-10 rounded-full bg-white p-1 shadow-md ring-1 ring-amber-300/60 overflow-hidden">
+                <span className="absolute inset-0 flex items-center justify-center text-[9px] font-black text-emerald-900">GoS</span>
+                <img
+                  src={GOVERNMENT_OF_SINDH_SEAL_URL}
+                  alt="Seal of the Sindh Government"
+                  loading="lazy"
+                  referrerPolicy="no-referrer"
+                  className="relative z-10 h-full w-full rounded-full object-contain"
+                  onError={(event) => { event.currentTarget.style.display = 'none'; }}
+                />
               </div>
             </div>
 
-            {/* Compact, non-official source icon for mobile */}
-            <div className="sm:hidden flex items-center justify-center w-9 h-9 rounded-xl bg-blue-500/10 text-amber-300">
-              <BookOpen className="w-5 h-5" aria-label="Sindh Textbook Library" />
+            <div className="sm:hidden relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-white p-1 shadow ring-1 ring-amber-300/60">
+              <span className="absolute text-[8px] font-black text-emerald-900">GoS</span>
+              <img
+                src={GOVERNMENT_OF_SINDH_SEAL_URL}
+                alt="Seal of the Sindh Government"
+                loading="lazy"
+                referrerPolicy="no-referrer"
+                className="relative z-10 h-full w-full rounded-full object-contain"
+                onError={(event) => { event.currentTarget.style.display = 'none'; }}
+              />
             </div>
-
             {/* Quick Dark Mode toggle: available without opening settings */}
             <button
               type="button"
