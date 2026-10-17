@@ -654,6 +654,10 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
 
   const handleAskAiAboutPage = (pageNum: number) => {
     scrollToPage(pageNum);
+    // Opening the assistant from a page button is a fresh page-level request,
+    // not a continuation of any older highlighted passage.
+    setSelectedReaderText('');
+    setFloatingSelection(null);
     setShowThumbnailsDrawer(false);
     setIsAiPanelOpen(true);
   };
@@ -1210,11 +1214,16 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
               <button
                 type="button"
                 onClick={() => {
-                  void navigator.clipboard?.writeText(floatingSelection.text).then(() => {
+                  const clipboard = navigator.clipboard;
+                  if (!clipboard?.writeText) {
+                    setSelectionReadError('Clipboard access is unavailable in this browser. You can still use Ask Chatbot.');
+                    return;
+                  }
+                  void clipboard.writeText(floatingSelection.text).then(() => {
                     setCopiedSelectionText(true);
                     window.setTimeout(() => setCopiedSelectionText(false), 1600);
                   }).catch(() => {
-                    setCopiedSelectionText(false);
+                    setSelectionReadError('Could not copy the selected text. You can still use Ask Chatbot.');
                   });
                 }}
                 className="px-2.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-100 font-semibold flex items-center gap-1.5 transition cursor-pointer"
