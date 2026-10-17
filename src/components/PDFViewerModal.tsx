@@ -88,6 +88,12 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
     clientY: number;
   } | null>(null);
   const [copiedSelectionText, setCopiedSelectionText] = useState<boolean>(false);
+  const [readingScannedSelection, setReadingScannedSelection] = useState<{
+    pageNumber: number;
+    clientX: number;
+    clientY: number;
+  } | null>(null);
+  const [selectionReadError, setSelectionReadError] = useState<string | null>(null);
 
   // Study workspace annotation state
   const [isStudyToolsOpen, setIsStudyToolsOpen] = useState<boolean>(false);
@@ -580,11 +586,70 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
     }
   };
 
-  const handleSelectTextOnPage = (text: string) => {
+  const handleSelectTextOnPage = (text: string, pageNumber: number = currentPage) => {
+    if (pageNumber !== currentPage) scrollToPage(pageNumber);
     setSelectedReaderText(text);
     setFloatingSelection(null);
     setShowThumbnailsDrawer(false);
     setIsAiPanelOpen(true);
+  };
+
+  const handleScannedRegionSelection = async (selection: {
+    pageNumber: number;
+    imageBase64: string;
+    clientX: number;
+    clientY: number;
+  }) => {
+    setReadingScannedSelection({
+      pageNumber: selection.pageNumber,
+      clientX: selection.clientX,
+      clientY: selection.clientY,
+    });
+    setSelectionReadError(null);
+
+    try {
+      const response = await fetch('/api/ai/study-assist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: [
+            'OCR TRANSCRIPTION TASK ONLY — do not solve or explain.',
+            'Transcribe all readable words, symbols, question labels, and mathematical expressions inside the attached cropped image.',
+            'Preserve the original wording and line order. For equations, keep digits, signs, brackets, powers, fractions, and punctuation as accurately as possible.',
+            'Do not guess missing content. Mark any genuinely unreadable part as [unclear].',
+            'Return only the transcription, with no introduction or extra commentary.',
+          ].join(' '),
+          language: 'english',
+          mode: 'general',
+          useTextbook: false,
+          imageBase64: selection.imageBase64,
+          imageMimeType: 'image/jpeg',
+        }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || 'The selected area could not be read.');
+      }
+
+      const recognizedText = String(data.answer || '').trim();
+      if (!recognizedText) {
+        throw new Error('No readable text was detected. Try selecting a slightly larger, clearer area.');
+      }
+
+      setFloatingSelection({
+        text: recognizedText,
+        pageNumber: selection.pageNumber,
+        clientX: selection.clientX,
+        clientY: selection.clientY,
+      });
+    } catch (error) {
+      setSelectionReadError(error instanceof Error
+        ? error.message
+        : 'Could not read the selected area. Please try selecting it again.');
+    } finally {
+      setReadingScannedSelection(null);
+    }
   };
 
   const handleAskAiAboutPage = (pageNum: number) => {
@@ -1088,11 +1153,40 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
                     lowDataMode={preferences.lowDataMode}
                     onAskAiPage={handleAskAiAboutPage}
                     onSelectionChange={setFloatingSelection}
+                    onScannedRegionSelect={handleScannedRegionSelection}
                   />
                 ))}
               </div>
             )}
           </div>
+
+          {/* OCR feedback is kept above the reader, even on a scanned PDF page. */}
+          {readingScannedSelection && createPortal(
+            <div
+              role="status"
+              aria-live="polite"
+              style={{ position: 'fixed', left: '50%', top: '18px', transform: 'translateX(-50%)', zIndex: 250 }}
+              className="flex items-center gap-2 rounded-full border border-sky-300/30 bg-slate-950/95 px-4 py-2.5 text-xs font-semibold text-sky-100 shadow-2xl"
+            >
+              <Loader2 className="h-4 w-4 animate-spin text-sky-300" />
+              Reading selected text from page {readingScannedSelection.pageNumber}…
+            </div>,
+            document.body
+          )}
+          {selectionReadError && createPortal(
+            <div
+              role="alert"
+              style={{ position: 'fixed', left: '50%', top: '18px', transform: 'translateX(-50%)', zIndex: 250 }}
+              className="flex max-w-[min(92vw,40rem)] items-center gap-2 rounded-xl border border-rose-300/30 bg-slate-950/95 px-4 py-3 text-xs text-rose-100 shadow-2xl"
+            >
+              <AlertCircle className="h-4 w-4 shrink-0 text-rose-300" />
+              <span>{selectionReadError}</span>
+              <button type="button" onClick={() => setSelectionReadError(null)} className="ml-1 rounded-md p-1 text-slate-400 hover:bg-slate-800 hover:text-white" aria-label="Dismiss selection error">
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>,
+            document.body
+          )}
 
           {/* Portal the selection actions to <body> so modal overflow/stacking
               can never clip the toolbar or hide it behind the PDF viewer. */}
@@ -1145,7 +1239,7 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
                   // Open the book-aware in-reader assistant, prefilled with only
                   // the selected passage. It can still retrieve this book when the
                   // student chooses a whole exercise or specific-question workflow.
-                  handleSelectTextOnPage(floatingSelection.text);
+                  handleSelectTextOnPage(floatingSelection.text, floatingSelection.pageNumber);
                   setFloatingSelection(null);
                 }}
                 className="px-3 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold flex items-center gap-1.5 transition cursor-pointer shadow-md"
