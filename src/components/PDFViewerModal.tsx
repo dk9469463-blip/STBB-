@@ -683,6 +683,7 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
   };
 
   const handleAskAiAboutPage = (pageNum: number) => {
+    setIsRegionSelectionMode(false);
     scrollToPage(pageNum);
     // Opening the assistant from a page button is a fresh page-level request,
     // not a continuation of any older highlighted passage.
@@ -781,7 +782,10 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
               onClick={() => {
                 const nextOpen = !isAiPanelOpen;
                 setIsAiPanelOpen(nextOpen);
-                if (nextOpen) setShowThumbnailsDrawer(false);
+                if (nextOpen) {
+                  setShowThumbnailsDrawer(false);
+                  setIsRegionSelectionMode(false);
+                }
               }}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer shadow-sm ${
                 isAiPanelOpen
@@ -797,7 +801,11 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
             {/* Enable region OCR only when the student asks to select part of a scanned page. */}
             <button
               type="button"
-              onClick={() => setIsRegionSelectionMode((enabled) => !enabled)}
+              onClick={() => {
+                const nextMode = !isRegionSelectionMode;
+                if (nextMode) setActiveTool('cursor');
+                setIsRegionSelectionMode(nextMode);
+              }}
               aria-pressed={isRegionSelectionMode}
               className={`flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-bold transition cursor-pointer shadow-sm ${isRegionSelectionMode
                 ? 'bg-sky-400 text-slate-950 ring-2 ring-sky-200'
