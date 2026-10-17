@@ -94,6 +94,8 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
     clientY: number;
   } | null>(null);
   const [selectionReadError, setSelectionReadError] = useState<string | null>(null);
+  // Scanned PDFs need a deliberate crop gesture; leaving it on blocks normal phone scrolling.
+  const [isRegionSelectionMode, setIsRegionSelectionMode] = useState<boolean>(false);
 
   // Study workspace annotation state
   const [isStudyToolsOpen, setIsStudyToolsOpen] = useState<boolean>(false);
@@ -125,6 +127,18 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const isProgrammaticScrollRef = useRef<boolean>(false);
 
+  // Scroll only the PDF viewport. Element.scrollIntoView() can also scroll
+  // outer containers and make the reader jump, especially inside mobile modals.
+  const scrollPageWithinReader = useCallback((pageNumber: number, behavior: ScrollBehavior = 'smooth') => {
+    const container = scrollContainerRef.current;
+    const pageEl = document.getElementById(`pdf-page-${pageNumber}`);
+    if (!container || !pageEl) return;
+    const containerTop = container.getBoundingClientRect().top;
+    const pageTop = pageEl.getBoundingClientRect().top;
+    const targetTop = container.scrollTop + pageTop - containerTop;
+    container.scrollTo({ top: Math.max(0, targetTop), behavior });
+  }, []);
+
   // Lower rendering resolution for slow connections; settings persist across books.
   useEffect(() => {
     if (!book) return;
@@ -154,6 +168,7 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
     setRedoHistory({});
     setShowThumbnailsDrawer(false);
     setIsAiPanelOpen(false);
+    setIsRegionSelectionMode(false);
     setSelectedReaderText('');
 
     if (book) {
@@ -327,6 +342,20 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
       setNumPages(pdf.numPages);
       setIsLoadingDoc(false);
 
+      // Start with the whole page visible on phones. The old fixed 0.9 scale
+      // cropped the sides on narrower devices, making reading and selection harder.
+      if (window.innerWidth < 640) {
+        try {
+          const fitPage = await pdf.getPage(Math.max(1, Math.min(initialPageNumber || 1, pdf.numPages)));
+          const baseViewport = fitPage.getViewport({ scale: 1, rotation });
+          const availableWidth = Math.max(200, (scrollContainerRef.current?.clientWidth || window.innerWidth) - 16);
+          const fitScale = availableWidth / baseViewport.width;
+          setScale(Math.max(0.45, Math.min(fitScale, preferences.lowDataMode ? 0.9 : 1.25)));
+        } catch {
+          // Preserve the reader if calculating the initial fit fails.
+        }
+      }
+
       // Restore saved annotations only for the first pages; other pages load on demand.
       const initialMap: { [pageNum: number]: AnnotationStroke[] } = {};
       for (let p = 1; p <= Math.min(10, pdf.numPages); p++) {
@@ -343,7 +372,7 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
           const clamped = Math.max(1, Math.min(initialPageNumber, pdf.numPages));
           const pageEl = document.getElementById(`pdf-page-${clamped}`);
           if (pageEl && scrollContainerRef.current) {
-            pageEl.scrollIntoView({ behavior: 'auto', block: 'start' });
+            scrollPageWithinReader(clamped, 'auto');
           }
           pageJumpTimeoutRef.current = null;
         }, 400);
@@ -421,16 +450,15 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
       setCurrentPage(clamped);
       setPageInput(clamped.toString());
 
-      const pageEl = document.getElementById(`pdf-page-${clamped}`);
-      if (pageEl && scrollContainerRef.current) {
+      if (scrollContainerRef.current) {
         isProgrammaticScrollRef.current = true;
-        pageEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        scrollPageWithinReader(clamped, 'smooth');
         setTimeout(() => {
           isProgrammaticScrollRef.current = false;
-        }, 600);
+        }, 450);
       }
     },
-    [numPages]
+    [numPages, scrollPageWithinReader]
   );
 
   const goToPrevPage = () => {
@@ -464,9 +492,9 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
     if (!scrollContainerRef.current || !pdfDocRef.current) return;
     pdfDocRef.current.getPage(currentPage).then((page) => {
       const viewport = page.getViewport({ scale: 1.0, rotation });
-      const availableWidth = scrollContainerRef.current?.clientWidth || 800;
-      const targetScale = (availableWidth - 56) / viewport.width;
-      setScale(Math.max(0.65, Math.min(Number(targetScale.toFixed(2)), 2.5)));
+      const availableWidth = Math.max(200, (scrollContainerRef.current?.clientWidth || window.innerWidth) - 16);
+      const targetScale = availableWidth / viewport.width;
+      setScale(Math.max(0.45, Math.min(Number(targetScale.toFixed(2)), 2.5)));
     });
   };
 
@@ -587,6 +615,7 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
   };
 
   const handleSelectTextOnPage = (text: string, pageNumber: number = currentPage) => {
+    setIsRegionSelectionMode(false);
     if (pageNumber !== currentPage) scrollToPage(pageNumber);
     setSelectedReaderText(text);
     setFloatingSelection(null);
@@ -649,6 +678,7 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
         : 'Could not read the selected area. Please try selecting it again.');
     } finally {
       setReadingScannedSelection(null);
+      setIsRegionSelectionMode(false);
     }
   };
 
@@ -762,6 +792,20 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
             >
               <Sparkles className="w-3.5 h-3.5 text-amber-300" />
               <span className="hidden sm:inline">Ask AI</span>
+            </button>
+
+            {/* Enable region OCR only when the student asks to select part of a scanned page. */}
+            <button
+              type="button"
+              onClick={() => setIsRegionSelectionMode((enabled) => !enabled)}
+              aria-pressed={isRegionSelectionMode}
+              className={`flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-bold transition cursor-pointer shadow-sm ${isRegionSelectionMode
+                ? 'bg-sky-400 text-slate-950 ring-2 ring-sky-200'
+                : 'bg-slate-800 text-slate-200 hover:bg-slate-700'}`}
+              title={isRegionSelectionMode ? 'Turn off region selection and resume scrolling' : 'Select an area on a scanned PDF page for the chatbot'}
+            >
+              <Camera className="h-3.5 w-3.5" />
+              <span className="hidden xs:inline">{isRegionSelectionMode ? 'Done Selecting' : 'Select Area'}</span>
             </button>
 
             {/* Toggle Study Tools */}
@@ -918,7 +962,7 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
 
               <button
                 onClick={fitToWidth}
-                className="hidden sm:flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 transition cursor-pointer"
+                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 transition cursor-pointer"
                 title="Fit to Width"
               >
                 <Maximize className="w-3.5 h-3.5" />
@@ -1062,8 +1106,8 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
           <div
             ref={scrollContainerRef}
             onScroll={handleScroll}
-            className={`${isAiPanelOpen ? 'hidden md:flex' : 'flex'} flex-1 min-w-0 overflow-y-auto overflow-x-hidden p-2 sm:p-6 flex-col items-center relative`}
-            style={{ scrollBehavior: 'smooth' }}
+            className={`${isAiPanelOpen ? 'hidden md:flex' : 'flex'} flex-1 min-w-0 overflow-y-auto overflow-x-hidden overscroll-y-contain p-2 sm:p-6 flex-col items-center relative`}
+            style={{ WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain', touchAction: 'pan-y' }}
           >
             {/* Loading State */}
             {isLoadingDoc && (
@@ -1158,6 +1202,7 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
                     onAskAiPage={handleAskAiAboutPage}
                     onSelectionChange={setFloatingSelection}
                     onScannedRegionSelect={handleScannedRegionSelection}
+                    enableScannedSelection={isRegionSelectionMode}
                   />
                 ))}
               </div>
