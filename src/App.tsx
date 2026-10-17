@@ -210,8 +210,9 @@ export default function App() {
         </Suspense>
       )}
 
-      {/* Always-available conversational Study Buddy on the home page and PDF reader. */}
-      <FloatingTutorChat />
+      {/* General Study Buddy stays on library pages. Inside a PDF, use the
+          book-aware reader chatbot so questions keep the current book/page context. */}
+      {!activeBookForModal && <FloatingTutorChat />}
 
       {/* Professional Footer */}
       <Footer
