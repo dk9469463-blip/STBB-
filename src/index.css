@@ -109,7 +109,7 @@ html[data-theme="dark"] .bg-purple-100 {
 .stbb-tutor-widget {
   position: fixed;
   inset: 0;
-  z-index: 90;
+  z-index: 220;
   pointer-events: none;
   font-family: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
 }
