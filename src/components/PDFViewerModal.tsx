@@ -1128,13 +1128,16 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
 
               <button
                 onClick={() => {
-                  setSelectedReaderText(floatingSelection.text);
-                  setIsAiPanelOpen(true);
+                  // Only the text the student selected is placed into the separate
+                  // conversational chatbot draft; no PDF or book context is sent.
+                  window.dispatchEvent(new CustomEvent('stbb:open-chat', {
+                    detail: { selectedText: floatingSelection.text },
+                  }));
                   setShowThumbnailsDrawer(false);
                   setFloatingSelection(null);
                 }}
-                className="px-2.5 py-1 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold flex items-center gap-1 transition cursor-pointer shadow-md"
-                title="Use selected text as chatbot context; it will not be typed or sent automatically"
+                className="px-2.5 py-1 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold flex items-center gap-1 transition cursor-pointer shadow-md"
+                title="Open Study Buddy with only your selected text in the draft"
               >
                 <Sparkles className="w-3.5 h-3.5 text-amber-300" />
                 <span>Ask Chatbot</span>
