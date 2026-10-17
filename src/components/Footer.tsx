@@ -126,17 +126,25 @@ export const Footer: React.FC<FooterProps> = ({ onSelectTab, onSelectClass }) =>
             <h4 className="text-xs font-bold uppercase tracking-wider text-white">
               Curriculum Source
             </h4>
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-blue-900 text-amber-300 border border-amber-400/20">
-                <BookOpen className="w-5 h-5" />
+            <div className="flex items-center gap-3">
+              <div className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white p-1.5 shadow ring-1 ring-amber-400/50">
+                <span className="absolute text-[9px] font-black text-emerald-900">GoS</span>
+                <img
+                  src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Seal_of_the_Sindh_Government.svg/1200px-Seal_of_the_Sindh_Government.svg.png"
+                  alt="Seal of the Sindh Government"
+                  loading="lazy"
+                  referrerPolicy="no-referrer"
+                  className="relative z-10 h-full w-full rounded-full object-contain"
+                  onError={(event) => { event.currentTarget.style.display = 'none'; }}
+                />
               </div>
               <div className="text-xs">
-                <p className="font-bold text-white">Sindh Textbook Board</p>
-                <p className="text-[11px] text-emerald-400">Jamshoro, Sindh, Pakistan</p>
+                <p className="font-bold text-white">Government of Sindh</p>
+                <p className="text-[11px] text-emerald-400">Sindh Textbook Board • Jamshoro</p>
               </div>
             </div>
             <p className="text-xs text-slate-400 leading-relaxed">
-              Textbooks are copyrighted by Sindh Textbook Board, Jamshoro. All digital streams are sourced directly from the official portal.
+              Textbook links are provided to help students access published learning materials. This is an independent educational project and is not an official government website or government-affiliated service.
             </p>
             <a
               href="https://ebooks.stbb.edu.pk/"
@@ -153,7 +161,7 @@ export const Footer: React.FC<FooterProps> = ({ onSelectTab, onSelectClass }) =>
         {/* Copyright and developer credits */}
         <div className="pt-8 border-t border-slate-900 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
           <p className="text-center sm:text-left">
-            © {new Date().getFullYear()} STBB BOOKS. Independent educational project.
+            © {new Date().getFullYear()} STBB BOOKS. Independent educational project; not an official Government of Sindh service.
           </p>
           <div className="text-center sm:text-right">
             <p className="font-extrabold tracking-wide text-amber-300">Developed by D&amp;A Brothers</p>
