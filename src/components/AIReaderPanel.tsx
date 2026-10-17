@@ -57,7 +57,7 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
   const [language, setLanguage] = useState<AssistantLanguage>('english');
   const [inputQuery, setInputQuery] = useState<string>(
     selectedText?.trim()
-      ? 'Selected text:\\n' + selectedText.trim() + '\\n\\nWhat would you like to know about this text?'
+      ? 'Selected text:\n' + selectedText.trim() + '\n\nWhat would you like to know about this text?'
       : ''
   );
   const [pendingQuestionNumber, setPendingQuestionNumber] = useState<boolean>(false);
@@ -126,7 +126,7 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
   useEffect(() => {
     if (selectedText?.trim()) {
       setInputQuery(
-        'Selected text:\\n' + selectedText.trim() + '\\n\\nWhat would you like to know about this text?'
+        'Selected text:\n' + selectedText.trim() + '\n\nWhat would you like to know about this text?'
       );
     } else {
       setInputQuery('');
