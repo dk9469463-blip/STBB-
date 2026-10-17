@@ -85,9 +85,9 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
   );
   // General questions should be answered directly by the AI. Textbook retrieval
   // is opt-in unless this assistant was opened from a specific book in the reader.
-  const [answerMode, setAnswerMode] = useState<'general' | 'textbook'>(
-    initialBook && !initialSelectedText?.trim() ? 'textbook' : 'general'
-  );
+  // The main assistant is always a general-purpose chat. Book-aware help
+  // lives in the PDF reader's own assistant, where the actual reader context exists.
+  const [answerMode, setAnswerMode] = useState<'general' | 'textbook'>('general');
   const [chapterInput, setChapterInput] = useState<string>('');
   const [exerciseInput, setExerciseInput] = useState<string>('');
   const [pageInput, setPageInput] = useState<string>(
