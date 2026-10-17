@@ -11,6 +11,7 @@ interface TextItemData {
   width: number;
   height: number;
   fontSize: number;
+  angle: number;
 }
 
 interface PDFPageItemProps {
@@ -40,6 +41,7 @@ interface PDFPageItemProps {
     clientX: number;
     clientY: number;
   }) => void;
+  enableScannedSelection?: boolean;
 }
 
 export const PDFPageItem: React.FC<PDFPageItemProps> = ({
@@ -62,6 +64,7 @@ export const PDFPageItem: React.FC<PDFPageItemProps> = ({
   onAskAiPage,
   onSelectionChange,
   onScannedRegionSelect,
+  enableScannedSelection = false,
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const pdfCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -190,16 +193,29 @@ export const PDFPageItem: React.FC<PDFPageItemProps> = ({
         const extracted: TextItemData[] = [];
         for (const item of textContent.items as any[]) {
           if (!item.str || !item.transform) continue;
-          const [vx, vy] = viewport.convertToViewportPoint(item.transform[4], item.transform[5]);
-          const fontSize =
-            Math.sqrt(item.transform[0] * item.transform[0] + item.transform[1] * item.transform[1]) * scale;
+          // Multiply the PDF text transform by the actual page viewport transform.
+          // This aligns selection spans with rendered pixels at different zoom levels
+          // and on rotated pages instead of approximating with the zoom value alone.
+          const [va, vb, vc, vd, ve, vf] = viewport.transform;
+          const [ia, ib, ic, id, ie, iff] = item.transform as number[];
+          const tx = [
+            va * ia + vc * ib,
+            vb * ia + vd * ib,
+            va * ic + vc * id,
+            vb * ic + vd * id,
+            va * ie + vc * iff + ve,
+            vb * ie + vd * iff + vf,
+          ];
+          const fontSize = Math.max(1, Math.hypot(tx[2], tx[3]));
+          const angle = Math.atan2(tx[1], tx[0]);
           extracted.push({
             str: item.str,
-            left: vx,
-            top: vy - (item.height * scale || fontSize),
-            width: item.width * scale,
-            height: item.height * scale || fontSize,
+            left: tx[4],
+            top: tx[5] - fontSize,
+            width: Math.max(1, item.width * scale),
+            height: Math.max(fontSize, item.height * scale),
             fontSize,
+            angle,
           });
         }
         setTextItems(extracted);
@@ -440,7 +456,14 @@ export const PDFPageItem: React.FC<PDFPageItemProps> = ({
       const selection = window.getSelection();
       const text = selection?.toString().replace(/\s+/g, ' ').trim();
 
-      if (!host || !selection || !text || text.length < 2 || selection.rangeCount < 1) return;
+      if (!host || !selection || selection.rangeCount < 1) {
+        onSelectionChange(null);
+        return;
+      }
+      if (!text || text.length < 2) {
+        onSelectionChange(null);
+        return;
+      }
 
       const range = selection.getRangeAt(0);
       const anchorInside = Boolean(selection.anchorNode && host.contains(selection.anchorNode));
@@ -654,6 +677,8 @@ export const PDFPageItem: React.FC<PDFPageItemProps> = ({
             userSelect: 'text',
             WebkitUserSelect: 'text',
             touchAction: 'auto',
+            WebkitTouchCallout: 'default',
+            WebkitTapHighlightColor: 'transparent',
           }}
           aria-label={`Selectable text on page ${pageNumber}`}
         >
@@ -674,8 +699,11 @@ export const PDFPageItem: React.FC<PDFPageItemProps> = ({
                 fontFamily: 'Arial, Helvetica, sans-serif',
                 color: 'rgba(0, 0, 0, 0.001)',
                 backgroundColor: 'transparent',
+                transform: Math.abs(item.angle) > 0.01 ? `rotate(${item.angle}rad)` : undefined,
+                transformOrigin: 'left top',
                 userSelect: 'text',
                 WebkitUserSelect: 'text',
+                WebkitTouchCallout: 'default',
               }}
               className="selection:bg-sky-500/40 selection:text-slate-900"
             >
@@ -705,7 +733,14 @@ export const PDFPageItem: React.FC<PDFPageItemProps> = ({
       />
 
       {/* When the PDF has no selectable text, allow drag-to-select a crop for OCR. */}
-      {hasCheckedTextLayer && textItems.length === 0 && activeTool === 'cursor' && isRendered && onScannedRegionSelect && (
+            {/* Keep scanned-page selection opt-in so ordinary touch scrolling still works on phones. */}
+      {hasCheckedTextLayer && textItems.length === 0 && activeTool === 'cursor' && isRendered && onScannedRegionSelect && !enableScannedSelection && (
+        <div className="pointer-events-none absolute bottom-3 left-1/2 z-10 -translate-x-1/2 rounded-full border border-slate-400/40 bg-slate-950/80 px-3 py-1.5 text-center text-[10px] font-semibold text-slate-100 shadow-lg">
+          Scanned page — tap Select Area to choose text
+        </div>
+      )}
+
+{hasCheckedTextLayer && textItems.length === 0 && activeTool === 'cursor' && isRendered && onScannedRegionSelect && enableScannedSelection && (
         <div
           className="absolute inset-0 z-[18] cursor-crosshair select-none touch-none"
           style={{ touchAction: 'none', userSelect: 'none', WebkitUserSelect: 'none' }}
