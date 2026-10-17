@@ -791,7 +791,7 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
               title="Open AI Study Assistant for this textbook"
             >
               <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-              <span className="hidden sm:inline">Ask AI</span>
+              <span className="text-[10px] sm:text-xs">AI</span>
             </button>
 
             {/* Enable region OCR only when the student asks to select part of a scanned page. */}
@@ -805,7 +805,7 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
               title={isRegionSelectionMode ? 'Turn off region selection and resume scrolling' : 'Select an area on a scanned PDF page for the chatbot'}
             >
               <Camera className="h-3.5 w-3.5" />
-              <span className="hidden xs:inline">{isRegionSelectionMode ? 'Done Selecting' : 'Select Area'}</span>
+              <span className="text-[10px] sm:text-xs">{isRegionSelectionMode ? 'Done' : 'Area'}</span>
             </button>
 
             {/* Toggle Study Tools */}
@@ -1247,14 +1247,15 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
               onTouchStart={(event) => event.stopPropagation()}
               style={{
                 position: 'fixed',
-                left: `${Math.min(window.innerWidth - 276, Math.max(12, floatingSelection.clientX - 108))}px`,
-                top: `${Math.min(window.innerHeight - 56, Math.max(12, floatingSelection.clientY - 50))}px`,
+                left: `${Math.max(8, Math.min(window.innerWidth - Math.min(320, window.innerWidth - 16) - 8, floatingSelection.clientX - Math.min(320, window.innerWidth - 16) / 2))}px`,
+                top: `${Math.max(8, Math.min(window.innerHeight - 58, floatingSelection.clientY - 52))}px`,
+                maxWidth: 'calc(100vw - 16px)',
                 zIndex: 240,
               }}
               className="bg-slate-950 border border-slate-600 rounded-2xl shadow-2xl p-1.5 flex items-center gap-1.5 text-xs text-white backdrop-blur-xl"
             >
-              <span className="hidden sm:inline max-w-28 truncate px-2 text-[10px] text-slate-400" title={floatingSelection.text}>
-                Text selected
+              <span className="max-w-16 truncate px-1 text-[10px] text-slate-200 sm:max-w-28 sm:px-2" title={floatingSelection.text}>
+                {floatingSelection.text.slice(0, 32)}
               </span>
               <button
                 type="button"
