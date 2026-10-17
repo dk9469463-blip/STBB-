@@ -1142,18 +1142,10 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
               <button
                 type="button"
                 onClick={() => {
-                  // Prefill the always-available chatbot with the selected text
-                  // and current book/page metadata; do not attach the full page.
-                  window.dispatchEvent(new CustomEvent('stbb:open-chat', {
-                    detail: {
-                      selectedText: floatingSelection.text,
-                      bookTitle: book.title,
-                      classNumber: book.classNumber,
-                      subjectName: book.subjectName,
-                      pageNumber: floatingSelection.pageNumber,
-                    },
-                  }));
-                  setShowThumbnailsDrawer(false);
+                  // Open the book-aware in-reader assistant, prefilled with only
+                  // the selected passage. It can still retrieve this book when the
+                  // student chooses a whole exercise or specific-question workflow.
+                  handleSelectTextOnPage(floatingSelection.text);
                   setFloatingSelection(null);
                 }}
                 className="px-3 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold flex items-center gap-1.5 transition cursor-pointer shadow-md"
