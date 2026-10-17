@@ -165,21 +165,21 @@ function drawBookIcon(x, y, w, h, isMaskable = false) {
     [265, 238], [327, 207], [417, 225], [417, 344], [310, 333], [265, 350],
   ];
 
-  if (insidePolygon(cover)) return [4, 15, 34, 255];
   if (onPolygonEdge(cover, 4)) return [246, 189, 66, 255];
-  if (insidePolygon(leftPage) || insidePolygon(rightPage)) return [247, 250, 255, 255];
 
-  // Printed page lines.
+  // Spine and bookmark sit above the pages.
+  if (px >= 251 && px <= 261 && py >= 228 && py <= 363) return [246, 189, 66, 255];
+  const bookmark = [[256, 232], [267, 266], [280, 326], [268, 334], [256, 322], [244, 334], [232, 326], [245, 266]];
+  if (insidePolygon(bookmark)) return [246, 189, 66, 255];
+
+  // Printed page lines sit on top of the pale page fill.
   const pageLines = [
     [119, 244, 220, 249], [119, 267, 220, 272], [119, 290, 216, 295],
     [292, 249, 393, 244], [292, 272, 393, 267], [296, 295, 393, 290],
   ];
   if (pageLines.some((line) => onLine(...line, 3))) return [117, 145, 181, 255];
-
-  if (px >= 251 && px <= 261 && py >= 228 && py <= 363) return [246, 189, 66, 255];
-
-  const bookmark = [[256, 232], [267, 266], [280, 326], [268, 334], [256, 322], [244, 334], [232, 326], [245, 266]];
-  if (insidePolygon(bookmark)) return [246, 189, 66, 255];
+  if (insidePolygon(leftPage) || insidePolygon(rightPage)) return [247, 250, 255, 255];
+  if (insidePolygon(cover)) return [4, 15, 34, 255];
   if (inCircle(256, 400, 5)) return [255, 220, 133, 255];
   if (onLine(185, 400, 327, 400, 4)) return [246, 189, 66, 255];
 
