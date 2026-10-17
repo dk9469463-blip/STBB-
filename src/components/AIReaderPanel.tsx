@@ -82,7 +82,7 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
   // Persistent Messages for this book reader session
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
-  const inputRef = useRef<HTMLInputElement | null>(null);
+  const inputRef = useRef<HTMLTextAreaElement | null>(null);
 
   // Load saved reader chat for this book from localStorage
   useEffect(() => {
@@ -613,7 +613,7 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
               Clear
             </button>
           </div>
-          <p className="line-clamp-2 italic bg-slate-950/50 p-1.5 rounded-lg border border-blue-900/40 text-[11px]">
+          <p className="max-h-20 overflow-y-auto whitespace-pre-wrap break-words italic bg-slate-950/50 p-1.5 rounded-lg border border-blue-900/40 text-[11px] leading-relaxed">
             "{selectedText}"
           </p>
         </div>
@@ -639,56 +639,78 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
         </div>
       )}
 
-      {/* Quick Action Chips */}
-      <div className="p-2.5 border-b border-slate-800 bg-slate-900/60 flex flex-wrap gap-1.5 shrink-0">
-        <button
-          onClick={() => handleQuickAction('explain')}
-          className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-amber-300 text-[11px] font-medium transition cursor-pointer"
-        >
-          💡 Explain
-        </button>
-        {selectedText && selectedText.split(' ').length <= 4 && (
+      {/* Compact, collapsible tools keep more room for the conversation. */}
+      <div className="px-3 py-1.5 border-b border-slate-800 bg-slate-900/60 shrink-0">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Study tools</span>
           <button
-            onClick={() => handleQuickAction('meaning')}
-            className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-amber-300 text-[11px] font-medium transition cursor-pointer"
+            type="button"
+            onClick={() => setShowAdvancedTools((open) => !open)}
+            className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-bold text-slate-300 hover:bg-slate-800 hover:text-amber-300 transition"
+            aria-expanded={showAdvancedTools}
           >
-            📖 Meaning
+            <SlidersHorizontal className="w-3 h-3" />
+            {showAdvancedTools ? 'Hide tools' : 'More tools'}
           </button>
-        )}
-        <button
-          onClick={() => handleQuickAction('solve')}
-          className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-amber-300 text-[11px] font-medium transition cursor-pointer"
-        >
-          ✏️ Solve
-        </button>
-        <button
-          onClick={() => handleQuickAction('translate_urdu')}
-          className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-amber-300 text-[11px] font-medium transition cursor-pointer"
-        >
-          اردو
-        </button>
-        <button
-          onClick={() => handleQuickAction('translate_sindhi')}
-          className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-amber-300 text-[11px] font-medium transition cursor-pointer"
-        >
-          سنڌي
-        </button>
-        <button
-          onClick={() => handleQuickAction('mcqs')}
-          className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-amber-300 text-[11px] font-medium transition cursor-pointer"
-        >
-          🎯 MCQs
-        </button>
-
-        {onCapturePageImage && !capturedImage && (
-          <button
-            onClick={handleCaptureCurrentPage}
-            disabled={isCapturing}
-            className="px-2 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-[11px] font-medium transition flex items-center gap-1 cursor-pointer"
-          >
-            <Camera className="w-3 h-3" />
-            <span>{isCapturing ? 'Snapping...' : 'Capture Page'}</span>
-          </button>
+        </div>
+        {showAdvancedTools && (
+          <div className="mt-1.5 flex flex-wrap gap-1.5 pb-1">
+            <button
+              type="button"
+              onClick={() => handleQuickAction('explain')}
+              className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-amber-300 text-[11px] font-medium transition cursor-pointer"
+            >
+              💡 Explain
+            </button>
+            {selectedText && selectedText.split(' ').length <= 4 && (
+              <button
+                type="button"
+                onClick={() => handleQuickAction('meaning')}
+                className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-amber-300 text-[11px] font-medium transition cursor-pointer"
+              >
+                📖 Meaning
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => handleQuickAction('solve')}
+              className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-amber-300 text-[11px] font-medium transition cursor-pointer"
+            >
+              ✏️ Solve
+            </button>
+            <button
+              type="button"
+              onClick={() => handleQuickAction('translate_urdu')}
+              className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-amber-300 text-[11px] font-medium transition cursor-pointer"
+            >
+              اردو
+            </button>
+            <button
+              type="button"
+              onClick={() => handleQuickAction('translate_sindhi')}
+              className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-amber-300 text-[11px] font-medium transition cursor-pointer"
+            >
+              سنڌي
+            </button>
+            <button
+              type="button"
+              onClick={() => handleQuickAction('mcqs')}
+              className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-amber-300 text-[11px] font-medium transition cursor-pointer"
+            >
+              🎯 MCQs
+            </button>
+            {onCapturePageImage && !capturedImage && (
+              <button
+                type="button"
+                onClick={handleCaptureCurrentPage}
+                disabled={isCapturing}
+                className="px-2.5 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-[11px] font-medium transition flex items-center gap-1 cursor-pointer"
+              >
+                <Camera className="w-3 h-3" />
+                <span>{isCapturing ? 'Capturing...' : 'Capture Page'}</span>
+              </button>
+            )}
+          </div>
         )}
       </div>
 
@@ -722,7 +744,7 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
       )}
 
       {/* Chronological Messages Stream */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-3 text-xs sm:text-sm scrollbar-thin">
+      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-3 space-y-3 text-sm sm:text-[15px] leading-relaxed scrollbar-thin">
         {messages.map((msg) => {
           const isAssistant = msg.role === 'assistant';
           const displayContent = formatStudyAnswer(msg.content);
@@ -881,22 +903,24 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Always-available reader intent shortcuts. They remain accessible even in older saved chats. */}
-      {!isGenerating && !inputQuery.trim() && !pendingQuestionNumber && !pendingConceptTopic &&
-        !(messages.length === 1 && messages[0].role === 'assistant' && messages[0].id.startsWith('reader-welcome-')) && (
-          <div className="px-3 py-2 bg-slate-950/95 border-t border-slate-800 shrink-0">
-            <p className="text-[10px] uppercase tracking-wide font-bold text-slate-400 mb-1.5">What would you like to do?</p>
-            <div className="grid grid-cols-2 gap-1.5">
-              <button type="button" onClick={() => handleFollowUpClick('Solve the whole exercise')} className="rounded-lg border border-slate-700 bg-slate-900 px-2 py-2 text-left text-[11px] font-semibold text-slate-200 hover:border-amber-400/60 hover:text-amber-300">Solve whole exercise</button>
-              <button type="button" onClick={() => handleFollowUpClick('Solve a specific question')} className="rounded-lg border border-slate-700 bg-slate-900 px-2 py-2 text-left text-[11px] font-semibold text-slate-200 hover:border-amber-400/60 hover:text-amber-300">Solve specific question</button>
-              <button type="button" onClick={() => handleFollowUpClick('Learn a concept')} className="rounded-lg border border-slate-700 bg-slate-900 px-2 py-2 text-left text-[11px] font-semibold text-slate-200 hover:border-amber-400/60 hover:text-amber-300">Learn a concept</button>
-              <button type="button" onClick={() => handleFollowUpClick("Something else (I'll type)")} className="rounded-lg border border-slate-700 bg-slate-900 px-2 py-2 text-left text-[11px] font-semibold text-slate-200 hover:border-amber-400/60 hover:text-amber-300">Something else — I’ll type</button>
-            </div>
+      {/* Compact quick-help actions stay visible whenever the composer is empty. */}
+      {!isGenerating && !inputQuery.trim() && !pendingQuestionNumber && !pendingConceptTopic && (
+        <div className="px-3 py-1.5 bg-slate-950/95 border-t border-slate-800 shrink-0">
+          <div className="mb-1 flex items-center gap-1.5 text-[10px] uppercase tracking-wide font-bold text-slate-500">
+            <Sparkles className="w-3 h-3 text-amber-400" />
+            What would you like to do?
           </div>
-        )}
+          <div className="flex flex-wrap gap-1.5">
+            <button type="button" onClick={() => handleFollowUpClick('Solve the whole exercise')} className="rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-[11px] font-semibold text-slate-200 hover:border-amber-400/60 hover:text-amber-300">Whole exercise</button>
+            <button type="button" onClick={() => handleFollowUpClick('Solve a specific question')} className="rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-[11px] font-semibold text-slate-200 hover:border-amber-400/60 hover:text-amber-300">Specific question</button>
+            <button type="button" onClick={() => handleFollowUpClick('Learn a concept')} className="rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-[11px] font-semibold text-slate-200 hover:border-amber-400/60 hover:text-amber-300">Learn concept</button>
+            <button type="button" onClick={() => handleFollowUpClick("Something else (I'll type)")} className="rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-[11px] font-semibold text-slate-200 hover:border-amber-400/60 hover:text-amber-300">Type a question</button>
+          </div>
+        </div>
+      )}
 
       {/* Input Bar with Voice Input & Edit Before Send */}
-      <div className="p-2.5 bg-slate-950 border-t border-slate-800 shrink-0">
+      <div className="p-2 bg-slate-950 border-t border-slate-800 shrink-0">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -920,20 +944,26 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
             </button>
           )}
 
-          {/* Editable text field */}
-          <input
+          {/* Multi-line composer: use Enter to send and Shift+Enter for a new line. */}
+          <textarea
             ref={inputRef}
-            type="text"
+            rows={2}
             value={inputQuery}
             onChange={(e) => setInputQuery(e.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendQuery();
+              }
+            }}
             placeholder={
               language === 'urdu'
                 ? 'اس صفحے یا سوال سے متعلق کچھ بھی پوچھیں...'
                 : language === 'sindhi'
                 ? 'هن صفحي يا درسي سوال بابت پڇو...'
-                : 'Ask about this page or question...'
+                : 'Ask a question, enter a question number, or use a quick action…'
             }
-            className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="min-w-0 flex-1 resize-y bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/70 max-h-32 min-h-[48px]"
             dir={language === 'urdu' || language === 'sindhi' ? 'rtl' : 'ltr'}
           />
 
