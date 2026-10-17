@@ -322,7 +322,7 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
 
     if (choice === 'solve the whole exercise') {
       sendQuery(
-        'Please help me solve the complete exercise from this textbook. Use my highlighted text and the current reader context as clues to identify the exercise, then solve every question in order with clear steps. If you cannot identify which exercise it is, ask me for the exercise number. Do not ask me to type the whole page.'
+        `Please solve the complete exercise shown on or near PDF page ${currentPage} of ${book.title} (Class ${book.classNumber}, ${book.subjectName}, ${book.medium} medium). First use the selected passage, if any, and the current page plus nearby pages to identify the exact exercise. Read any continuation pages from this same book and solve every question in the original order, showing clear step-by-step working. Do not ask me to type the whole page or repeat text already selected. If you still cannot identify the exercise after checking the available pages, ask only for the exercise number.`
       );
       return;
     }
