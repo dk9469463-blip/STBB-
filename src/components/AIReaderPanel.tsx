@@ -541,7 +541,7 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
     <aside
       className={isExpanded
         ? "fixed inset-2 sm:inset-4 z-[260] w-auto h-auto min-h-0 rounded-2xl border border-blue-400/30 bg-slate-900 shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-150"
-        : "w-full md:w-96 lg:w-[420px] shrink-0 min-w-0 min-h-0 bg-slate-900 border-l border-slate-800 flex flex-col h-full shadow-2xl z-40 animate-in slide-in-from-right duration-200"
+        : "fixed inset-0 z-[260] w-full h-full min-h-0 bg-slate-900 border border-slate-700 flex flex-col overflow-hidden shadow-2xl animate-in slide-in-from-right duration-200 md:relative md:inset-auto md:z-40 md:w-96 lg:w-[420px] md:h-full md:border-y-0 md:border-r-0 md:border-l"
       }
       aria-label="AI textbook study chat"
     >
@@ -639,6 +639,44 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
           </p>
         </div>
       )}
+
+      {/* Always-visible choices: the student should not need to type a prompt first. */}
+      <div className="shrink-0 border-b border-slate-800 bg-slate-950/70 px-3 py-2.5">
+        <p className="mb-2 text-[11px] font-semibold text-slate-300">What would you like to do?</p>
+        <div className="grid grid-cols-2 gap-1.5">
+          <button
+            type="button"
+            onClick={() => handleFollowUpClick('Solve the whole exercise')}
+            disabled={isGenerating}
+            className="min-w-0 rounded-xl border border-blue-500/30 bg-blue-500/10 px-2 py-2 text-left text-[11px] font-bold text-blue-100 transition hover:bg-blue-500/20 disabled:opacity-50 cursor-pointer"
+          >
+            Solve the whole exercise
+          </button>
+          <button
+            type="button"
+            onClick={() => handleFollowUpClick('Solve a specific question')}
+            disabled={isGenerating}
+            className="min-w-0 rounded-xl border border-amber-500/30 bg-amber-500/10 px-2 py-2 text-left text-[11px] font-bold text-amber-100 transition hover:bg-amber-500/20 disabled:opacity-50 cursor-pointer"
+          >
+            Solve a specific question
+          </button>
+          <button
+            type="button"
+            onClick={() => handleFollowUpClick('Learn a concept')}
+            disabled={isGenerating}
+            className="min-w-0 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-2 py-2 text-left text-[11px] font-bold text-emerald-100 transition hover:bg-emerald-500/20 disabled:opacity-50 cursor-pointer"
+          >
+            Learn a concept
+          </button>
+          <button
+            type="button"
+            onClick={() => handleFollowUpClick("Something else (I'll type)")}
+            className="min-w-0 rounded-xl border border-slate-700 bg-slate-800/70 px-2 py-2 text-left text-[11px] font-bold text-slate-200 transition hover:bg-slate-700 cursor-pointer"
+          >
+            Something else — I’ll type
+          </button>
+        </div>
+      </div>
 
       {/* Captured Image Preview */}
       {capturedImage && (
