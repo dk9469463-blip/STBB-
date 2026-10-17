@@ -55,7 +55,11 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
   onCapturePageImage,
 }) => {
   const [language, setLanguage] = useState<AssistantLanguage>('english');
-  const [inputQuery, setInputQuery] = useState<string>('');
+  const [inputQuery, setInputQuery] = useState<string>(
+    selectedText?.trim()
+      ? 'Selected text:\\n' + selectedText.trim() + '\\n\\nWhat would you like to know about this text?'
+      : ''
+  );
   const [pendingQuestionNumber, setPendingQuestionNumber] = useState<boolean>(false);
   const [pendingConceptTopic, setPendingConceptTopic] = useState<boolean>(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
@@ -95,7 +99,7 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
       if (onlyWelcome) {
         const welcome: ChatMessage = {
           ...saved[0],
-          content: `Hi! What would you like help with in ${book.title}? Choose an option below, or type your own question. Highlighted text stays separate from your message. When text is highlighted, only that text is sent as context; if no text is selected, the current page image may be used to read scanned pages.`,
+          content: `Hi! What would you like help with in ${book.title}? Choose an option below, or type your own question. When you choose Ask Chatbot on selected text, it is placed in the editable message box. It is not sent until you press Send. For scanned pages, drag over a small text area to read that crop; the entire page is not sent when text is selected.`,
           followUps: startOptions,
         };
         setMessages([welcome]);
@@ -107,7 +111,7 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
       const welcome: ChatMessage = {
         id: `reader-welcome-${book.id}`,
         role: 'assistant',
-        content: `Hi! What would you like help with in ${book.title}? Choose an option below, or type your own question. Highlighted text stays separate from your message. When text is highlighted, only that text is sent as context; if no text is selected, the current page image may be used to read scanned pages.`,
+        content: `Hi! What would you like help with in ${book.title}? Choose an option below, or type your own question. When you choose Ask Chatbot on selected text, it is placed in the editable message box. It is not sent until you press Send. For scanned pages, drag over a small text area to read that crop; the entire page is not sent when text is selected.`,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         language: 'english',
         followUps: startOptions,
@@ -117,8 +121,18 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
     }
   }, [book.id]);
 
-  // Keep the user's question field empty. The highlighted passage is passed
-  // separately as context, so selecting text never auto-types a prompt for them.
+  // Whenever the student chooses Ask Chatbot on a highlighted passage, place
+  // that passage in the editable composer. It is never sent until Send is pressed.
+  useEffect(() => {
+    if (selectedText?.trim()) {
+      setInputQuery(
+        'Selected text:\\n' + selectedText.trim() + '\\n\\nWhat would you like to know about this text?'
+      );
+    } else {
+      setInputQuery('');
+    }
+  }, [book.id, selectedText]);
+
 
   // Scroll to bottom on new message
   useEffect(() => {
@@ -234,7 +248,7 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
     const welcome: ChatMessage = {
       id: `reader-welcome-${Date.now()}`,
       role: 'assistant',
-      content: `New chat for ${book.title}. What would you like to do? Choose an option below, or type your own question. Highlighted text stays separate from your message; the full page is captured only if you manually choose Capture Page.`,
+      content: `New chat for ${book.title}. What would you like to do? Choose an option below, or type your own question. Selected text is prefilled as an editable draft; the page image is used only when no text is selected.`,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       language,
       followUps: [
