@@ -122,43 +122,74 @@ function drawBrandIcon(x, y, w, h, isMaskable = false) {
   if (!isMaskable && squircle > 0.94 && squircle <= 1) return [246, 189, 66, 255];
   if (!isMaskable && squircle > 0.91 && squircle <= 0.94) return [65, 133, 225, 255];
 
-  // Small Ajrak-inspired diamonds at the crown.
-  if (diamond(256, 87, 22)) return [255, 230, 157, 255];
-  if (diamond(211, 111, 13) || diamond(301, 111, 13)) return [246, 189, 66, 240];
-  if (diamond(177, 152, 9) || diamond(335, 152, 9)) return [246, 189, 66, 170];
-
-  // Soft golden rising sun with delicate rays.
-  if (inCircle(256, 183, 51)) {
-    const sunT = Math.max(0, Math.min(1, (py - 132) / 102));
-    return [mix(255, 219, sunT), mix(239, 146, sunT), mix(185, 25, sunT), 255];
-  }
+  // Draw an open-book symbol, matching public/logo.svg and public/icon.svg.
+  // Small gold sparks make it recognisable at launcher/fav-icon sizes.
+  if (diamond(355, 104, 25) || diamond(402, 170, 11)) return [250, 199, 87, 255];
   if (
-    onLine(256, 119, 256, 108, 5) ||
-    onLine(218, 133, 210, 125, 5) ||
-    onLine(294, 133, 302, 125, 5) ||
-    onLine(199, 168, 188, 166, 5) ||
-    onLine(313, 168, 324, 166, 5)
-  ) return [255, 225, 154, 255];
+    onLine(355, 75, 355, 91, 5) ||
+    onLine(355, 117, 355, 135, 5) ||
+    onLine(326, 104, 341, 104, 5) ||
+    onLine(369, 104, 384, 104, 5)
+  ) return [255, 233, 165, 255];
 
-  // Flowing river ribbons. The icon uses curves instead of a book to make
-  // the app identity feel distinct and recognisably connected to Sindh.
-  const waveOne = 266 - 28 * Math.sin((px - 92) * Math.PI / 88);
-  const waveTwo = 307 - 23 * Math.sin((px - 108) * Math.PI / 75);
-  const waveThree = 348 - 18 * Math.sin((px - 132) * Math.PI / 62);
+  const leftOuter = [
+    [67, 197], [149, 187], [226, 211], [256, 235],
+    [256, 390], [224, 358], [149, 343], [67, 365],
+  ];
+  const rightOuter = [
+    [445, 197], [363, 187], [286, 211], [256, 235],
+    [256, 390], [288, 358], [363, 343], [445, 365],
+  ];
+  const leftPage = [
+    [84, 216], [150, 206], [220, 228], [246, 249],
+    [246, 350], [218, 336], [150, 323], [84, 342],
+  ];
+  const rightPage = [
+    [428, 216], [362, 206], [292, 228], [266, 249],
+    [266, 350], [294, 336], [362, 323], [428, 342],
+  ];
 
-  if (px >= 88 && px <= 424 && Math.abs(py - waveOne) <= 6) return [112, 211, 237, 255];
-  if (px >= 103 && px <= 414 && Math.abs(py - waveTwo) <= 5) return [138, 220, 242, 255];
-  if (px >= 128 && px <= 393 && Math.abs(py - waveThree) <= 4) return [246, 189, 66, 255];
+  // Fine gold outline around the book cover and its central binding.
   if (
-    (px >= 83 && px <= 429 && Math.abs(py - waveOne) <= 12) ||
-    (px >= 98 && px <= 419 && Math.abs(py - waveTwo) <= 10) ||
-    (px >= 123 && px <= 398 && Math.abs(py - waveThree) <= 9)
-  ) return [4, 19, 42, 255];
+    onLine(67, 197, 149, 187, 8) ||
+    onLine(149, 187, 226, 211, 8) ||
+    onLine(226, 211, 256, 235, 8) ||
+    onLine(256, 235, 286, 211, 8) ||
+    onLine(286, 211, 363, 187, 8) ||
+    onLine(363, 187, 445, 197, 8) ||
+    onLine(67, 197, 67, 365, 8) ||
+    onLine(445, 197, 445, 365, 8) ||
+    onLine(67, 365, 149, 343, 8) ||
+    onLine(149, 343, 224, 358, 8) ||
+    onLine(224, 358, 256, 390, 8) ||
+    onLine(256, 390, 288, 358, 8) ||
+    onLine(288, 358, 363, 343, 8) ||
+    onLine(363, 343, 445, 365, 8)
+  ) return [247, 190, 67, 255];
 
-  // Quiet footline and jewel-like anchor below the river motif.
-  const baselineDistance = distanceToSegment(148, 393, 364, 393);
-  if (baselineDistance <= 1.5) return [126, 183, 255, 125];
-  if (inCircle(256, 393, 4)) return [255, 224, 143, 255];
+  // Bright left page and cool-blue right page.
+  if (insidePolygon(leftPage)) return [244, 249, 255, 255];
+  if (insidePolygon(rightPage)) return [191, 226, 255, 255];
+
+  // Three short, gently sloped lines on each page suggest writing.
+  if (
+    onLine(106, 247, 214, 262, 5) ||
+    onLine(106, 278, 214, 293, 5) ||
+    onLine(106, 309, 214, 324, 5)
+  ) return [93, 142, 196, 255];
+  if (
+    onLine(406, 247, 298, 262, 5) ||
+    onLine(406, 278, 298, 293, 5) ||
+    onLine(406, 309, 298, 324, 5)
+  ) return [49, 111, 173, 255];
+
+  if (insidePolygon(leftOuter) || insidePolygon(rightOuter)) return [247, 190, 67, 255];
+
+  // Gold spine ties the two pages together.
+  if (onLine(256, 239, 256, 387, 7)) return [247, 190, 67, 255];
+
+  // Quiet baseline beneath the open book.
+  if (onLine(146, 407, 366, 407, 3)) return [126, 183, 255, 180];
 
   return background;
 }
