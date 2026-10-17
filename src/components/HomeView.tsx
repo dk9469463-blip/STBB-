@@ -270,96 +270,90 @@ export const HomeView: React.FC<HomeViewProps> = ({
           </button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Primary */}
-          <div
-            onClick={() => onSelectClass(1)}
-            className="group p-5 rounded-2xl bg-white border border-slate-200 hover:border-blue-400 shadow-xs hover:shadow-lg transition-all cursor-pointer relative overflow-hidden"
-          >
-            <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm mb-3 group-hover:scale-110 transition-transform">
-              1 - 5
-            </div>
-            <h3 className="font-bold text-slate-900 text-base group-hover:text-blue-700 transition-colors">
-              Primary School
-            </h3>
-            <p className="text-xs text-slate-500 mt-1">
-              Classes 1 to 5. Foundational literacy, numeracy, general science & mother tongue.
-            </p>
-            <div className="mt-4 flex items-center justify-between text-xs font-semibold text-blue-600">
-              <span>Classes 1, 2, 3, 4, 5</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </div>
-          </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {[
+            {
+              number: 1,
+              title: 'Primary School',
+              range: 'Classes 1–5',
+              code: '01 — 05',
+              description: 'Build strong foundations in reading, writing, numbers and discovery.',
+              subjects: 'Core learning · Languages · Science',
+              icon: BookOpen,
+              tone: 'blue',
+            },
+            {
+              number: 6,
+              title: 'Middle School',
+              range: 'Classes 6–8',
+              code: '06 — 08',
+              description: 'Grow subject knowledge, reasoning and independent study skills.',
+              subjects: 'Maths · Science · Computer',
+              icon: Layers,
+              tone: 'teal',
+            },
+            {
+              number: 9,
+              title: 'Secondary School',
+              range: 'Classes 9–10',
+              code: '09 — 10',
+              description: 'Prepare for SSC with focused study across core school subjects.',
+              subjects: 'SSC · Biology · Physics · Maths',
+              icon: Calculator,
+              tone: 'amber',
+            },
+            {
+              number: 11,
+              title: 'Higher Secondary',
+              range: 'Classes 11–12',
+              code: '11 — 12',
+              description: 'Continue into HSSC subjects and prepare for the next academic step.',
+              subjects: 'Pre-Medical · Engineering · ICS',
+              icon: GraduationCap,
+              tone: 'violet',
+            },
+          ].map((stage) => {
+            const Icon = stage.icon;
+            const theme = stage.tone === 'blue'
+              ? { glow: 'bg-blue-500/10', chip: 'bg-blue-50 text-blue-700 ring-blue-100', accent: 'text-blue-700', hover: 'group-hover:text-blue-700', line: 'from-blue-600 to-cyan-500' }
+              : stage.tone === 'teal'
+                ? { glow: 'bg-teal-500/10', chip: 'bg-teal-50 text-teal-700 ring-teal-100', accent: 'text-teal-700', hover: 'group-hover:text-teal-700', line: 'from-teal-600 to-emerald-400' }
+                : stage.tone === 'amber'
+                  ? { glow: 'bg-amber-500/10', chip: 'bg-amber-50 text-amber-700 ring-amber-100', accent: 'text-amber-700', hover: 'group-hover:text-amber-700', line: 'from-amber-500 to-orange-400' }
+                  : { glow: 'bg-violet-500/10', chip: 'bg-violet-50 text-violet-700 ring-violet-100', accent: 'text-violet-700', hover: 'group-hover:text-violet-700', line: 'from-violet-600 to-fuchsia-500' };
 
-          {/* Middle */}
-          <div
-            onClick={() => onSelectClass(6)}
-            className="group p-5 rounded-2xl bg-white border border-slate-200 hover:border-emerald-400 shadow-xs hover:shadow-lg transition-all cursor-pointer relative overflow-hidden"
-          >
-            <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm mb-3 group-hover:scale-110 transition-transform">
-              6 - 8
-            </div>
-            <h3 className="font-bold text-slate-900 text-base group-hover:text-emerald-700 transition-colors">
-              Middle School
-            </h3>
-            <p className="text-xs text-slate-500 mt-1">
-              Classes 6 to 8. General Science, Mathematics, Computer Education, History & Geography.
-            </p>
-            <div className="mt-4 flex items-center justify-between text-xs font-semibold text-emerald-600">
-              <span>Classes 6, 7, 8</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </div>
-          </div>
-
-          {/* Secondary (Matric) */}
-          <div
-            onClick={() => onSelectClass(9)}
-            className="group p-5 rounded-2xl bg-white border border-slate-200 hover:border-amber-400 shadow-xs hover:shadow-lg transition-all cursor-pointer relative overflow-hidden"
-          >
-            <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-sm mb-3 group-hover:scale-110 transition-transform">
-              9 - 10
-            </div>
-            <div className="flex items-center gap-1.5">
-              <h3 className="font-bold text-slate-900 text-base group-hover:text-amber-700 transition-colors">
-                Secondary (Matric)
-              </h3>
-              <span className="text-[10px] bg-amber-100 text-amber-800 font-bold px-1.5 py-0.2 rounded">
-                BSEK
-              </span>
-            </div>
-            <p className="text-xs text-slate-500 mt-1">
-              Classes 9 & 10 (SSC I & II). Biology, Physics, Chemistry, Computer & Mathematics.
-            </p>
-            <div className="mt-4 flex items-center justify-between text-xs font-semibold text-amber-700">
-              <span>Classes 9 & 10</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </div>
-          </div>
-
-          {/* Higher Secondary (Inter) */}
-          <div
-            onClick={() => onSelectClass(11)}
-            className="group p-5 rounded-2xl bg-white border border-slate-200 hover:border-purple-400 shadow-xs hover:shadow-lg transition-all cursor-pointer relative overflow-hidden"
-          >
-            <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-sm mb-3 group-hover:scale-110 transition-transform">
-              11 - 12
-            </div>
-            <div className="flex items-center gap-1.5">
-              <h3 className="font-bold text-slate-900 text-base group-hover:text-purple-700 transition-colors">
-                Higher Secondary (Inter)
-              </h3>
-              <span className="text-[10px] bg-purple-100 text-purple-800 font-bold px-1.5 py-0.2 rounded">
-                BIEK
-              </span>
-            </div>
-            <p className="text-xs text-slate-500 mt-1">
-              Classes 11 & 12 (HSSC I & II). Pre-Medical, Pre-Engineering, ICS & Commerce faculties.
-            </p>
-            <div className="mt-4 flex items-center justify-between text-xs font-semibold text-purple-600">
-              <span>Classes 11 & 12</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </div>
-          </div>
+            return (
+              <button
+                key={stage.title}
+                type="button"
+                onClick={() => onSelectClass(stage.number)}
+                aria-label={'Browse ' + stage.title + ' books'}
+                className="group relative isolate min-h-64 overflow-hidden rounded-3xl border border-slate-200/90 bg-white p-5 text-left shadow-sm transition duration-300 hover:-translate-y-1 hover:border-slate-300 hover:shadow-xl focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 sm:p-6"
+              >
+                <div className={'pointer-events-none absolute -right-12 -top-12 h-36 w-36 rounded-full blur-2xl transition-opacity group-hover:opacity-150 ' + theme.glow} />
+                <div className={'pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r opacity-70 transition-opacity group-hover:opacity-100 ' + theme.line} />
+                <div className="relative flex items-start justify-between gap-3">
+                  <span className={'flex h-12 w-12 items-center justify-center rounded-2xl ring-1 transition duration-300 group-hover:scale-105 ' + theme.chip}>
+                    <Icon className="h-6 w-6" />
+                  </span>
+                  <span className="rounded-full bg-slate-50 px-3 py-1.5 text-[10px] font-extrabold tracking-widest text-slate-400 ring-1 ring-slate-100">
+                    {stage.code}
+                  </span>
+                </div>
+                <div className="relative mt-5">
+                  <p className={'text-xs font-extrabold uppercase tracking-widest ' + theme.accent}>{stage.range}</p>
+                  <h3 className={'mt-1 text-lg font-black tracking-tight text-slate-900 transition-colors ' + theme.hover}>{stage.title}</h3>
+                  <p className="mt-2 min-h-10 text-sm leading-relaxed text-slate-500">{stage.description}</p>
+                </div>
+                <div className="relative mt-5 flex items-center justify-between gap-3 border-t border-slate-100 pt-4">
+                  <span className="text-[11px] font-semibold leading-relaxed text-slate-400">{stage.subjects}</span>
+                  <span className={'flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-50 transition duration-300 group-hover:translate-x-1 group-hover:bg-slate-900 group-hover:text-white ' + theme.accent}>
+                    <ArrowRight className="h-4 w-4" />
+                  </span>
+                </div>
+              </button>
+            );
+          })}
         </div>
       </section>
 
