@@ -16,6 +16,9 @@ import {
   Pause,
   Square,
   AlertCircle,
+  Maximize2,
+  Minimize2,
+  SlidersHorizontal,
 } from 'lucide-react';
 import { Book } from '../types';
 import {
@@ -55,11 +58,11 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
   onCapturePageImage,
 }) => {
   const [language, setLanguage] = useState<AssistantLanguage>('english');
-  const [inputQuery, setInputQuery] = useState<string>(
-    selectedText?.trim()
-      ? 'Selected text:\n' + selectedText.trim() + '\n\nWhat would you like to know about this text?'
-      : ''
-  );
+  // Keep the composer empty after opening the chatbot. Selected passage text is
+  // shown as context and sent separately, so it is never mistaken for the user's question.
+  const [inputQuery, setInputQuery] = useState<string>('');
+  const [showAdvancedTools, setShowAdvancedTools] = useState<boolean>(false);
+  const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const [pendingQuestionNumber, setPendingQuestionNumber] = useState<boolean>(false);
   const [pendingConceptTopic, setPendingConceptTopic] = useState<boolean>(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
@@ -84,13 +87,6 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
   // Load saved reader chat for this book from localStorage
   useEffect(() => {
     const saved = getStoredReaderMessages(book.id);
-    const startOptions = [
-      'Solve the whole exercise',
-      'Solve a specific question',
-      'Learn a concept',
-      "Something else (I'll type)",
-    ];
-
     if (saved.length > 0) {
       // Refresh an old, untouched welcome screen so existing users get the new choices.
       const onlyWelcome = saved.length === 1 &&
@@ -99,8 +95,8 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
       if (onlyWelcome) {
         const welcome: ChatMessage = {
           ...saved[0],
-          content: `Hi! What would you like help with in ${book.title}? Choose an option below, or type your own question. When you choose Ask Chatbot on selected text, it is placed in the editable message box. It is not sent until you press Send. For scanned pages, drag over a small text area to read that crop; the entire page is not sent when text is selected.`,
-          followUps: startOptions,
+          content: `Welcome to your study chat for ${book.title}. The selected passage, if any, is kept as context. Choose a quick action below or type your own question. Full-page images are not sent automatically; use Capture Page only when visual context is needed.`,
+          followUps: [],
         };
         setMessages([welcome]);
         saveStoredReaderMessages(book.id, [welcome]);
@@ -111,26 +107,24 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
       const welcome: ChatMessage = {
         id: `reader-welcome-${book.id}`,
         role: 'assistant',
-        content: `Hi! What would you like help with in ${book.title}? Choose an option below, or type your own question. When you choose Ask Chatbot on selected text, it is placed in the editable message box. It is not sent until you press Send. For scanned pages, drag over a small text area to read that crop; the entire page is not sent when text is selected.`,
+        content: `Welcome to your study chat for ${book.title}. The selected passage, if any, is kept as context. Choose a quick action below or type your own question. Full-page images are not sent automatically; use Capture Page only when visual context is needed.`,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         language: 'english',
-        followUps: startOptions,
+        followUps: [],
       };
       setMessages([welcome]);
       saveStoredReaderMessages(book.id, [welcome]);
     }
   }, [book.id]);
 
-  // Whenever the student chooses Ask Chatbot on a highlighted passage, place
-  // that passage in the editable composer. It is never sent until Send is pressed.
+  // A passage selection updates the context preview only. Keep the composer clear
+  // so the student can choose a quick action or write their own question.
   useEffect(() => {
-    if (selectedText?.trim()) {
-      setInputQuery(
-        'Selected text:\n' + selectedText.trim() + '\n\nWhat would you like to know about this text?'
-      );
-    } else {
-      setInputQuery('');
-    }
+    setInputQuery('');
+    setPendingQuestionNumber(false);
+    setPendingConceptTopic(false);
+    setCapturedImage(null);
+    setErrorMsg(null);
   }, [book.id, selectedText]);
 
 
@@ -248,15 +242,10 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
     const welcome: ChatMessage = {
       id: `reader-welcome-${Date.now()}`,
       role: 'assistant',
-      content: `New chat for ${book.title}. What would you like to do? Choose an option below, or type your own question. Selected text is prefilled as an editable draft; the page image is used only when no text is selected.`,
+      content: `New chat for ${book.title}. Choose a quick action below or type your own question. Any selected passage remains available as context. Full-page images are never attached automatically.`,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       language,
-      followUps: [
-        'Solve the whole exercise',
-        'Solve a specific question',
-        'Learn a concept',
-        "Something else (I'll type)",
-      ],
+      followUps: [],
     };
     setMessages([welcome]);
     saveStoredReaderMessages(book.id, [welcome]);
@@ -416,20 +405,10 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
     setErrorMsg(null);
     setSpeechError(null);
 
-    // A highlighted passage is sent as text context only, never as a full-page image.
-    // If nothing was highlighted, use the current page image as a fallback so scanned
-    // PDFs are still readable by the AI. Explicit Capture Page always takes priority.
-    let attachmentForRequest = originalRetryMessage?.imageBase64 || capturedImage;
-    if (!attachmentForRequest && !originalRetryMessage && !selectedText.trim() && onCapturePageImage) {
-      try {
-        attachmentForRequest = await onCapturePageImage();
-      } catch (captureError) {
-        console.warn(
-          'Could not capture the current reader page for AI context:',
-          captureError instanceof Error ? captureError.message : 'unknown error'
-        );
-      }
-    }
+    // Never attach the full PDF page automatically. A selected passage is sent
+    // as text in bookContext; a page image is included only after the student
+    // explicitly chooses Capture Page in Study Tools.
+    const attachmentForRequest = originalRetryMessage?.imageBase64 || capturedImage;
 
     const userMsg: ChatMessage = {
       id: `user-${Date.now()}`,
