@@ -59,6 +59,7 @@ export const PDFPageItem: React.FC<PDFPageItemProps> = ({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const pdfCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const annotationCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const selectionTimerRef = useRef<number | null>(null);
 
   const [isInViewport, setIsInViewport] = useState<boolean>(false);
   const [isRendered, setIsRendered] = useState<boolean>(false);
@@ -407,29 +408,58 @@ export const PDFPageItem: React.FC<PDFPageItemProps> = ({
     }
   };
 
-  // 6. Handle Selection and trigger floating contextual menu without automatic submission
-  const handleCheckSelection = () => {
+  // 6. Detect native text selection reliably. Document selectionchange is
+  // more dependable than mouseup alone, especially when selecting across spans,
+  // using a touch screen, or moving the pointer after a drag.
+  const inspectSelection = useCallback(() => {
     if (activeTool !== 'cursor' || !onSelectionChange) return;
 
-    setTimeout(() => {
-      const sel = window.getSelection();
-      const text = sel?.toString().trim();
-      if (text && text.length >= 2 && sel && sel.rangeCount > 0) {
-        const range = sel.getRangeAt(0);
-        const rect = range.getBoundingClientRect();
-        if (rect.width > 0 && rect.height > 0) {
-          onSelectionChange({
-            text,
-            pageNumber,
-            clientX: rect.left + rect.width / 2,
-            clientY: rect.top - 8,
-          });
-          return;
-        }
+    if (selectionTimerRef.current !== null) {
+      window.clearTimeout(selectionTimerRef.current);
+    }
+
+    selectionTimerRef.current = window.setTimeout(() => {
+      selectionTimerRef.current = null;
+      const host = containerRef.current;
+      const selection = window.getSelection();
+      const text = selection?.toString().replace(/\\s+/g, ' ').trim();
+
+      if (!host || !selection || !text || text.length < 2 || selection.rangeCount < 1) return;
+
+      const range = selection.getRangeAt(0);
+      const anchorInside = Boolean(selection.anchorNode && host.contains(selection.anchorNode));
+      const focusInside = Boolean(selection.focusNode && host.contains(selection.focusNode));
+      const commonAncestorInside = host.contains(range.commonAncestorContainer);
+      if (!anchorInside && !focusInside && !commonAncestorInside) return;
+
+      const rects = Array.from(range.getClientRects()).filter((rect) => rect.width > 0 && rect.height > 0);
+      const rect = range.getBoundingClientRect();
+      const positionRect = rect.width > 0 && rect.height > 0 ? rect : rects[rects.length - 1];
+      if (!positionRect) return;
+
+      onSelectionChange({
+        text,
+        pageNumber,
+        clientX: positionRect.left + Math.min(positionRect.width / 2, 180),
+        clientY: positionRect.top - 8,
+      });
+    }, 35);
+  }, [activeTool, onSelectionChange, pageNumber]);
+
+  useEffect(() => {
+    const handleSelectionChange = () => inspectSelection();
+    document.addEventListener('selectionchange', handleSelectionChange);
+    return () => {
+      document.removeEventListener('selectionchange', handleSelectionChange);
+      if (selectionTimerRef.current !== null) {
+        window.clearTimeout(selectionTimerRef.current);
+        selectionTimerRef.current = null;
       }
-      // If no valid selection, dismiss
-      onSelectionChange(null);
-    }, 50);
+    };
+  }, [inspectSelection]);
+
+  const handleCheckSelection = () => {
+    inspectSelection();
   };
 
   return (
@@ -494,30 +524,38 @@ export const PDFPageItem: React.FC<PDFPageItemProps> = ({
         }}
       />
 
-      {/* Selectable Text Layer: Clearly visible blue highlight, perfectly positioned over canvas */}
+      {/* Real DOM text overlay: selectable, copyable, and independent from the PDF canvas. */}
       {textItems.length > 0 && activeTool === 'cursor' && (
         <div
-          className="absolute inset-0 z-12 overflow-hidden pointer-events-auto select-text cursor-text"
+          className="pdf-selectable-text-layer absolute inset-0 z-[12] overflow-hidden pointer-events-auto cursor-text"
           style={{
             userSelect: 'text',
             WebkitUserSelect: 'text',
+            touchAction: 'auto',
           }}
+          aria-label={`Selectable text on page ${pageNumber}`}
         >
           {textItems.map((item, idx) => (
             <span
               key={idx}
+              data-pdf-text-item="true"
               style={{
                 position: 'absolute',
+                display: 'block',
                 left: `${item.left}px`,
                 top: `${item.top}px`,
-                width: `${item.width}px`,
-                height: `${item.height}px`,
+                width: `${Math.max(item.width, item.fontSize * 0.75)}px`,
+                height: `${Math.max(item.height, item.fontSize)}px`,
                 fontSize: `${item.fontSize}px`,
-                lineHeight: `${item.height}px`,
-                color: 'transparent',
+                lineHeight: `${Math.max(item.height, item.fontSize)}px`,
+                whiteSpace: 'pre',
+                fontFamily: 'Arial, Helvetica, sans-serif',
+                color: 'rgba(0, 0, 0, 0.001)',
                 backgroundColor: 'transparent',
+                userSelect: 'text',
+                WebkitUserSelect: 'text',
               }}
-              className="selection:bg-blue-500/40 selection:text-transparent"
+              className="selection:bg-sky-500/40 selection:text-slate-900"
             >
               {item.str}{' '}
             </span>
