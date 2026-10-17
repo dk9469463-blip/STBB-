@@ -53,7 +53,6 @@ import {
   stopSpeech,
 } from '../utils/speechHelper';
 import { formatStudyAnswer } from '../utils/formatStudyAnswer';
-import { captureBookPdfPage } from '../utils/pdfPageCapture';
 
 interface AIAssistantViewProps {
   initialBook?: Book | null;
@@ -72,6 +71,7 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConvId, setActiveConvId] = useState<string>('');
   const [showHistoryDrawer, setShowHistoryDrawer] = useState<boolean>(false);
+  const [showExamplePrompts, setShowExamplePrompts] = useState<boolean>(false);
 
   // Active Chat Language
   const [selectedLanguage, setSelectedLanguage] = useState<AssistantLanguage>('english');
@@ -99,12 +99,8 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
   // Keep highlighted textbook text as separate context. Never auto-fill the student's message box.
   const [selectedPassage, setSelectedPassage] = useState<string>(initialSelectedText || '');
 
-  // Selected reader text is prefilled as an editable draft, never auto-submitted.
-  const [userInput, setUserInput] = useState<string>(
-    initialSelectedText?.trim()
-      ? 'Selected text:\n' + initialSelectedText.trim() + '\n\nWhat would you like to know about this text?'
-      : ''
-  );
+  // Keep the selected passage separate from the user's question; it is sent as context.
+  const [userInput, setUserInput] = useState<string>('');
   const [attachedImage, setAttachedImage] = useState<string | null>(null);
   const [imageFileName, setImageFileName] = useState<string | null>(null);
 
@@ -177,12 +173,10 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
       setSelectedBookId(initialBook.id);
     }
     setSelectedPassage(initialSelectedText || '');
-    if (initialSelectedText?.trim()) {
-      setUserInput('Selected text:\n' + initialSelectedText.trim() + '\n\nWhat would you like to know about this text?');
-    }
-    if (initialPageNumber) {
-      setPageInput(initialPageNumber.toString());
-    }
+    setUserInput('');
+    setErrorNotice(null);
+    setFailedPrompt(null);
+    setPageInput(initialPageNumber ? initialPageNumber.toString() : '');
   }, [initialBook, initialSelectedText, initialPageNumber]);
 
   // Scroll to bottom on new message or loading change
@@ -463,18 +457,9 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
       }));
 
     try {
-      // A supplied page number lets the browser render the real textbook page
-      // and send it as an image too, so scanned PDFs can still be read by Gemini.
-      if (!currentAttachment && bookContext?.pageNumber && currentSelectedBook && !bookContext?.selectedText) {
-        try {
-          currentAttachment = await captureBookPdfPage(currentSelectedBook, bookContext.pageNumber);
-        } catch (captureError) {
-          console.warn(
-            'Could not render the selected textbook page for AI vision:',
-            captureError instanceof Error ? captureError.message : 'unknown error'
-          );
-        }
-      }
+      // Do not silently attach a full textbook page just because a page number
+      // is selected. Only a photo explicitly chosen by the student is sent.
+      // The backend can search the book text using the supplied page context.
 
       const response = await fetch('/api/ai/study-assist', {
         method: 'POST',
@@ -723,8 +708,27 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
         <span className="text-[10px] text-slate-500">For a textbook passage, select text in the reader and choose Ask Chatbot.</span>
       </div>
 
+      {/* Selected passage is visible as context, not inserted into the question field. */}
+      {selectedPassage.trim() && (
+        <div className="shrink-0 border-b border-slate-800 bg-blue-950/30 px-4 py-2.5">
+          <div className="mb-1 flex items-center justify-between gap-2">
+            <span className="text-[11px] font-bold text-amber-300">Selected textbook passage · context only</span>
+            <button
+              type="button"
+              onClick={() => setSelectedPassage('')}
+              className="text-[11px] text-slate-400 underline hover:text-white"
+            >
+              Clear
+            </button>
+          </div>
+          <div className="max-h-20 overflow-y-auto whitespace-pre-wrap break-words rounded-lg border border-blue-900/40 bg-slate-950/70 p-2 text-xs leading-relaxed text-blue-100">
+            {selectedPassage}
+          </div>
+        </div>
+      )}
+
       {/* Main Conversation Messages Scroll Area (Chronological Order) */}
-      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 scrollbar-thin">
+      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-6 space-y-4 scrollbar-thin">
         {messages.map((msg) => {
           const isAssistant = msg.role === 'assistant';
           const displayContent = formatStudyAnswer(msg.content);
@@ -736,7 +740,7 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
               className={`flex flex-col ${isAssistant ? 'items-start' : 'items-end'}`}
             >
               <div
-                className={`max-w-[90%] sm:max-w-[82%] rounded-2xl p-4 sm:p-5 shadow-lg space-y-3 leading-relaxed text-sm ${
+                className={`max-w-[96%] sm:max-w-[92%] rounded-2xl p-4 sm:p-5 shadow-lg space-y-3 leading-relaxed text-sm ${
                   isAssistant
                     ? msg.isError
                       ? 'bg-rose-950/80 text-rose-100 border border-rose-800/80 rounded-tl-sm'
@@ -978,20 +982,26 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
             {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
           </button>
 
-          {/* Text Input Field */}
-          <div className="relative flex-1">
-            <input
-              type="text"
+          {/* Multi-line question field: Enter sends; Shift+Enter adds a line. */}
+          <div className="relative min-w-0 flex-1">
+            <textarea
+              rows={2}
               value={userInput}
               onChange={(e) => setUserInput(e.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' && !event.shiftKey) {
+                  event.preventDefault();
+                  handleSendMessage();
+                }
+              }}
               placeholder={
                 selectedLanguage === 'urdu'
                   ? 'اپنا سوال یا مشق یہاں لکھیے (مثلاً: کلاس 11 میتھ مشق 9.1 سوال 3 حل کریں)...'
                   : selectedLanguage === 'sindhi'
                   ? 'پنهنجو درسي سوال هتي لکو (مثال: ڪلاس 8 سنڌي سبق 4 سوال 3 سمجهايو)...'
-                  : 'Ask any textbook question, exercise, concept, or word (e.g. Class 11 Maths Ex 9.1)...'
+                  : 'Ask a question, exercise, concept, or word…'
               }
-              className="w-full bg-slate-900 border border-slate-800 rounded-2xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              className="w-full min-h-[52px] max-h-32 resize-y bg-slate-900 border border-slate-700 rounded-2xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
               dir={selectedLanguage === 'urdu' || selectedLanguage === 'sindhi' ? 'rtl' : 'ltr'}
             />
           </div>
@@ -1006,8 +1016,19 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
           </button>
         </form>
 
-        {/* Quick Suggestion Prompts */}
-        <div className="mt-2.5 flex items-center gap-1.5 overflow-x-auto pb-1 text-xs text-slate-400 scrollbar-none">
+        {/* Example prompts are collapsed by default to leave more room for chat. */}
+        <div className="mt-1.5 flex justify-end">
+          <button
+            type="button"
+            onClick={() => setShowExamplePrompts((show) => !show)}
+            className="rounded-lg px-2.5 py-1 text-[11px] font-semibold text-slate-400 hover:bg-slate-900 hover:text-amber-300 transition"
+            aria-expanded={showExamplePrompts}
+          >
+            {showExamplePrompts ? 'Hide examples −' : 'Show example questions +'}
+          </button>
+        </div>
+        {showExamplePrompts && (
+        <div className="mt-1.5 flex items-center gap-1.5 overflow-x-auto pb-1 text-xs text-slate-400 scrollbar-none">
           <span className="text-[11px] font-semibold text-slate-500 shrink-0">Try:</span>
           <button
             type="button"
@@ -1038,6 +1059,7 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
             Class 10 Physics Motion
           </button>
         </div>
+        )}
       </div>
     </div>
   );
