@@ -86,7 +86,7 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
   // General questions should be answered directly by the AI. Textbook retrieval
   // is opt-in unless this assistant was opened from a specific book in the reader.
   const [answerMode, setAnswerMode] = useState<'general' | 'textbook'>(
-    initialBook ? 'textbook' : 'general'
+    initialBook && !initialSelectedText?.trim() ? 'textbook' : 'general'
   );
   const [chapterInput, setChapterInput] = useState<string>('');
   const [exerciseInput, setExerciseInput] = useState<string>('');
@@ -99,8 +99,12 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
   // Keep highlighted textbook text as separate context. Never auto-fill the student's message box.
   const [selectedPassage, setSelectedPassage] = useState<string>(initialSelectedText || '');
 
-  // Message Input & Image Attachment
-  const [userInput, setUserInput] = useState<string>('');
+  // Selected reader text is prefilled as an editable draft, never auto-submitted.
+  const [userInput, setUserInput] = useState<string>(
+    initialSelectedText?.trim()
+      ? 'Selected text:\\n' + initialSelectedText.trim() + '\\n\\nWhat would you like to know about this text?'
+      : ''
+  );
   const [attachedImage, setAttachedImage] = useState<string | null>(null);
   const [imageFileName, setImageFileName] = useState<string | null>(null);
 
@@ -173,9 +177,11 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
       setSelectedBookId(initialBook.id);
     }
     setSelectedPassage(initialSelectedText || '');
+    if (initialSelectedText?.trim()) {
+      setUserInput('Selected text:\\n' + initialSelectedText.trim() + '\\n\\nWhat would you like to know about this text?');
+    }
     if (initialPageNumber) {
       setPageInput(initialPageNumber.toString());
-      setShowAdvancedLocator(true);
     }
   }, [initialBook, initialSelectedText, initialPageNumber]);
 
@@ -203,6 +209,7 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
     setErrorNotice(null);
     setFailedPrompt(null);
     setUserInput('');
+    setSelectedPassage('');
     setAttachedImage(null);
 
     const bookContext = {
@@ -364,33 +371,13 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
   // Send Message: Appends user message and AI response, preserves history.
   // Students can submit a chapter/exercise locator without knowing the page number.
   const handleSendMessage = async (customPrompt?: string) => {
-    const typedPrompt = (customPrompt || userInput).trim();
-    const locatorPrompt = [
-      chapterInput.trim() ? 'Chapter / Unit: ' + chapterInput.trim() : '',
-      exerciseInput.trim() ? 'Exercise: ' + exerciseInput.trim() : '',
-      pageInput.trim() ? 'PDF Page Number: ' + pageInput.trim() : '',
-      questionInput.trim() ? 'Question: ' + questionInput.trim() : '',
-    ].filter(Boolean).join('\n');
-
-    const generatedLocatorPrompt = locatorPrompt
-      ? (pageInput.trim() && !chapterInput.trim() && !exerciseInput.trim()
-          ? 'Please read and solve the questions visible on the selected textbook PDF page.\n'
-          : 'Please find and solve the selected textbook exercise using the official book content.\n') +
-        (currentSelectedBook
-          ? 'Book: ' + currentSelectedBook.title + ' (Class ' + currentSelectedBook.classNumber + ', ' + currentSelectedBook.subjectName + ', ' + currentSelectedBook.medium + ' medium).\n'
-          : 'Class: ' + (selectedClass || 'not selected') + '. Subject/book: identify from the selected class and clues.\n') +
-        locatorPrompt + '\n' +
-        (questionInput.trim()
-          ? 'Solve the specified question clearly, step by step.'
-          : pageInput.trim() && !exerciseInput.trim()
-            ? 'Solve all visible questions on this PDF page step by step.'
-            : 'Solve all questions in this exercise in their original order.') +
-        (pageInput.trim()
-          ? ' Use the specified PDF page first and solve the visible questions on that page.'
-          : ' Search the selected book by chapter and exercise. Use the best matching extracted textbook pages, and do not invent any question that is not visible in the provided book text.')
-      : '';
-
-    const promptToSend = typedPrompt || generatedLocatorPrompt;
+    const typedPrompt = (customPrompt ?? userInput).trim();
+    // The universal assistant is intentionally simple: the student writes a
+    // question in their own words. Book-specific exercise workflows live inside
+    // the PDF reader, where the actual book/page context is available.
+    const promptToSend = typedPrompt || (
+      attachedImage ? 'Please explain the attached image and answer any visible question.' : ''
+    );
     if (!promptToSend && !attachedImage) return;
 
     setErrorNotice(null);
@@ -725,204 +712,16 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
         </div>
       )}
 
-      {/* Textbook Context Bar (Class, Subject, Exercise Locator) */}
-      <div className="bg-slate-900/90 border-b border-slate-800 px-4 py-2.5 text-xs text-slate-300 flex flex-wrap items-center justify-between gap-2 shrink-0">
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Explicit intent switch: default is direct AI, textbook lookup is opt-in. */}
-          <div className="flex items-center gap-1 rounded-xl border border-slate-800 bg-slate-950 p-1">
-            <button
-              type="button"
-              onClick={() => setAnswerMode('general')}
-              className={`rounded-lg px-2.5 py-1.5 text-xs font-bold transition cursor-pointer ${
-                answerMode === 'general'
-                  ? 'bg-blue-600 text-white'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-              title="Answer a general question directly without searching textbooks"
-            >
-              Direct Answer
-            </button>
-            <button
-              type="button"
-              onClick={() => setAnswerMode('textbook')}
-              className={`rounded-lg px-2.5 py-1.5 text-xs font-bold transition cursor-pointer ${
-                answerMode === 'textbook'
-                  ? 'bg-amber-500 text-slate-950'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-              title="Search the selected STBB class/book before answering"
-            >
-              Search Textbook
-            </button>
-          </div>
-
-          {/* Class Selector */}
-          <div className="flex items-center gap-1.5 bg-slate-950 px-2.5 py-1.5 rounded-xl border border-slate-800">
-            <GraduationCap className="w-3.5 h-3.5 text-blue-400" />
-            <select
-              value={selectedClass || ''}
-              onChange={(e) => {
-                const val = e.target.value ? parseInt(e.target.value, 10) : null;
-                setSelectedClass(val);
-                setSelectedBookId('');
-                setAnswerMode('textbook');
-              }}
-              className="bg-transparent text-white font-bold text-xs focus:outline-none cursor-pointer"
-            >
-              {CLASSES_LIST.map((c) => (
-                <option key={c.classNumber} value={c.classNumber} className="bg-slate-900 text-white">
-                  Class {c.classNumber} ({c.level})
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Book / Subject Selector */}
-          <div className="flex items-center gap-1.5 bg-slate-950 px-2.5 py-1.5 rounded-xl border border-slate-800 max-w-[200px] sm:max-w-[280px]">
-            <BookOpen className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-            <select
-              value={selectedBookId}
-              onChange={(e) => {
-                setSelectedBookId(e.target.value);
-                setAnswerMode('textbook');
-              }}
-              className="bg-transparent text-white font-bold text-xs focus:outline-none cursor-pointer truncate w-full"
-            >
-              <option value="" className="bg-slate-900 text-slate-400">
-                All Subjects in Class {selectedClass}
-              </option>
-              {availableBooks.map((book) => (
-                <option key={book.id} value={book.id} className="bg-slate-900 text-white">
-                  {book.title} ({book.medium} Medium)
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Quick toggle for detailed exercise fields */}
-          <button
-            onClick={() => {
-              const nextOpen = !showAdvancedLocator;
-              setShowAdvancedLocator(nextOpen);
-              if (nextOpen) setAnswerMode('textbook');
-            }}
-            className={`px-2.5 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1 transition cursor-pointer ${
-              showAdvancedLocator || exerciseInput || chapterInput
-                ? 'bg-amber-500/15 border-amber-500/40 text-amber-300'
-                : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
-            }`}
-          >
-            <Calculator className="w-3.5 h-3.5" />
-            <span>{showAdvancedLocator ? 'Hide Locator' : 'Specify Chapter & Exercise'}</span>
-            <ChevronDown className={`w-3 h-3 transition-transform ${showAdvancedLocator ? 'rotate-180' : ''}`} />
-          </button>
+      {/* Universal assistant: no class, subject or chapter filters. Type any question directly. */}
+      <div className="shrink-0 border-b border-slate-800 bg-slate-900/80 px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <span className="rounded-lg border border-emerald-400/25 bg-emerald-400/10 px-2.5 py-1 text-[11px] font-bold text-emerald-300">
+            General Study Assistant
+          </span>
+          <span className="text-[11px] text-slate-400">Ask any question in your own words.</span>
         </div>
-
-        {currentSelectedBook && onOpenBookReader && (
-          <button
-            onClick={() => onOpenBookReader(currentSelectedBook, pageInput ? parseInt(pageInput, 10) : 1)}
-            className="flex items-center gap-1.5 text-blue-400 hover:text-blue-300 font-bold transition cursor-pointer"
-          >
-            <span>Open in Reader</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-        )}
-        <div className="w-full px-1 pt-1 text-[11px] text-slate-400">
-          {answerMode === 'general'
-            ? 'Direct Answer: general questions are answered directly; the selected class/book will not restrict the answer.'
-            : currentSelectedBook
-              ? 'Search Textbook: answers will be grounded in ' + currentSelectedBook.title + '.'
-              : 'Search Textbook: the AI will look for a relevant book in the selected class based on your question.'}
-        </div>
+        <span className="text-[10px] text-slate-500">For a textbook passage, select text in the reader and choose Ask Chatbot.</span>
       </div>
-
-      {selectedPassage && (
-        <div className="px-4 py-2 bg-blue-950/50 border-b border-blue-900/60 shrink-0 flex items-start gap-3">
-          <div className="min-w-0 flex-1">
-            <p className="text-[10px] uppercase tracking-wide font-bold text-amber-300 mb-1">Selected text context</p>
-            <p className="text-xs text-blue-100 whitespace-pre-wrap break-words line-clamp-3">{selectedPassage}</p>
-            <p className="text-[10px] text-slate-400 mt-1">This passage is provided separately; it has not been typed into your message.</p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setSelectedPassage('')}
-            className="shrink-0 rounded-lg px-2 py-1 text-[10px] text-slate-300 hover:bg-slate-800 hover:text-white"
-            title="Remove selected passage context"
-          >
-            Clear
-          </button>
-        </div>
-      )}
-
-      {/* Chapter, exercise, PDF page and question locator. */}
-      {showAdvancedLocator && (
-        <div className="bg-slate-950 border-b border-slate-800 p-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-xs shrink-0 animate-in slide-in-from-top-2 duration-150">
-          <div>
-            <label className="text-[11px] font-medium text-slate-400 block mb-1">
-              Chapter / Unit:
-            </label>
-            <input
-              type="text"
-              placeholder="e.g. Sets and Functions"
-              value={chapterInput}
-              onChange={(e) => setChapterInput(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white placeholder-slate-500 text-xs focus:ring-1 focus:ring-amber-400 focus:outline-none"
-            />
-          </div>
-          <div>
-            <label className="text-[11px] font-medium text-slate-400 block mb-1">
-              Exercise Number:
-            </label>
-            <input
-              type="text"
-              placeholder="e.g. 9.1 or Review Exercise"
-              value={exerciseInput}
-              onChange={(e) => setExerciseInput(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white placeholder-slate-500 text-xs focus:ring-1 focus:ring-amber-400 focus:outline-none"
-            />
-          </div>
-          <div>
-            <label className="text-[11px] font-medium text-slate-400 block mb-1">
-              PDF Page Number (optional):
-            </label>
-            <input
-              type="number"
-              min="1"
-              step="1"
-              placeholder="e.g. 142"
-              value={pageInput}
-              onChange={(e) => setPageInput(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white placeholder-slate-500 text-xs focus:ring-1 focus:ring-amber-400 focus:outline-none"
-            />
-          </div>
-          <div>
-            <label className="text-[11px] font-medium text-slate-400 block mb-1">
-              Question Number (optional):
-            </label>
-            <input
-              type="text"
-              placeholder="e.g. Q3 or All"
-              value={questionInput}
-              onChange={(e) => setQuestionInput(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white placeholder-slate-500 text-xs focus:ring-1 focus:ring-amber-400 focus:outline-none"
-            />
-          </div>
-          <div className="sm:col-span-2 lg:col-span-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1">
-            <p className="text-[11px] text-slate-400">
-              Enter a PDF page number to send that page image to the AI, or leave it blank to search by chapter and exercise.
-            </p>
-            <button
-              type="button"
-              onClick={() => handleSendMessage()}
-              disabled={isLoading || (!userInput.trim() && !attachedImage && !chapterInput.trim() && !exerciseInput.trim() && !pageInput.trim() && !questionInput.trim())}
-              className="shrink-0 inline-flex items-center justify-center gap-2 rounded-lg bg-amber-500 hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed px-3 py-2 text-xs font-extrabold text-slate-950 transition cursor-pointer"
-            >
-              {isLoading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-              {isLoading ? 'Searching textbook…' : 'Find & Solve Exercise'}
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Main Conversation Messages Scroll Area (Chronological Order) */}
       <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 scrollbar-thin">
