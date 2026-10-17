@@ -57,7 +57,7 @@ export const Header: React.FC<HeaderProps> = ({
             {/* STBB Books brand mark */}
             <div className="relative w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center group-hover:scale-105 transition-transform">
               <img
-                src="/logo.svg"
+                src="/logo.svg?v=2"
                 alt="STBB Books brand logo"
                 className="w-11 h-11 sm:w-12 sm:h-12 object-contain drop-shadow-md"
               />
