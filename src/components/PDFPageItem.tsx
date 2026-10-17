@@ -34,6 +34,12 @@ interface PDFPageItemProps {
   onSelectionChange?: (
     selection: { text: string; pageNumber: number; clientX: number; clientY: number } | null
   ) => void;
+  onScannedRegionSelect?: (selection: {
+    pageNumber: number;
+    imageBase64: string;
+    clientX: number;
+    clientY: number;
+  }) => void;
 }
 
 export const PDFPageItem: React.FC<PDFPageItemProps> = ({
@@ -55,6 +61,7 @@ export const PDFPageItem: React.FC<PDFPageItemProps> = ({
   lowDataMode,
   onAskAiPage,
   onSelectionChange,
+  onScannedRegionSelect,
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const pdfCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -64,6 +71,9 @@ export const PDFPageItem: React.FC<PDFPageItemProps> = ({
   const [isInViewport, setIsInViewport] = useState<boolean>(false);
   const [isRendered, setIsRendered] = useState<boolean>(false);
   const [textItems, setTextItems] = useState<TextItemData[]>([]);
+  const [hasCheckedTextLayer, setHasCheckedTextLayer] = useState<boolean>(false);
+  const [scanSelectionRect, setScanSelectionRect] = useState<{ left: number; top: number; width: number; height: number } | null>(null);
+  const scanSelectionStartRef = useRef<{ x: number; y: number; pointerId: number } | null>(null);
   const [pageDimensions, setPageDimensions] = useState<{ width: number; height: number }>({
     width: 600 * scale,
     height: 850 * scale,
@@ -132,6 +142,9 @@ export const PDFPageItem: React.FC<PDFPageItemProps> = ({
   // 3. Render PDF Page onto HTML5 Canvas & Extract Text Content
   const renderPdfCanvas = useCallback(async () => {
     if (!isInViewport || !pdfDoc) return;
+    setHasCheckedTextLayer(false);
+    setTextItems([]);
+    setScanSelectionRect(null);
 
     if (renderTaskRef.current) {
       try {
@@ -190,8 +203,11 @@ export const PDFPageItem: React.FC<PDFPageItemProps> = ({
           });
         }
         setTextItems(extracted);
+        setHasCheckedTextLayer(true);
       } catch {
-        // Scanned page without text layer
+        // Scanned page without text layer: enable the crop-to-text selection tool.
+        setTextItems([]);
+        setHasCheckedTextLayer(true);
       }
     } catch (err: unknown) {
       if ((err as { name?: string })?.name !== 'RenderingCancelledException') {
@@ -422,7 +438,7 @@ export const PDFPageItem: React.FC<PDFPageItemProps> = ({
       selectionTimerRef.current = null;
       const host = containerRef.current;
       const selection = window.getSelection();
-      const text = selection?.toString().replace(/\\s+/g, ' ').trim();
+      const text = selection?.toString().replace(/\s+/g, ' ').trim();
 
       if (!host || !selection || !text || text.length < 2 || selection.rangeCount < 1) return;
 
@@ -460,6 +476,112 @@ export const PDFPageItem: React.FC<PDFPageItemProps> = ({
 
   const handleCheckSelection = () => {
     inspectSelection();
+  };
+
+  // Scanned PDFs have no real text layer. Let the student drag a small rectangle
+  // around the words they want; the parent crops that region and asks the AI to
+  // transcribe it, instead of sending the entire page.
+  const getScanPoint = (event: React.PointerEvent<HTMLDivElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    return {
+      x: Math.max(0, Math.min(rect.width, event.clientX - rect.left)),
+      y: Math.max(0, Math.min(rect.height, event.clientY - rect.top)),
+    };
+  };
+
+  const handleScanSelectionDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!onScannedRegionSelect || activeTool !== 'cursor') return;
+    event.preventDefault();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    const point = getScanPoint(event);
+    scanSelectionStartRef.current = { ...point, pointerId: event.pointerId };
+    setScanSelectionRect({ left: point.x, top: point.y, width: 0, height: 0 });
+  };
+
+  const handleScanSelectionMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    const start = scanSelectionStartRef.current;
+    if (!start || start.pointerId !== event.pointerId) return;
+    event.preventDefault();
+    const point = getScanPoint(event);
+    setScanSelectionRect({
+      left: Math.min(start.x, point.x),
+      top: Math.min(start.y, point.y),
+      width: Math.abs(point.x - start.x),
+      height: Math.abs(point.y - start.y),
+    });
+  };
+
+  const handleScanSelectionUp = (event: React.PointerEvent<HTMLDivElement>) => {
+    const start = scanSelectionStartRef.current;
+    if (!start || start.pointerId !== event.pointerId) return;
+    scanSelectionStartRef.current = null;
+    try {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    } catch {
+      // Pointer may already have been released.
+    }
+
+    const point = getScanPoint(event);
+    const left = Math.min(start.x, point.x);
+    const top = Math.min(start.y, point.y);
+    const width = Math.abs(point.x - start.x);
+    const height = Math.abs(point.y - start.y);
+    const selection = { left, top, width, height };
+    setScanSelectionRect(selection);
+
+    if (width < 14 || height < 10) {
+      window.setTimeout(() => setScanSelectionRect(null), 400);
+      return;
+    }
+
+    const sourceCanvas = pdfCanvasRef.current;
+    const canvasRect = sourceCanvas?.getBoundingClientRect();
+    if (!sourceCanvas || !canvasRect || !sourceCanvas.width || !sourceCanvas.height) {
+      setScanSelectionRect(null);
+      return;
+    }
+
+    const scaleX = sourceCanvas.width / canvasRect.width;
+    const scaleY = sourceCanvas.height / canvasRect.height;
+    const sx = Math.max(0, Math.floor(left * scaleX));
+    const sy = Math.max(0, Math.floor(top * scaleY));
+    const sw = Math.min(sourceCanvas.width - sx, Math.ceil(width * scaleX));
+    const sh = Math.min(sourceCanvas.height - sy, Math.ceil(height * scaleY));
+    if (sw < 1 || sh < 1) {
+      setScanSelectionRect(null);
+      return;
+    }
+
+    const cropCanvas = document.createElement('canvas');
+    cropCanvas.width = sw;
+    cropCanvas.height = sh;
+    const context = cropCanvas.getContext('2d');
+    if (!context) {
+      setScanSelectionRect(null);
+      return;
+    }
+
+    context.fillStyle = '#ffffff';
+    context.fillRect(0, 0, sw, sh);
+    context.drawImage(sourceCanvas, sx, sy, sw, sh, 0, 0, sw, sh);
+    let imageBase64 = '';
+    try {
+      imageBase64 = cropCanvas.toDataURL('image/jpeg', 0.94);
+    } catch {
+      imageBase64 = '';
+    }
+    cropCanvas.width = 0;
+    cropCanvas.height = 0;
+
+    setScanSelectionRect(null);
+    if (imageBase64) {
+      onScannedRegionSelect?.({
+        pageNumber,
+        imageBase64,
+        clientX: canvasRect.left + left + width / 2,
+        clientY: canvasRect.top + top - 8,
+      });
+    }
   };
 
   return (
@@ -581,6 +703,38 @@ export const PDFPageItem: React.FC<PDFPageItemProps> = ({
           opacity: showAnnotations ? 1 : 0,
         }}
       />
+
+      {/* When the PDF has no selectable text, allow drag-to-select a crop for OCR. */}
+      {hasCheckedTextLayer && textItems.length === 0 && activeTool === 'cursor' && isRendered && onScannedRegionSelect && (
+        <div
+          className="absolute inset-0 z-[18] cursor-crosshair select-none touch-none"
+          style={{ touchAction: 'none', userSelect: 'none', WebkitUserSelect: 'none' }}
+          onContextMenu={(event) => event.preventDefault()}
+          onPointerDown={handleScanSelectionDown}
+          onPointerMove={handleScanSelectionMove}
+          onPointerUp={handleScanSelectionUp}
+          onPointerCancel={handleScanSelectionUp}
+          aria-label="Drag around text to select it for the AI chatbot"
+          title="Drag around a line or word to select it for the AI chatbot"
+        >
+          {!scanSelectionRect && (
+            <div className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full border border-sky-300/70 bg-slate-950/85 px-3 py-1.5 text-[10px] font-bold text-sky-100 shadow-lg backdrop-blur">
+              Drag around text to select it
+            </div>
+          )}
+          {scanSelectionRect && (
+            <div
+              className="pointer-events-none absolute rounded-md border-2 border-sky-400 bg-sky-400/20 shadow-[0_0_0_9999px_rgba(2,6,23,0.12)]"
+              style={{
+                left: scanSelectionRect.left,
+                top: scanSelectionRect.top,
+                width: scanSelectionRect.width,
+                height: scanSelectionRect.height,
+              }}
+            />
+          )}
+        </div>
+      )}
     </div>
   );
 };
