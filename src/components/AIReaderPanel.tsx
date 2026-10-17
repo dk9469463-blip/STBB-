@@ -81,7 +81,7 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
 
   // Persistent Messages for this book reader session
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const messagesContainerRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
 
   // Load saved reader chat for this book from localStorage
@@ -95,8 +95,8 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
       if (onlyWelcome) {
         const welcome: ChatMessage = {
           ...saved[0],
-          content: `Welcome to your study chat for ${book.title}. The selected passage, if any, is kept as context. Choose a quick action below or type your own question. Full-page images are not sent automatically; use Capture Page only when visual context is needed.`,
-          followUps: [],
+          content: `Welcome to your study chat for ${book.title}. If you select text, I will show exactly what was selected. Choose an option below to get help; your selected text is context, not a question you must send.`,
+          followUps: ['Solve the whole exercise', 'Solve a specific question', 'Learn a concept', "Something else (I'll type)"],
         };
         setMessages([welcome]);
         saveStoredReaderMessages(book.id, [welcome]);
@@ -107,10 +107,10 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
       const welcome: ChatMessage = {
         id: `reader-welcome-${book.id}`,
         role: 'assistant',
-        content: `Welcome to your study chat for ${book.title}. The selected passage, if any, is kept as context. Choose a quick action below or type your own question. Full-page images are not sent automatically; use Capture Page only when visual context is needed.`,
+        content: `Welcome to your study chat for ${book.title}. If you select text, I will show exactly what was selected. Choose an option below to get help; your selected text is context, not a question you must send.`,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         language: 'english',
-        followUps: [],
+        followUps: ['Solve the whole exercise', 'Solve a specific question', 'Learn a concept', "Something else (I'll type)"],
       };
       setMessages([welcome]);
       saveStoredReaderMessages(book.id, [welcome]);
@@ -128,9 +128,12 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
   }, [book.id, selectedText]);
 
 
-  // Scroll to bottom on new message
+  // Scroll only the chat's own message viewport. scrollIntoView() also moves
+  // ancestor containers, which caused the PDF reader to jump on mobile.
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const container = messagesContainerRef.current;
+    if (!container) return;
+    container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
   }, [messages.length, isGenerating]);
 
   // Cleanup speech on unmount
@@ -245,7 +248,7 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
       content: `New chat for ${book.title}. Choose a quick action below or type your own question. Any selected passage remains available as context. Full-page images are never attached automatically.`,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       language,
-      followUps: [],
+      followUps: ['Solve the whole exercise', 'Solve a specific question', 'Learn a concept', "Something else (I'll type)"],
     };
     setMessages([welcome]);
     saveStoredReaderMessages(book.id, [welcome]);
@@ -762,7 +765,7 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
       )}
 
       {/* Chronological Messages Stream */}
-      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-3 space-y-3 text-sm sm:text-[15px] leading-relaxed scrollbar-thin">
+      <div ref={messagesContainerRef} className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-3 space-y-3 text-sm sm:text-[15px] leading-relaxed scrollbar-thin" style={{ WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain' }}>
         {messages.map((msg) => {
           const isAssistant = msg.role === 'assistant';
           const displayContent = formatStudyAnswer(msg.content);
@@ -918,7 +921,7 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
           </div>
         )}
 
-        <div ref={messagesEndRef} />
+        
       </div>
 
       {/* Compact quick-help actions stay visible whenever the composer is empty. */}
@@ -928,11 +931,11 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
             <Sparkles className="w-3 h-3 text-amber-400" />
             What would you like to do?
           </div>
-          <div className="flex flex-wrap gap-1.5">
-            <button type="button" onClick={() => handleFollowUpClick('Solve the whole exercise')} className="rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-[11px] font-semibold text-slate-200 hover:border-amber-400/60 hover:text-amber-300">Whole exercise</button>
-            <button type="button" onClick={() => handleFollowUpClick('Solve a specific question')} className="rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-[11px] font-semibold text-slate-200 hover:border-amber-400/60 hover:text-amber-300">Specific question</button>
-            <button type="button" onClick={() => handleFollowUpClick('Learn a concept')} className="rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-[11px] font-semibold text-slate-200 hover:border-amber-400/60 hover:text-amber-300">Learn concept</button>
-            <button type="button" onClick={() => handleFollowUpClick("Something else (I'll type)")} className="rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-[11px] font-semibold text-slate-200 hover:border-amber-400/60 hover:text-amber-300">Type a question</button>
+          <div className="grid grid-cols-2 gap-2">
+            <button type="button" onClick={() => handleFollowUpClick('Solve the whole exercise')} className="min-h-[42px] rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-semibold text-slate-100 hover:border-amber-400/60 hover:text-amber-300 active:bg-slate-800">Whole exercise</button>
+            <button type="button" onClick={() => handleFollowUpClick('Solve a specific question')} className="min-h-[42px] rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-semibold text-slate-100 hover:border-amber-400/60 hover:text-amber-300 active:bg-slate-800">Specific question</button>
+            <button type="button" onClick={() => handleFollowUpClick('Learn a concept')} className="min-h-[42px] rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-semibold text-slate-100 hover:border-amber-400/60 hover:text-amber-300 active:bg-slate-800">Learn a concept</button>
+            <button type="button" onClick={() => handleFollowUpClick("Something else (I'll type)")} className="min-h-[42px] rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-semibold text-slate-100 hover:border-amber-400/60 hover:text-amber-300 active:bg-slate-800">Type a question</button>
           </div>
         </div>
       )}
