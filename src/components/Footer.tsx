@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, Layers, ExternalLink, Sparkles } from 'lucide-react';
+import { Layers, ExternalLink, Sparkles } from 'lucide-react';
 import { NavTab } from './Header';
 
 interface FooterProps {
