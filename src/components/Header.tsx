@@ -22,7 +22,7 @@ import { useOnlineStatus } from '../hooks/useOnlineStatus';
 
 export type NavTab = 'home' | 'classes' | 'search' | 'ai-assistant' | 'about';
 
-const GOVERNMENT_OF_SINDH_SEAL_URL = 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Seal_of_the_Sindh_Government.svg/1200px-Seal_of_the_Sindh_Government.svg.png';
+const GOVERNMENT_OF_SINDH_SEAL_URL = '/government-sindh-logo.svg';
 
 interface HeaderProps {
   currentTab: NavTab;
