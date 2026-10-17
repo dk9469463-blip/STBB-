@@ -72,16 +72,16 @@ function createPNG(width, height, drawFn) {
   return Buffer.concat([signature, ihdrChunk, idatChunk, iendChunk]);
 }
 
-// Draw the STBB Books brand mark: a clean open book, rising sun and
-// subtle Ajrak-inspired diamonds in the app's navy, blue and gold palette.
-function drawBookIcon(x, y, w, h, isMaskable = false) {
+// Draw a brand mark inspired by Ajrak geometry, a rising sun and the Indus River.
+// It deliberately uses no book or government seal, so app icons match public/logo.svg.
+function drawBrandIcon(x, y, w, h, isMaskable = false) {
   const px = ((x + 0.5) / w) * 512;
   const py = ((y + 0.5) / h) * 512;
   const nx = (px - 256) / 256;
   const ny = (py - 256) / 256;
   const gradientT = Math.max(0, Math.min(1, py / 512));
-
   const squircle = Math.pow(Math.abs(nx), 3.6) + Math.pow(Math.abs(ny), 3.6);
+
   if (!isMaskable && squircle > 1) return [0, 0, 0, 0];
 
   const mix = (a, b, t) => Math.round(a * (1 - t) + b * t);
@@ -110,78 +110,55 @@ function drawBookIcon(x, y, w, h, isMaskable = false) {
     const t = lengthSquared
       ? Math.max(0, Math.min(1, ((px - x1) * dx + (py - y1) * dy) / lengthSquared))
       : 0;
-    const nearX = x1 + t * dx, nearY = y1 + t * dy;
-    return Math.hypot(px - nearX, py - nearY);
+    return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy));
   };
-
   const onLine = (x1, y1, x2, y2, thickness) =>
     distanceToSegment(x1, y1, x2, y2) <= thickness / 2;
-
-  const onPolygonEdge = (points, thickness) => points.some((point, index) => {
-    const next = points[(index + 1) % points.length];
-    return onLine(point[0], point[1], next[0], next[1], thickness);
-  });
-
   const inCircle = (cx, cy, radius) => Math.hypot(px - cx, py - cy) <= radius;
-
   const diamond = (cx, cy, radius) => insidePolygon([
     [cx, cy - radius], [cx + radius, cy], [cx, cy + radius], [cx - radius, cy],
   ]);
 
-  // Thin brand border around the app icon.
-  if (!isMaskable && squircle > 0.94 && squircle <= 1) {
-    return [246, 189, 66, 255];
-  }
-  if (!isMaskable && squircle > 0.91 && squircle <= 0.94) {
-    return [65, 133, 225, 255];
-  }
+  if (!isMaskable && squircle > 0.94 && squircle <= 1) return [246, 189, 66, 255];
+  if (!isMaskable && squircle > 0.91 && squircle <= 0.94) return [65, 133, 225, 255];
 
-  // Ajrak-inspired diamond motif.
-  if (diamond(256, 73, 19)) return [255, 220, 133, 255];
-  if (diamond(218, 99, 10) || diamond(294, 99, 10)) return [246, 189, 66, 240];
+  // Small Ajrak-inspired diamonds at the crown.
+  if (diamond(256, 87, 22)) return [255, 230, 157, 255];
+  if (diamond(211, 111, 13) || diamond(301, 111, 13)) return [246, 189, 66, 240];
+  if (diamond(177, 152, 9) || diamond(335, 152, 9)) return [246, 189, 66, 170];
 
-  // Rising sun and fine rays.
-  if (inCircle(256, 154, 42)) {
-    const sunT = Math.max(0, Math.min(1, (py - 112) / 84));
-    return [mix(255, 215, sunT), mix(231, 145, sunT), mix(164, 25, sunT), 255];
+  // Soft golden rising sun with delicate rays.
+  if (inCircle(256, 183, 51)) {
+    const sunT = Math.max(0, Math.min(1, (py - 132) / 102));
+    return [mix(255, 219, sunT), mix(239, 146, sunT), mix(185, 25, sunT), 255];
   }
   if (
-    onLine(256, 101, 256, 108, 4) ||
-    onLine(221, 111, 216, 106, 4) ||
-    onLine(291, 111, 296, 106, 4) ||
-    onLine(207, 146, 199, 146, 4) ||
-    onLine(305, 146, 313, 146, 4)
-  ) return [255, 220, 133, 255];
+    onLine(256, 119, 256, 108, 5) ||
+    onLine(218, 133, 210, 125, 5) ||
+    onLine(294, 133, 302, 125, 5) ||
+    onLine(199, 168, 188, 166, 5) ||
+    onLine(313, 168, 324, 166, 5)
+  ) return [255, 225, 154, 255];
 
-  // Open-book cover, pages and center spine.
-  const cover = [
-    [78, 214], [188, 193], [256, 226], [324, 193], [434, 214],
-    [434, 360], [330, 343], [256, 378], [182, 343], [78, 360],
-  ];
-  const leftPage = [
-    [95, 225], [185, 207], [247, 238], [247, 350], [202, 333], [95, 344],
-  ];
-  const rightPage = [
-    [265, 238], [327, 207], [417, 225], [417, 344], [310, 333], [265, 350],
-  ];
+  // Flowing river ribbons. The icon uses curves instead of a book to make
+  // the app identity feel distinct and recognisably connected to Sindh.
+  const waveOne = 266 - 28 * Math.sin((px - 92) * Math.PI / 88);
+  const waveTwo = 307 - 23 * Math.sin((px - 108) * Math.PI / 75);
+  const waveThree = 348 - 18 * Math.sin((px - 132) * Math.PI / 62);
 
-  if (onPolygonEdge(cover, 4)) return [246, 189, 66, 255];
+  if (px >= 88 && px <= 424 && Math.abs(py - waveOne) <= 6) return [112, 211, 237, 255];
+  if (px >= 103 && px <= 414 && Math.abs(py - waveTwo) <= 5) return [138, 220, 242, 255];
+  if (px >= 128 && px <= 393 && Math.abs(py - waveThree) <= 4) return [246, 189, 66, 255];
+  if (
+    (px >= 83 && px <= 429 && Math.abs(py - waveOne) <= 12) ||
+    (px >= 98 && px <= 419 && Math.abs(py - waveTwo) <= 10) ||
+    (px >= 123 && px <= 398 && Math.abs(py - waveThree) <= 9)
+  ) return [4, 19, 42, 255];
 
-  // Spine and bookmark sit above the pages.
-  if (px >= 251 && px <= 261 && py >= 228 && py <= 363) return [246, 189, 66, 255];
-  const bookmark = [[256, 232], [267, 266], [280, 326], [268, 334], [256, 322], [244, 334], [232, 326], [245, 266]];
-  if (insidePolygon(bookmark)) return [246, 189, 66, 255];
-
-  // Printed page lines sit on top of the pale page fill.
-  const pageLines = [
-    [119, 244, 220, 249], [119, 267, 220, 272], [119, 290, 216, 295],
-    [292, 249, 393, 244], [292, 272, 393, 267], [296, 295, 393, 290],
-  ];
-  if (pageLines.some((line) => onLine(...line, 3))) return [117, 145, 181, 255];
-  if (insidePolygon(leftPage) || insidePolygon(rightPage)) return [247, 250, 255, 255];
-  if (insidePolygon(cover)) return [4, 15, 34, 255];
-  if (inCircle(256, 400, 5)) return [255, 220, 133, 255];
-  if (onLine(185, 400, 327, 400, 4)) return [246, 189, 66, 255];
+  // Quiet footline and jewel-like anchor below the river motif.
+  const baselineDistance = distanceToSegment(148, 393, 364, 393);
+  if (baselineDistance <= 1.5) return [126, 183, 255, 125];
+  if (inCircle(256, 393, 4)) return [255, 224, 143, 255];
 
   return background;
 }
@@ -193,18 +170,18 @@ if (!fs.existsSync(outDir)) {
 
 // Generate 192x192
 console.log('Generating pwa-192x192.png...');
-fs.writeFileSync(path.join(outDir, 'pwa-192x192.png'), createPNG(192, 192, (x, y, w, h) => drawBookIcon(x, y, w, h, false)));
+fs.writeFileSync(path.join(outDir, 'pwa-192x192.png'), createPNG(192, 192, (x, y, w, h) => drawBrandIcon(x, y, w, h, false)));
 
 // Generate 512x512
 console.log('Generating pwa-512x512.png...');
-fs.writeFileSync(path.join(outDir, 'pwa-512x512.png'), createPNG(512, 512, (x, y, w, h) => drawBookIcon(x, y, w, h, false)));
+fs.writeFileSync(path.join(outDir, 'pwa-512x512.png'), createPNG(512, 512, (x, y, w, h) => drawBrandIcon(x, y, w, h, false)));
 
 // Generate maskable 512x512
 console.log('Generating pwa-maskable-512x512.png...');
-fs.writeFileSync(path.join(outDir, 'pwa-maskable-512x512.png'), createPNG(512, 512, (x, y, w, h) => drawBookIcon(x, y, w, h, true)));
+fs.writeFileSync(path.join(outDir, 'pwa-maskable-512x512.png'), createPNG(512, 512, (x, y, w, h) => drawBrandIcon(x, y, w, h, true)));
 
 // Generate apple-touch-icon 180x180
 console.log('Generating apple-touch-icon.png...');
-fs.writeFileSync(path.join(outDir, 'apple-touch-icon.png'), createPNG(180, 180, (x, y, w, h) => drawBookIcon(x, y, w, h, false)));
+fs.writeFileSync(path.join(outDir, 'apple-touch-icon.png'), createPNG(180, 180, (x, y, w, h) => drawBrandIcon(x, y, w, h, false)));
 
 console.log('Done generating PWA PNG icons!');
