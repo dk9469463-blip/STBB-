@@ -352,20 +352,22 @@ export const FloatingTutorChat: React.FC = () => {
         </section>
       )}
 
-      <button
-        type="button"
-        className={'stbb-tutor-launcher ' + (isOpen ? 'is-open' : '')}
-        onClick={() => {
-          setIsOpen((current) => !current);
-          setError('');
-          if (!isOpen) window.setTimeout(() => inputRef.current?.focus(), 80);
-        }}
-        aria-label={isOpen ? 'Close study chatbot' : 'Open study chatbot'}
-        title="Ask Study Buddy"
-      >
-        {isOpen ? <X className="h-6 w-6" /> : <MessageCircle className="h-6 w-6" />}
-        {!isOpen && <span className="stbb-tutor-launcher-label">Ask AI</span>}
-      </button>
+      {!isOpen && (
+        <button
+          type="button"
+          className="stbb-tutor-launcher"
+          onClick={() => {
+            setIsOpen(true);
+            setError('');
+            window.setTimeout(() => inputRef.current?.focus(), 80);
+          }}
+          aria-label="Open study chatbot"
+          title="Ask Study Buddy"
+        >
+          <MessageCircle className="h-6 w-6" />
+          <span className="stbb-tutor-launcher-label">Ask AI</span>
+        </button>
+      )}
     </div>
   );
 };
