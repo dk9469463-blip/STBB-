@@ -94,13 +94,32 @@ export const FloatingTutorChat: React.FC = () => {
 
   useEffect(() => {
     const handleOpenChat = (event: Event) => {
-      const detail = (event as CustomEvent<{ selectedText?: string }>).detail;
+      const detail = (event as CustomEvent<{
+        selectedText?: string;
+        bookTitle?: string;
+        classNumber?: number;
+        subjectName?: string;
+        pageNumber?: number;
+      }>).detail;
       setIsOpen(true);
       setError('');
       if (detail?.selectedText?.trim()) {
-        setDraft('Explain this selected text in simple English:\n\n' + detail.selectedText.trim());
+        const bookContext = [
+          detail.bookTitle,
+          detail.classNumber ? 'Class ' + detail.classNumber : '',
+          detail.subjectName,
+          detail.pageNumber ? 'PDF page ' + detail.pageNumber : '',
+        ].filter(Boolean).join(' · ');
+        const contextLine = bookContext ? 'Reader context: ' + bookContext + '\n\n' : '';
+        setDraft(
+          contextLine +
+          'Selected text:\n' + detail.selectedText.trim() +
+          '\n\nWhat would you like to know about this text?'
+        );
+      } else {
+        setDraft((current) => current);
       }
-      window.setTimeout(() => inputRef.current?.focus(), 80);
+      window.setTimeout(() => inputRef.current?.focus(), 100);
     };
     window.addEventListener(CHAT_EVENT, handleOpenChat);
     return () => window.removeEventListener(CHAT_EVENT, handleOpenChat);
@@ -234,7 +253,7 @@ export const FloatingTutorChat: React.FC = () => {
           </header>
 
           <div className="stbb-tutor-messages" ref={listRef} aria-live="polite">
-            {messages.length === 0 && (
+            {messages.length === 0 && !draft.trim() && (
               <div className="mx-auto w-full max-w-sm py-3">
                 <div className="mb-4 text-center">
                   <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
@@ -348,7 +367,7 @@ export const FloatingTutorChat: React.FC = () => {
               <Send className="h-4 w-4" />
             </button>
           </form>
-          <div className="stbb-tutor-footnote">Conversational tutor · No PDF or book is sent to the AI.</div>
+          <div className="stbb-tutor-footnote">Selected text is included only when you choose Ask Chatbot. PDFs are not attached automatically.</div>
         </section>
       )}
 
