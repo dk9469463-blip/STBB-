@@ -1120,6 +1120,216 @@ app.post('/api/ai/study-assist', async (req: Request, res: Response) => {
     });
   }
 });
+// SIMPLE CONVERSATIONAL CHATBOT.
+// Only the last 10 chat messages are accepted. This endpoint intentionally does
+// not read PDFs, select a book, receive page numbers, or retrieve textbook text.
+app.post('/api/chat', async (req: Request, res: Response) => {
+  try {
+    if (!geminiApiKey) {
+      return res.status(503).json({
+        error: 'Study Buddy is not configured yet. The app administrator needs to add GEMINI_API_KEY to Codespaces Secrets.',
+      });
+    }
+    if (!allowAiRequest(req, res)) return;
+
+    const rawMessages = (req.body as { messages?: unknown })?.messages;
+    if (!Array.isArray(rawMessages)) {
+      return res.status(400).json({ error: 'Please type a question to start the conversation.' });
+    }
+
+    const messages = rawMessages.slice(-10).map((item) => {
+      const entry = item as { role?: unknown; content?: unknown };
+      const role = entry?.role === 'assistant' || entry?.role === 'model' ? 'model' : 'user';
+      const content = typeof entry?.content === 'string' ? entry.content.trim().slice(0, 7000) : '';
+      return { role: role as 'user' | 'model', content };
+    }).filter((item) => item.content.length > 0);
+
+    if (!messages.length || messages[messages.length - 1].role !== 'user') {
+      return res.status(400).json({ error: 'Write your question in the message box and try again.' });
+    }
+
+    // Gemini expects a user turn first; merge adjacent turns of the same role.
+    const contents: Array<{ role: 'user' | 'model'; parts: Array<{ text: string }> }> = [];
+    for (const message of messages) {
+      if (!contents.length && message.role === 'model') continue;
+      const previous = contents[contents.length - 1];
+      const part = { text: message.content };
+      if (previous?.role === message.role) {
+        previous.parts.push(part);
+      } else {
+        contents.push({ role: message.role, parts: [part] });
+      }
+    }
+    if (!contents.length || contents[contents.length - 1].role !== 'user') {
+      return res.status(400).json({ error: 'Please send a new question to continue the chat.' });
+    }
+
+    const systemInstruction = [
+      'You are STBB Study Buddy, a helpful, patient Pakistani tutor for school students in Classes 1–12.',
+      'Answer in simple English by default. When a student writes in Urdu or Roman Urdu, you may reply in the same language style.',
+      'Explain ideas step by step, use friendly examples, and be encouraging rather than judgmental.',
+      'Use the last messages to understand follow-up words such as "it", "this", "ye", "iska" and "that". Do not act as if every message is a brand-new conversation.',
+      'If a student chooses whole-exercise help, ask them for the subject, exercise number and question text they want help with. If they ask for a specific question but do not say which one, ask for its number or for them to type it. If they choose a concept but do not name it, ask which concept they want to learn.',
+      'This is a conversation-only tutor. You cannot see or open the student’s PDF, textbook, selected page, or any book. Do not claim to have read a book or access its contents. You can explain a question or a selected text only when the student includes that wording in their chat message.',
+      'Be clear if a numerical question is missing details. Ask one short follow-up instead of inventing the question. Never shame students for spelling mistakes or imperfect wording.',
+      'Keep responses clear and school-friendly. For maths and physics, show formulas, substitutions, and steps using readable plain text.',
+    ].join('\n');
+
+    let discoveredModels: string[] = [];
+    try {
+      discoveredModels = await getAvailableGeminiTextModels(geminiApiKey);
+    } catch (discoveryError) {
+      const detail = getGeminiErrorDetails(discoveryError);
+      console.warn('Study Buddy model discovery failed' +
+        (detail.status ? ' with HTTP ' + detail.status : '') +
+        '. Trying configured and fallback models.');
+    }
+
+    const configuredModel = geminiModel.replace(/^models\//, '');
+    const normalFlash = discoveredModels.filter((name) =>
+      /flash/i.test(name) && !/flash-lite/i.test(name)
+    );
+    const liteFlash = discoveredModels.filter((name) => /flash-lite/i.test(name));
+    const fallbackModels = [
+      'gemini-3.8-flash',
+      'gemini-2.5-flash',
+      'gemini-3.8-flash-lite',
+      'gemini-2.5-flash-lite',
+      'gemini-2.0-flash',
+    ];
+    const modelCandidates = Array.from(new Set([
+      configuredModel,
+      ...normalFlash,
+      ...fallbackModels,
+      ...liteFlash,
+    ])).filter(Boolean).slice(0, 5);
+
+    const genAI = new GoogleGenAI({ apiKey: geminiApiKey });
+    let lastFailure: { status: number; message: string } = { status: 0, message: 'No compatible model returned an answer.' };
+    const overallDeadlineAt = Date.now() + 30000;
+
+    for (const modelName of modelCandidates) {
+      const remainingMs = overallDeadlineAt - Date.now();
+      if (remainingMs < 900) break;
+
+      try {
+        const stream = await genAI.models.generateContentStream({
+          model: modelName,
+          contents,
+          config: {
+            systemInstruction,
+            temperature: 0.35,
+            maxOutputTokens: 1800,
+            abortSignal: AbortSignal.timeout(Math.min(7500, remainingMs)),
+          },
+        });
+
+        let modelProducedText = false;
+        for await (const chunk of stream) {
+          const delta = String(chunk.text || '');
+          if (!delta) continue;
+          modelProducedText = true;
+          if (!res.headersSent) {
+            res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
+            res.setHeader('Cache-Control', 'no-cache, no-transform');
+            res.setHeader('Connection', 'keep-alive');
+            res.setHeader('X-Accel-Buffering', 'no');
+          }
+          res.write('data: ' + JSON.stringify({ text: delta }) + '\n\n');
+        }
+
+        if (modelProducedText) {
+          res.write('data: {"done":true}\n\n');
+          return res.end();
+        }
+
+        lastFailure = { status: 502, message: 'The model returned an empty response.' };
+      } catch (providerError) {
+        const detail = getGeminiErrorDetails(providerError);
+        const provider = providerError as { name?: string; code?: number | string };
+        const aborted = /AbortError|TimeoutError/i.test(String(provider?.name || '')) ||
+          /abort|timed out|timeout/i.test(detail.message) ||
+          Number(provider?.code) === 20;
+
+        console.warn(
+          'Study Buddy model "' + modelName + '" failed' +
+          (detail.status ? ' with HTTP/code ' + detail.status : '') +
+          (detail.message ? ': ' + detail.message : '.')
+        );
+
+        if (res.headersSent) {
+          res.write('data: ' + JSON.stringify({
+            error: 'The answer stream was interrupted by a temporary model issue. Please tap Retry to try again.',
+          }) + '\n\n');
+          return res.end();
+        }
+
+        if (
+          detail.status === 401 ||
+          detail.status === 403 ||
+          /API_KEY_INVALID|invalid api key|permission denied|forbidden/i.test(detail.message)
+        ) {
+          return res.status(503).json({
+            error: 'Study Buddy needs the administrator to check the Gemini API key and model permissions.',
+          });
+        }
+
+        lastFailure = aborted
+          ? { status: 503, message: 'This model timed out; trying another model.' }
+          : detail;
+
+        const transient = aborted ||
+          detail.status === 429 ||
+          detail.status === 400 ||
+          detail.status === 404 ||
+          detail.status === 503 ||
+          detail.status >= 500 ||
+          detail.status === 0 ||
+          /RESOURCE_EXHAUSTED|quota exceeded|rate.?limit|high demand|overloaded|UNAVAILABLE|temporarily unavailable|model.+not found|fetch failed|network error/i.test(detail.message);
+
+        if (!transient) {
+          return res.status(502).json({
+            error: 'Study Buddy could not complete this message. Please try again.',
+          });
+        }
+      }
+
+      const timeLeft = overallDeadlineAt - Date.now();
+      if (timeLeft > 650) {
+        await new Promise<void>((resolve) => setTimeout(resolve, Math.min(250, timeLeft - 500)));
+      }
+    }
+
+    if (lastFailure.status === 429 ||
+      /RESOURCE_EXHAUSTED|quota exceeded|rate.?limit|too many requests/i.test(lastFailure.message)) {
+      return res.status(429).json({
+        error: 'The Gemini API quota or rate limit has been reached for the available models. Check AI Studio usage or try again after the limit resets.',
+      });
+    }
+    if (
+      lastFailure.status === 503 ||
+      /UNAVAILABLE|high demand|overloaded|temporarily unavailable|timed out|timeout|abort/i.test(lastFailure.message)
+    ) {
+      return res.status(503).json({
+        error: 'Gemini is temporarily unavailable across the available models. Study Buddy tried its automatic fallbacks; please retry shortly.',
+      });
+    }
+    return res.status(502).json({
+      error: 'Study Buddy could not get a response from the available Gemini models. Please retry in a moment.',
+    });
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error('Study Buddy chat request failed:', (err.message || 'unknown error').slice(0, 180));
+    if (!res.headersSent) {
+      return res.status(500).json({
+        error: 'Study Buddy hit a temporary processing issue. Please try again.',
+      });
+    }
+    res.write('data: ' + JSON.stringify({ error: 'The chat connection ended unexpectedly. Please tap Retry.' }) + '\n\n');
+    return res.end();
+  }
+});
+
 // START EXPRESS SERVER WITH VITE INTEGRATION
 async function startServer() {
   const isDev = process.env.NODE_ENV !== 'production';
