@@ -20,7 +20,7 @@ export default defineConfig(() => {
           name: 'STBB Books by Ajeet Kumar Oad',
           short_name: 'STBB Books',
           description: 'Sindh Textbook Board (STBB) digital textbook library for Class 1 to 12. Every Class, Every Book, One Library.',
-          theme_color: '#1e40af',
+          theme_color: '#0b2450',
           background_color: '#0f172a',
           display: 'standalone',
           start_url: '/',
