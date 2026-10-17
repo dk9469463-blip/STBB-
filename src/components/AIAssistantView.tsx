@@ -102,7 +102,7 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
   // Selected reader text is prefilled as an editable draft, never auto-submitted.
   const [userInput, setUserInput] = useState<string>(
     initialSelectedText?.trim()
-      ? 'Selected text:\\n' + initialSelectedText.trim() + '\\n\\nWhat would you like to know about this text?'
+      ? 'Selected text:\n' + initialSelectedText.trim() + '\n\nWhat would you like to know about this text?'
       : ''
   );
   const [attachedImage, setAttachedImage] = useState<string | null>(null);
@@ -178,7 +178,7 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
     }
     setSelectedPassage(initialSelectedText || '');
     if (initialSelectedText?.trim()) {
-      setUserInput('Selected text:\\n' + initialSelectedText.trim() + '\\n\\nWhat would you like to know about this text?');
+      setUserInput('Selected text:\n' + initialSelectedText.trim() + '\n\nWhat would you like to know about this text?');
     }
     if (initialPageNumber) {
       setPageInput(initialPageNumber.toString());
