@@ -11,6 +11,7 @@ const PDFViewerModal = lazy(() =>
   import('./components/PDFViewerModal').then((module) => ({ default: module.PDFViewerModal }))
 );
 import { OfflineIndicator } from './components/OfflineIndicator';
+import { FloatingTutorChat } from './components/FloatingTutorChat';
 import { Book } from './types';
 import { getStoredReadingPage } from './utils/readingProgress';
 import { recordRecentlyViewedBook } from './utils/recentlyViewed';
@@ -208,6 +209,9 @@ export default function App() {
           />
         </Suspense>
       )}
+
+      {/* Always-available conversational Study Buddy on the home page and PDF reader. */}
+      <FloatingTutorChat />
 
       {/* Professional Footer */}
       <Footer
