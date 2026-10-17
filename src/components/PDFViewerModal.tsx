@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import {
   X,
   Download,
@@ -1093,30 +1094,42 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
             )}
           </div>
 
-          {/* Floating Contextual Action Menu on Text Selection (Copy & Ask Chatbot) */}
-          {floatingSelection && (
+          {/* Portal the selection actions to <body> so modal overflow/stacking
+              can never clip the toolbar or hide it behind the PDF viewer. */}
+          {floatingSelection && createPortal(
             <div
+              role="toolbar"
+              aria-label="Selected text actions"
+              onMouseDown={(event) => event.preventDefault()}
+              onTouchStart={(event) => event.stopPropagation()}
               style={{
                 position: 'fixed',
-                left: `${Math.min(window.innerWidth - 240, Math.max(16, floatingSelection.clientX - 100))}px`,
-                top: `${Math.max(70, floatingSelection.clientY - 46)}px`,
-                zIndex: 65,
+                left: `${Math.min(window.innerWidth - 276, Math.max(12, floatingSelection.clientX - 108))}px`,
+                top: `${Math.min(window.innerHeight - 56, Math.max(12, floatingSelection.clientY - 50))}px`,
+                zIndex: 240,
               }}
-              className="bg-slate-900/95 border border-slate-700/90 rounded-2xl shadow-2xl p-1.5 flex items-center gap-1.5 text-xs text-white backdrop-blur-md animate-in fade-in zoom-in-95 duration-150"
+              className="bg-slate-950 border border-slate-600 rounded-2xl shadow-2xl p-1.5 flex items-center gap-1.5 text-xs text-white backdrop-blur-xl"
             >
+              <span className="hidden sm:inline max-w-28 truncate px-2 text-[10px] text-slate-400" title={floatingSelection.text}>
+                Text selected
+              </span>
               <button
+                type="button"
                 onClick={() => {
-                  navigator.clipboard.writeText(floatingSelection.text);
-                  setCopiedSelectionText(true);
-                  setTimeout(() => setCopiedSelectionText(false), 2000);
+                  void navigator.clipboard?.writeText(floatingSelection.text).then(() => {
+                    setCopiedSelectionText(true);
+                    window.setTimeout(() => setCopiedSelectionText(false), 1600);
+                  }).catch(() => {
+                    setCopiedSelectionText(false);
+                  });
                 }}
-                className="px-2.5 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-medium flex items-center gap-1 transition cursor-pointer"
-                title="Copy text to clipboard"
+                className="px-2.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-100 font-semibold flex items-center gap-1.5 transition cursor-pointer"
+                title="Copy selected text"
               >
                 {copiedSelectionText ? (
                   <>
                     <Check className="w-3.5 h-3.5 text-emerald-400" />
-                    <span className="text-emerald-400 font-bold">Copied</span>
+                    <span className="text-emerald-300">Copied</span>
                   </>
                 ) : (
                   <>
@@ -1127,30 +1140,43 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
               </button>
 
               <button
+                type="button"
                 onClick={() => {
-                  // Only the text the student selected is placed into the separate
-                  // conversational chatbot draft; no PDF or book context is sent.
+                  // Prefill the always-available chatbot with the selected text
+                  // and current book/page metadata; do not attach the full page.
                   window.dispatchEvent(new CustomEvent('stbb:open-chat', {
-                    detail: { selectedText: floatingSelection.text },
+                    detail: {
+                      selectedText: floatingSelection.text,
+                      bookTitle: book.title,
+                      classNumber: book.classNumber,
+                      subjectName: book.subjectName,
+                      pageNumber: floatingSelection.pageNumber,
+                    },
                   }));
                   setShowThumbnailsDrawer(false);
                   setFloatingSelection(null);
                 }}
-                className="px-2.5 py-1 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold flex items-center gap-1 transition cursor-pointer shadow-md"
-                title="Open Study Buddy with only your selected text in the draft"
+                className="px-3 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold flex items-center gap-1.5 transition cursor-pointer shadow-md"
+                title="Open chatbot with only your selected text"
               >
-                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                <Sparkles className="w-3.5 h-3.5 text-amber-200" />
                 <span>Ask Chatbot</span>
               </button>
 
               <button
-                onClick={() => setFloatingSelection(null)}
-                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
-                title="Dismiss"
+                type="button"
+                onClick={() => {
+                  window.getSelection()?.removeAllRanges();
+                  setFloatingSelection(null);
+                }}
+                className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
+                title="Dismiss text actions"
+                aria-label="Dismiss text actions"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
-            </div>
+            </div>,
+            document.body
           )}
 
           {/* Ask AI Side Panel */}
