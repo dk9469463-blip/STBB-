@@ -44,6 +44,7 @@ interface AIReaderPanelProps {
   book: Book;
   currentPage: number;
   selectedText: string;
+  selectedImage?: string | null;
   onClearSelectedText: () => void;
   onClose: () => void;
   onCapturePageImage?: () => Promise<string | null>;
@@ -53,6 +54,7 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
   book,
   currentPage,
   selectedText,
+  selectedImage,
   onClearSelectedText,
   onClose,
   onCapturePageImage,
@@ -408,10 +410,9 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
     setErrorMsg(null);
     setSpeechError(null);
 
-    // Never attach the full PDF page automatically. A selected passage is sent
-    // as text in bookContext; a page image is included only after the student
-    // explicitly chooses Capture Page in Study Tools.
-    const attachmentForRequest = originalRetryMessage?.imageBase64 || capturedImage;
+    // A scanned-PDF selection stays as a cropped image attached to the student's
+    // next question. Never attach the full PDF page automatically.
+    const attachmentForRequest = originalRetryMessage?.imageBase64 || capturedImage || selectedImage || null;
 
     const userMsg: ChatMessage = {
       id: `user-${Date.now()}`,
