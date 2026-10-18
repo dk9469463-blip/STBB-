@@ -81,11 +81,15 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
   // In-Reader AI Side Panel State
   const [isAiPanelOpen, setIsAiPanelOpen] = useState<boolean>(false);
   const [selectedReaderText, setSelectedReaderText] = useState<string>('');
+  // Keep a crop from a scanned PDF attached to the same passage so the chat
+  // can inspect that exact region instead of receiving a screenshot of the page.
+  const [selectedReaderImage, setSelectedReaderImage] = useState<string | null>(null);
   const [floatingSelection, setFloatingSelection] = useState<{
     text: string;
     pageNumber: number;
     clientX: number;
     clientY: number;
+    imageBase64?: string;
   } | null>(null);
   const [copiedSelectionText, setCopiedSelectionText] = useState<boolean>(false);
   const [readingScannedSelection, setReadingScannedSelection] = useState<{
@@ -170,6 +174,7 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
     setIsAiPanelOpen(false);
     setIsRegionSelectionMode(false);
     setSelectedReaderText('');
+    setSelectedReaderImage(null);
 
     if (book) {
       document.body.style.overflow = 'hidden';
@@ -614,14 +619,19 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
     }
   };
 
-  const handleSelectTextOnPage = (text: string, pageNumber: number = currentPage) => {
+  const handleSelectTextOnPage = (
+    text: string,
+    pageNumber: number = currentPage,
+    imageBase64?: string
+  ) => {
     setIsRegionSelectionMode(false);
-    // Keep the selected passage and the chatbot's page context in sync. The
-    // visible page may lag behind a text selection made on another page.
+    // Keep the selected passage, optional selected-region crop, and the
+    // chatbot's page context in sync. Never substitute the entire page image.
     setCurrentPage(pageNumber);
     setPageInput(String(pageNumber));
     if (pageNumber !== currentPage) scrollToPage(pageNumber);
     setSelectedReaderText(text);
+    setSelectedReaderImage(imageBase64 || null);
     setFloatingSelection(null);
     setShowThumbnailsDrawer(false);
     setIsAiPanelOpen(true);
@@ -678,6 +688,9 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
         pageNumber: selection.pageNumber,
         clientX: selection.clientX,
         clientY: selection.clientY,
+        // Retain the cropped region after OCR. The chatbot receives this crop,
+        // not a screenshot of the full page, when the student asks for help.
+        imageBase64: selection.imageBase64,
       });
     } catch (error) {
       setSelectionReadError(error instanceof Error
@@ -697,6 +710,7 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
     // Opening the assistant from a page button is a fresh page-level request,
     // not a continuation of any older highlighted passage.
     setSelectedReaderText('');
+    setSelectedReaderImage(null);
     setFloatingSelection(null);
     setShowThumbnailsDrawer(false);
     setIsAiPanelOpen(true);
@@ -1311,7 +1325,11 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
                   // Open the book-aware in-reader assistant, prefilled with only
                   // the selected passage. It can still retrieve this book when the
                   // student chooses a whole exercise or specific-question workflow.
-                  handleSelectTextOnPage(floatingSelection.text, floatingSelection.pageNumber);
+                  handleSelectTextOnPage(
+                    floatingSelection.text,
+                    floatingSelection.pageNumber,
+                    floatingSelection.imageBase64
+                  );
                   setFloatingSelection(null);
                 }}
                 className="px-3 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold flex items-center gap-1.5 transition cursor-pointer shadow-md"
@@ -1343,7 +1361,11 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
               book={book}
               currentPage={currentPage}
               selectedText={selectedReaderText}
-              onClearSelectedText={() => setSelectedReaderText('')}
+              selectedImage={selectedReaderImage}
+              onClearSelectedText={() => {
+                setSelectedReaderText('');
+                setSelectedReaderImage(null);
+              }}
               onClose={() => setIsAiPanelOpen(false)}
               onCapturePageImage={captureCurrentPageImage}
             />
