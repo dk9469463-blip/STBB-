@@ -1,6 +1,9 @@
 {
-  "name": "STBB Books by Ajeet Kumar Oad",
-  "description": "Sindh Textbook Board (STBB) digital textbook library for Class 1 to 12. Access verified textbooks, syllabus guides, PDF viewer, and search. Every Class, Every Book, One Library.",
+  "name": "SindhLearn",
+  "short_name": "SindhLearn",
+  "description": "SindhLearn — Learn, Grow, Build Your Future. An independent education app for students in Sindh with textbooks, an AI study assistant, notes, and tests for Classes 1–12.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }
