@@ -22,7 +22,7 @@ import { useOnlineStatus } from '../hooks/useOnlineStatus';
 
 export type NavTab = 'home' | 'classes' | 'search' | 'ai-assistant' | 'about';
 
-const GOVERNMENT_OF_SINDH_SEAL_URL = '/government-sindh-logo.svg';
+const GOVERNMENT_OF_SINDH_SEAL_URL = '/government-sindh-logo.webp';
 
 interface HeaderProps {
   currentTab: NavTab;
@@ -49,7 +49,7 @@ export const Header: React.FC<HeaderProps> = ({
     <header className="sticky top-0 z-40 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 text-white shadow-lg">
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20 gap-3">
-          {/* LEFT: STBB BOOKS Brand Logo & Title */}
+          {/* LEFT: SindhLearn Brand Logo & Title */}
           <div
             onClick={() => handleNav('home')}
             className="flex items-center gap-3 cursor-pointer group py-2 shrink-0 select-none"
@@ -57,8 +57,8 @@ export const Header: React.FC<HeaderProps> = ({
             {/* STBB Books brand mark */}
             <div className="relative w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center group-hover:scale-105 transition-transform">
               <img
-                src="/logo.svg?v=2"
-                alt="STBB Books brand logo"
+                src="/sindhlearn-app-icon.webp?v=1"
+                alt="SindhLearn app logo"
                 className="w-11 h-11 sm:w-12 sm:h-12 object-contain drop-shadow-md"
               />
             </div>
@@ -66,10 +66,10 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Brand Title and Tagline */}
             <div className="flex flex-col">
               <span className="text-xl sm:text-2xl font-black tracking-wider text-white group-hover:text-amber-300 transition-colors leading-none">
-                STBB BOOKS
+                SindhLearn
               </span>
               <span className="text-[11px] sm:text-xs font-semibold text-amber-400/90 tracking-wide mt-1">
-                Every Class, Every Book, One Library.
+                Learn • Grow • Build Your Future
               </span>
             </div>
           </div>

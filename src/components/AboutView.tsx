@@ -20,10 +20,10 @@ export const AboutView: React.FC = () => {
         </div>
         <div className="space-y-1">
           <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
-            About STBB Books
+            About SindhLearn
           </h1>
           <p className="text-base font-semibold text-amber-600">
-            Every Class, Every Book, One Library.
+            Learn • Grow • Build Your Future
           </p>
         </div>
       </div>
@@ -38,7 +38,7 @@ export const AboutView: React.FC = () => {
               Project Statement
             </span>
             <blockquote className="text-lg sm:text-xl md:text-2xl font-bold text-blue-50 leading-relaxed italic border-l-4 border-amber-400 pl-4 sm:pl-6">
-              "STBB Books is an educational library platform designed to help students and teachers across Sindh organize and access their textbooks in one convenient place."
+              "SindhLearn is an independent educational app designed to help students across Sindh access textbooks, understand concepts, and study with AI support."
             </blockquote>
           </div>
 
@@ -127,7 +127,7 @@ export const AboutView: React.FC = () => {
       <div className="p-6 bg-slate-900 text-white rounded-2xl border border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div>
           <h4 className="font-bold text-sm text-white">Install on Mobile or Tablet</h4>
-          <p className="text-xs text-slate-400">Install STBB Books as an app for fast access.</p>
+          <p className="text-xs text-slate-400">Install SindhLearn as an app for fast access.</p>
         </div>
         <PWAInstallButton />
       </div>

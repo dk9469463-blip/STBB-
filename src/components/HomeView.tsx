@@ -93,10 +93,10 @@ export const HomeView: React.FC<HomeViewProps> = ({
           {/* Welcome Heading & Tagline */}
           <div className="space-y-3">
             <h1 className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tight leading-tight text-white">
-              Welcome to <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-amber-200 to-yellow-400">STBB Books</span>
+              Welcome to <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-amber-200 to-yellow-400">SindhLearn</span>
             </h1>
             <p className="text-lg sm:text-2xl font-bold text-blue-100 tracking-wide">
-              Every Class, Every Book, One Library.
+              Learn • Grow • Build Your Future
             </p>
           </div>
 
@@ -225,7 +225,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
           <div className="space-y-2 max-w-2xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-bold">
               <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              <span>Universal STBB Educational Tutor</span>
+              <span>SindhLearn AI Study Assistant</span>
             </div>
             <h3 className="text-xl sm:text-2xl font-black text-white group-hover:text-amber-300 transition-colors">
               Need help solving a textbook exercise or question?

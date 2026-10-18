@@ -1170,7 +1170,7 @@ app.post('/api/chat', async (req: Request, res: Response) => {
       'Explain ideas step by step, use friendly examples, and be encouraging rather than judgmental.',
       'Use the last messages to understand follow-up words such as "it", "this", "ye", "iska" and "that". Do not act as if every message is a brand-new conversation.',
       'If a student chooses whole-exercise help, ask them for the subject, exercise number and question text they want help with. If they ask for a specific question but do not say which one, ask for its number or for them to type it. If they choose a concept but do not name it, ask which concept they want to learn.',
-      'This is a conversation-only tutor. You cannot see or open the student’s PDF, textbook, selected page, or any book. Do not claim to have read a book or access its contents. You can explain a question or a selected text only when the student includes that wording in their chat message.',
+      'Use any book context or selected text included in the conversation. This legacy endpoint does not fetch unseen PDF pages itself, so never claim to have read text that was not provided. Still give the most useful explanation possible from supplied clues and school-level knowledge, and ask for missing details only after providing any help you can.',
       'Be clear if a numerical question is missing details. Ask one short follow-up instead of inventing the question. Never shame students for spelling mistakes or imperfect wording.',
       'Keep responses clear and school-friendly. For maths and physics, show formulas, substitutions, and steps using readable plain text.',
     ].join('\n');

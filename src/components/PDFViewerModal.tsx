@@ -815,10 +815,10 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
                   ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 ring-2 ring-amber-300'
                   : 'bg-blue-600 hover:bg-blue-500 text-white'
               }`}
-              title="Open AI Study Assistant for this textbook"
+              title="Open SindhLearn AI Study Assistant for this textbook"
             >
               <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-              <span className="text-[10px] sm:text-xs">AI</span>
+              <span className="text-[10px] sm:text-xs">Ask AI</span>
             </button>
 
             {/* Enable region OCR only when the student asks to select part of a scanned page. */}

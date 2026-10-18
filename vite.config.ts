@@ -14,18 +14,24 @@ export default defineConfig(() => {
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png'],
+        includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png', 'sindhlearn-app-icon.webp', 'government-sindh-logo.webp'],
         manifest: {
           id: '/',
-          name: 'STBB Books by Ajeet Kumar Oad',
-          short_name: 'STBB Books',
-          description: 'Sindh Textbook Board (STBB) digital textbook library for Class 1 to 12. Every Class, Every Book, One Library.',
+          name: 'SindhLearn — Learn, Grow, Build Your Future',
+          short_name: 'SindhLearn',
+          description: 'Independent educational app for Sindh students with STBB textbooks, AI study support, notes and learning tools for Classes 1–12.',
           theme_color: '#0b2450',
           background_color: '#0f172a',
           display: 'standalone',
           start_url: '/',
           scope: '/',
           icons: [
+            {
+              src: '/sindhlearn-app-icon.webp',
+              sizes: '256x256',
+              type: 'image/webp',
+              purpose: 'any',
+            },
             {
               src: '/pwa-192x192.png',
               sizes: '192x192',
@@ -49,7 +55,7 @@ export default defineConfig(() => {
         workbox: {
           // Include the self-hosted PDF.js worker so saved books can open without
           // downloading another script when the device is offline.
-          globPatterns: ['**/*.{js,mjs,css,html,ico,png,svg,woff,woff2}'],
+          globPatterns: ['**/*.{js,mjs,css,html,ico,png,svg,webp,woff,woff2}'],
           // PDF.js worker is about 2.3 MiB; allow it into the offline app shell.
           maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
           runtimeCaching: [

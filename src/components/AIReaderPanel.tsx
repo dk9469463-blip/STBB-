@@ -556,7 +556,7 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
           </div>
           <div className="min-w-0">
             <h3 className="text-xs sm:text-sm font-black text-white truncate">
-              Ask AI in Reader
+              SindhLearn Study Assistant
             </h3>
             <p className="text-[10px] text-slate-400 truncate">
               {book.title} • Page {currentPage}

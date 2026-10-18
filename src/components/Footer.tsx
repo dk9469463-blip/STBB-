@@ -16,14 +16,14 @@ export const Footer: React.FC<FooterProps> = ({ onSelectTab, onSelectClass }) =>
           <div className="space-y-3 md:col-span-1">
             <div className="flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-xl bg-blue-700 text-amber-300 flex items-center justify-center font-bold text-xs shadow-sm">
-                <img src="/logo.svg" alt="STBB Books" className="w-7 h-7 object-contain" />
+                <img src="/sindhlearn-app-icon.webp" alt="SindhLearn" className="w-7 h-7 object-contain" />
               </div>
               <span className="text-base font-black tracking-wider text-white">
-                STBB BOOKS
+                SindhLearn
               </span>
             </div>
             <p className="text-xs text-amber-400 font-bold">
-              Every Class, Every Book, One Library.
+              Learn • Grow • Build Your Future
             </p>
             <p className="text-xs text-slate-400 leading-relaxed">
               An independent educational reading portal that helps students and teachers find Sindh Textbook Board textbooks in one place.
@@ -130,7 +130,7 @@ export const Footer: React.FC<FooterProps> = ({ onSelectTab, onSelectClass }) =>
               <div className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white p-1.5 shadow ring-1 ring-amber-400/50">
                 <span className="absolute text-[9px] font-black text-emerald-900">GoS</span>
                 <img
-                  src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Seal_of_the_Sindh_Government.svg/1200px-Seal_of_the_Sindh_Government.svg.png"
+                  src="/government-sindh-logo.webp"
                   alt="Seal of the Sindh Government"
                   loading="lazy"
                   referrerPolicy="no-referrer"
@@ -161,7 +161,7 @@ export const Footer: React.FC<FooterProps> = ({ onSelectTab, onSelectClass }) =>
         {/* Copyright and developer credits */}
         <div className="pt-8 border-t border-slate-900 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
           <p className="text-center sm:text-left">
-            © {new Date().getFullYear()} STBB BOOKS. Independent educational project; not an official Government of Sindh service.
+            © {new Date().getFullYear()} SindhLearn. Independent educational project; not an official Government of Sindh service.
           </p>
           <div className="text-center sm:text-right">
             <p className="font-extrabold tracking-wide text-amber-300">Developed by D&amp;A Brothers</p>

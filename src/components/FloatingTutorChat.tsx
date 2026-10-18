@@ -26,12 +26,12 @@ const CHAT_EVENT = 'stbb:open-chat';
 const STARTER_CHOICES = [
   {
     label: 'Solve a whole exercise',
-    prompt: 'I want help solving a whole exercise. Please ask me which subject, exercise number, and the question text you need.',
+    prompt: 'I want help solving a whole exercise. Use the selected book/page context if available. If no book is selected, ask me for the class, subject and exercise number. Search for the exercise before asking me to type it out.',
     icon: GraduationCap,
   },
   {
     label: 'Solve a specific question',
-    prompt: 'I want help with a specific question. Please ask me which question it is, then help me solve it step by step.',
+    prompt: 'I want to solve a specific question. If a book/page is selected, look for the question there first. If I have not given the question number, ask me for the question number and then explain it step by step.',
     icon: CircleHelp,
   },
   {
@@ -69,9 +69,18 @@ function makeId(): string {
   return String(Date.now()) + '-' + Math.random().toString(36).slice(2, 9);
 }
 
+interface ReaderChatContext {
+  selectedText?: string;
+  bookTitle?: string;
+  classNumber?: number;
+  subjectName?: string;
+  pageNumber?: number;
+}
+
 export const FloatingTutorChat: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<TutorMessage[]>(readSavedMessages);
+  const [readerContext, setReaderContext] = useState<ReaderChatContext | null>(null);
   const [draft, setDraft] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -103,6 +112,15 @@ export const FloatingTutorChat: React.FC = () => {
       }>).detail;
       setIsOpen(true);
       setError('');
+      setReaderContext(detail && (detail.bookTitle || detail.selectedText)
+        ? {
+            selectedText: detail.selectedText,
+            bookTitle: detail.bookTitle,
+            classNumber: detail.classNumber,
+            subjectName: detail.subjectName,
+            pageNumber: detail.pageNumber,
+          }
+        : null);
       if (detail?.selectedText?.trim()) {
         const bookContext = [
           detail.bookTitle,
@@ -132,6 +150,7 @@ export const FloatingTutorChat: React.FC = () => {
     abortRef.current = null;
     setIsLoading(false);
     setMessages([]);
+    setReaderContext(null);
     setDraft('');
     setError('');
     try {
@@ -160,51 +179,46 @@ export const FloatingTutorChat: React.FC = () => {
     let streamedText = '';
 
     try {
-      const response = await fetch('/api/chat', {
+
+      // Route the floating tutor through the same AI endpoint as the
+      // textbook-aware reader assistant instead of maintaining a separate,
+      // conversation-only Gemini path.
+      const hasReaderContext = Boolean(readerContext?.bookTitle || readerContext?.selectedText);
+      const response = await fetch('/api/ai/study-assist', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
-        body: JSON.stringify({ messages: requestMessages }),
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({
+          prompt: text,
+          language: /[ء-ي]/.test(text) ? 'urdu' : 'english',
+          mode: 'general',
+          useTextbook: hasReaderContext,
+          bookContext: hasReaderContext && readerContext ? {
+            bookTitle: readerContext.bookTitle,
+            classNumber: readerContext.classNumber,
+            subjectName: readerContext.subjectName,
+            pageNumber: readerContext.pageNumber,
+            selectedText: readerContext.selectedText,
+          } : undefined,
+          history: requestMessages.slice(0, -1),
+        }),
         signal: controller.signal,
       });
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        throw new Error(data.error || ('Chat service returned ' + response.status + '. Please try again.'));
-      }
-      if (!response.body) throw new Error('Your browser could not open the chat response stream. Please retry.');
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let pending = '';
-      let finished = false;
-
-      while (!finished) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        pending += decoder.decode(value, { stream: true });
-        const events = pending.split('\n\n');
-        pending = events.pop() || '';
-
-        for (const eventText of events) {
-          const dataLine = eventText.split('\n').find((line) => line.startsWith('data:'));
-          if (!dataLine) continue;
-          const payload = JSON.parse(dataLine.slice(5).trim()) as { text?: string; done?: boolean; error?: string };
-          if (payload.text) {
-            streamedText += payload.text;
-            setMessages((current) => current.map((message) =>
-              message.id === assistantMessage.id
-                ? { ...message, content: streamedText }
-                : message
-            ));
-          }
-          if (payload.error) throw new Error(payload.error);
-          if (payload.done) finished = true;
-        }
+        throw new Error(data.error || ('AI service returned ' + response.status + '. Please try again.'));
       }
 
-      if (!streamedText.trim()) {
-        throw new Error('The AI returned an empty answer. Please try asking in a different way.');
+      const data = await response.json();
+      streamedText = typeof data.answer === 'string' ? data.answer.trim() : '';
+      if (!streamedText) {
+        throw new Error(data.error || 'The AI returned an empty answer. Please try again.');
       }
+      setMessages((current) => current.map((message) =>
+        message.id === assistantMessage.id
+          ? { ...message, content: streamedText }
+          : message
+      ));
     } catch (chatError) {
       if (chatError instanceof Error && chatError.name === 'AbortError') return;
       const errorText = chatError instanceof Error
@@ -218,7 +232,7 @@ export const FloatingTutorChat: React.FC = () => {
       if (abortRef.current === controller) abortRef.current = null;
       setIsLoading(false);
     }
-  }, [draft, isLoading, messages]);
+  }, [draft, isLoading, messages, readerContext]);
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -228,14 +242,14 @@ export const FloatingTutorChat: React.FC = () => {
   return (
     <div className="stbb-tutor-widget">
       {isOpen && (
-        <section className="stbb-tutor-panel" role="dialog" aria-label="STBB Study Buddy" aria-modal="false">
+        <section className="stbb-tutor-panel" role="dialog" aria-label="SindhLearn Study Assistant" aria-modal="false">
           <header className="stbb-tutor-header">
             <div className="flex min-w-0 items-center gap-3">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-emerald-300/30 bg-emerald-400/15 text-emerald-300">
                 <Bot className="h-6 w-6" />
               </div>
               <div className="min-w-0">
-                <h2 className="truncate text-base font-extrabold text-white">STBB Study Buddy</h2>
+                <h2 className="truncate text-base font-extrabold text-white">SindhLearn Study Assistant</h2>
                 <p className="mt-0.5 text-xs text-emerald-200">Your friendly learning assistant</p>
               </div>
             </div>
@@ -381,7 +395,7 @@ export const FloatingTutorChat: React.FC = () => {
             window.setTimeout(() => inputRef.current?.focus(), 80);
           }}
           aria-label="Open study chatbot"
-          title="Ask Study Buddy"
+          title="Ask SindhLearn AI"
         >
           <MessageCircle className="h-6 w-6" />
           <span className="stbb-tutor-launcher-label">Ask AI</span>
