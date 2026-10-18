@@ -361,7 +361,9 @@ function scoreAssistantPage(
   const normalizedText = normalizeAssistantText(text);
   if (!normalizedText) return 0;
 
-  const normalizedPrompt = normalizeAssistantText(prompt);
+  // The selected passage often contains the strongest clue to the exercise or
+  // concept. Include it when ranking nearby pages, not only in the final prompt.
+  const normalizedPrompt = normalizeAssistantText([prompt, context?.selectedText || ''].join(' '));
   const chapter = normalizeAssistantText(context?.chapter);
   const exercise = normalizeAssistantText(context?.exercise);
   const question = normalizeAssistantText(context?.questionNumber);
@@ -500,7 +502,8 @@ export async function retrieveTextbookMaterial(
       // For a whole exercise, include more pages around the reader's current
       // page; exercises often start or continue on adjacent pages.
       const nearbyPageOffsets = wantsWholeExercise
-        ? [-3, -2, -1, 0, 1, 2, 3, 4, 5, 6]
+        // Include more forward pages because some STBB exercises span several pages.
+        ? [-3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8]
         : lookupContext.questionNumber
           ? [-2, -1, 0, 1, 2]
           : [-1, 0, 1];
