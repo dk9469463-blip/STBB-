@@ -428,6 +428,8 @@ export const AIReaderPanel: React.FC<AIReaderPanelProps> = ({
         subjectName: book.subjectName,
         bookTitle: book.title,
         pageNumber: currentPage,
+        // Keep the chosen question number as structured locator context too.
+        questionNumber: pendingQuestionNumber && typedPrompt ? typedPrompt.trim() : undefined,
         selectedText: selectedText || undefined,
       },
     };
