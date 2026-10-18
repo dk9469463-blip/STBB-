@@ -616,6 +616,10 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
 
   const handleSelectTextOnPage = (text: string, pageNumber: number = currentPage) => {
     setIsRegionSelectionMode(false);
+    // Keep the selected passage and the chatbot's page context in sync. The
+    // visible page may lag behind a text selection made on another page.
+    setCurrentPage(pageNumber);
+    setPageInput(String(pageNumber));
     if (pageNumber !== currentPage) scrollToPage(pageNumber);
     setSelectedReaderText(text);
     setFloatingSelection(null);
@@ -634,6 +638,9 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
       clientX: selection.clientX,
       clientY: selection.clientY,
     });
+    // Preserve the actual scanned page for the OCR result and subsequent chat.
+    setCurrentPage(selection.pageNumber);
+    setPageInput(String(selection.pageNumber));
     setSelectionReadError(null);
 
     try {
@@ -684,6 +691,8 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
 
   const handleAskAiAboutPage = (pageNum: number) => {
     setIsRegionSelectionMode(false);
+    setCurrentPage(pageNum);
+    setPageInput(String(pageNum));
     scrollToPage(pageNum);
     // Opening the assistant from a page button is a fresh page-level request,
     // not a continuation of any older highlighted passage.
