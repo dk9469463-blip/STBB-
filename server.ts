@@ -23,7 +23,9 @@ const PORT = parseInt(process.env.PORT || '3000', 10);
 
 // Gemini is called only on the server; the API key is never sent to the browser.
 const geminiApiKey = process.env.GEMINI_API_KEY?.trim();
-const geminiModel = process.env.GEMINI_MODEL?.trim() || 'gemini-3.8-flash';
+// Leave blank by default so the app selects a text model actually listed for this API key.
+// Set GEMINI_MODEL in Codespaces secrets only when you want to pin a known available model.
+const geminiModel = process.env.GEMINI_MODEL?.trim() || '';
 
 if (!geminiApiKey) {
   console.info('GEMINI_API_KEY is not set. The textbook library will run; AI assistance will remain disabled.');
@@ -937,8 +939,6 @@ app.post('/api/ai/study-assist', async (req: Request, res: Response) => {
 
     const configuredModel = geminiModel.replace(/^models\//, '');
     const fallbackModels = [
-      'gemini-3.8-flash',
-      'gemini-3.8-flash-lite',
       'gemini-2.5-flash',
       'gemini-2.5-flash-lite',
       'gemini-2.0-flash',
@@ -954,19 +954,29 @@ app.post('/api/ai/study-assist', async (req: Request, res: Response) => {
     const discoveredOtherModels = discoveredModels.filter(
       (name) => !/flash/i.test(name) && !/(embedding|imagen|veo|audio|tts|live|robotics|computer-use|deep-research|aqa)/i.test(name)
     );
-    const uniqueModels = Array.from(new Set([
-      configuredModel,
+    // If discovery succeeds, prefer only models the key explicitly lists as
+    // supporting generateContent. A stale configured model must not consume a
+    // fallback slot or be retried when it is absent from the account's model list.
+    const discoveredSet = new Set(discoveredModels);
+    const discoveredCandidates = [
+      ...(configuredModel && discoveredSet.has(configuredModel) ? [configuredModel] : []),
       ...discoveredFlashModels,
       ...discoveredLiteModels,
       ...discoveredOtherModels,
-      ...fallbackModels,
-    ])).filter(Boolean).slice(0, 4);
+    ];
+    const fallbackCandidates = discoveredModels.length > 0
+      ? []
+      : [configuredModel, ...fallbackModels];
+    const uniqueModels = Array.from(new Set([
+      ...discoveredCandidates,
+      ...fallbackCandidates,
+    ])).filter(Boolean).slice(0, 5);
 
     // Give each model its own timeout, with an overall request ceiling. If all
     // alternatives return transient errors, make one final attempt on the
     // configured model because high-demand 503s are often short-lived.
     const modelsToTry = uniqueModels.length > 1
-      ? [...uniqueModels, configuredModel]
+      ? [...uniqueModels, ...(configuredModel && uniqueModels.includes(configuredModel) ? [configuredModel] : [])]
       : uniqueModels;
     const overallDeadlineAt = Date.now() + 35000;
     const MODEL_ATTEMPT_TIMEOUT_MS = 9000;
@@ -1191,17 +1201,23 @@ app.post('/api/chat', async (req: Request, res: Response) => {
     );
     const liteFlash = discoveredModels.filter((name) => /flash-lite/i.test(name));
     const fallbackModels = [
-      'gemini-3.8-flash',
       'gemini-2.5-flash',
-      'gemini-3.8-flash-lite',
       'gemini-2.5-flash-lite',
       'gemini-2.0-flash',
     ];
-    const modelCandidates = Array.from(new Set([
-      configuredModel,
+    const discoveredSet = new Set(discoveredModels);
+    const discoveredCandidates = [
+      ...(configuredModel && discoveredSet.has(configuredModel) ? [configuredModel] : []),
       ...normalFlash,
-      ...fallbackModels,
       ...liteFlash,
+      ...discoveredModels.filter((name) => !/flash/i.test(name)),
+    ];
+    const fallbackCandidates = discoveredModels.length > 0
+      ? []
+      : [configuredModel, ...fallbackModels];
+    const modelCandidates = Array.from(new Set([
+      ...discoveredCandidates,
+      ...fallbackCandidates,
     ])).filter(Boolean).slice(0, 5);
 
     const genAI = new GoogleGenAI({ apiKey: geminiApiKey });
