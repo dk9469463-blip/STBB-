@@ -54,10 +54,10 @@ export const Header: React.FC<HeaderProps> = ({
             onClick={() => handleNav('home')}
             className="flex items-center gap-3 cursor-pointer group py-2 shrink-0 select-none"
           >
-            {/* STBB Books brand mark */}
+            {/* SindhLearn official brand mark */}
             <div className="relative w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center group-hover:scale-105 transition-transform">
               <img
-                src="/sindhlearn-app-icon.webp?v=1"
+                src="/logo.svg?v=2"
                 alt="SindhLearn app logo"
                 className="w-11 h-11 sm:w-12 sm:h-12 object-contain drop-shadow-md"
               />
@@ -65,10 +65,10 @@ export const Header: React.FC<HeaderProps> = ({
 
             {/* Brand Title and Tagline */}
             <div className="flex flex-col">
-              <span className="text-xl sm:text-2xl font-black tracking-wider text-white group-hover:text-amber-300 transition-colors leading-none">
+              <span className="text-xl sm:text-2xl font-extrabold tracking-tight text-amber-300 group-hover:text-amber-200 transition-colors leading-none">
                 SindhLearn
               </span>
-              <span className="text-[11px] sm:text-xs font-semibold text-amber-400/90 tracking-wide mt-1">
+              <span className="text-[11px] sm:text-xs font-medium text-slate-200 tracking-wide mt-1">
                 Learn • Grow • Build Your Future
               </span>
             </div>
