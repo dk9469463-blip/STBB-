@@ -16,9 +16,9 @@ export const Footer: React.FC<FooterProps> = ({ onSelectTab, onSelectClass }) =>
           <div className="space-y-3 md:col-span-1">
             <div className="flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-xl bg-blue-700 text-amber-300 flex items-center justify-center font-bold text-xs shadow-sm">
-                <img src="/sindhlearn-app-icon.webp" alt="SindhLearn" className="w-7 h-7 object-contain" />
+                <img src="/logo.svg?v=2" alt="SindhLearn" className="w-7 h-7 object-contain" />
               </div>
-              <span className="text-base font-black tracking-wider text-white">
+              <span className="text-base font-extrabold tracking-tight text-amber-300">
                 SindhLearn
               </span>
             </div>
