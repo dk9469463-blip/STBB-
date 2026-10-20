@@ -377,7 +377,7 @@ html[data-theme="dark"] .bg-purple-100 {
 }
 
 
-/* Global responsive safeguards for phones, tablets, and narrow embedded views. */
+/* Unified responsive layout rules. Keep these in one place to avoid conflicting overrides. */
 *,
 *::before,
 *::after {
@@ -386,13 +386,13 @@ html[data-theme="dark"] .bg-purple-100 {
 
 html {
   -webkit-text-size-adjust: 100%;
-  scroll-padding-top: 5.5rem;
+  scroll-padding-top: 5rem;
 }
 
 body {
   margin: 0;
-  min-width: 0;
-  overflow-x: clip;
+  min-width: 320px;
+  overflow-x: hidden;
 }
 
 #root,
@@ -402,6 +402,7 @@ body {
 }
 
 main {
+  width: 100%;
   min-width: 0;
 }
 
@@ -412,25 +413,6 @@ svg {
   max-width: 100%;
 }
 
-input,
-select,
-textarea,
-pre,
-table {
-  max-width: 100%;
-}
-
-pre,
-code {
-  overflow-wrap: anywhere;
-}
-
-table {
-  display: block;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
 button,
 a,
 input,
@@ -439,93 +421,9 @@ textarea {
   touch-action: manipulation;
 }
 
-@media (max-width: 640px) {
-  html {
-    scroll-padding-top: 4.75rem;
-  }
-
-  main {
-    padding-top: 1rem !important;
-  }
-
-  /* Prevent long book names and AI answers from widening the page. */
-  h1,
-  h2,
-  h3,
-  p,
-  a,
-  button,
-  label {
-    overflow-wrap: break-word;
-    word-break: normal;
-  }
-
-  /* Keep form controls comfortable to tap and prevent iOS input zoom. */
-  input:not([type="checkbox"]):not([type="radio"]),
-  select,
-  textarea {
-    font-size: 16px;
-  }
-
-  .stbb-tutor-panel {
-    width: 100%;
-    max-width: 100%;
-    max-height: 100%;
-  }
-
-  .stbb-tutor-messages,
-  .stbb-tutor-bubble {
-    overflow-wrap: anywhere;
-    word-break: normal;
-  }
-}
-
-@media (max-width: 380px) {
-  /* Compact the brand row on narrow phones while keeping the main controls visible. */
-  header .max-w-7xl > .h-20 {
-    gap: 0.5rem;
-  }
-
-  header .max-w-7xl > .h-20 > div:first-child {
-    gap: 0.5rem;
-  }
-
-  header .max-w-7xl > .h-20 > div:first-child img {
-    width: 2.25rem;
-    height: 2.25rem;
-  }
-
-  header .max-w-7xl > .h-20 > div:first-child > div:last-child > span:first-child {
-    font-size: 1.125rem;
-  }
-
-  header .max-w-7xl > .h-20 > div:first-child > div:last-child > span:last-child {
-    display: none;
-  }
-
-  .stbb-tutor-launcher-label {
-    display: none;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto !important;
-  }
-}
-
-
-/* Mobile layout fixes: keep grid cards and their contents inside the viewport. */
-main,
-main * {
-  min-width: 0;
-}
-
-main .grid > * {
-  min-width: 0;
-  max-width: 100%;
-}
-
+main .grid > *,
+main section,
+main article,
 main button,
 main a,
 main h1,
@@ -533,43 +431,219 @@ main h2,
 main h3,
 main p,
 main span {
+  min-width: 0;
+}
+
+main h1,
+main h2,
+main h3,
+main p,
+main a,
+main button,
+main label {
   overflow-wrap: break-word;
   word-break: normal;
 }
 
 main img {
-  height: auto;
+  max-width: 100%;
+}
+
+/* AI workspace: explicit flex sizing prevents controls from squeezing labels. */
+.stbb-ai-workspace {
+  width: 100%;
+  min-width: 0;
+}
+
+.stbb-ai-header {
+  min-width: 0;
+}
+
+.stbb-ai-brand {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+
+.stbb-ai-controls {
+  display: flex;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.stbb-ai-language-switch {
+  display: inline-flex;
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.stbb-ai-language-switch button {
+  flex: 0 0 auto;
+  min-width: max-content;
+  white-space: nowrap;
+  overflow-wrap: normal;
+  word-break: keep-all;
+}
+
+.stbb-ai-messages,
+.stbb-ai-message {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.stbb-ai-message {
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+/* Floating Study Buddy should stay inside narrow screens. */
+.stbb-tutor-widget {
+  min-width: 0;
+}
+
+.stbb-tutor-panel {
+  min-width: 0;
+}
+
+.stbb-tutor-bubble {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+.stbb-tutor-messages {
+  min-width: 0;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+.stbb-tutor-composer {
+  min-width: 0;
+}
+
+.stbb-tutor-input {
+  min-width: 0;
+}
+
+/* Preserve readable book cards on all screen sizes. */
+main .grid {
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+main .grid > * {
+  width: 100%;
+  max-width: 100%;
+}
+
+@media (min-width: 640px) {
+  main .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  main .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1280px) {
+  main .grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 640px) {
-  main .grid:not(.grid-cols-2) {
-    grid-template-columns: repeat(1, minmax(0, 1fr));
+  html {
+    scroll-padding-top: 4.5rem;
   }
 
   main {
+    padding-top: 1rem !important;
     padding-left: 0.75rem !important;
     padding-right: 0.75rem !important;
   }
 
-  main > div,
-  main section,
-  main article {
-    max-width: 100%;
+  main .grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 1rem;
   }
 
-  /* Keep book actions usable without letting labels widen their cards. */
   main .grid.grid-cols-2 {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 
+  main button,
+  main a {
+    max-width: 100%;
+  }
+
   main button {
     white-space: normal;
-    overflow-wrap: anywhere;
+    overflow-wrap: normal;
+    word-break: normal;
   }
 
   main .overflow-x-auto {
     max-width: 100%;
     overscroll-behavior-x: contain;
+  }
+
+  .stbb-ai-workspace {
+    height: min(760px, calc(100dvh - 7rem));
+    min-height: 460px;
+    border-radius: 1.25rem;
+  }
+
+  .stbb-ai-header {
+    align-items: stretch;
+  }
+
+  .stbb-ai-brand {
+    flex-basis: 100%;
+  }
+
+  .stbb-ai-controls {
+    flex: 1 1 100%;
+    justify-content: space-between;
+  }
+
+  .stbb-ai-messages {
+    padding: 0.75rem;
+  }
+
+  .stbb-ai-message {
+    max-width: 100%;
+    padding: 0.875rem;
+  }
+
+  .stbb-tutor-panel {
+    inset: 0;
+    width: 100%;
+    max-width: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+  }
+
+  .stbb-tutor-bubble {
+    max-width: calc(100vw - 5rem);
+  }
+
+  .stbb-tutor-launcher {
+    right: 0.75rem;
+    bottom: max(0.75rem, env(safe-area-inset-bottom));
+  }
+
+  .stbb-tutor-launcher-label {
+    display: none;
   }
 }
 
@@ -596,13 +670,12 @@ main img {
     font-size: 1rem;
   }
 
-  header .max-w-7xl > .h-20 > div:last-child {
-    gap: 0.25rem;
+  header .max-w-7xl > .h-20 > div:first-child > div:last-child > span:last-child {
+    display: none;
   }
 
-  header .max-w-7xl > .h-20 > div:last-child > div:first-child {
-    width: 1.75rem;
-    height: 1.75rem;
+  header .max-w-7xl > .h-20 > div:last-child {
+    gap: 0.25rem;
   }
 
   header button[aria-label="Display and network settings"],
@@ -621,29 +694,17 @@ main img {
   }
 }
 
-
-/* Keep normal words intact across the AI assistant and every mobile section. */
-@media (max-width: 640px) {
-  main button,
-  main a,
-  main h1,
-  main h2,
-  main h3,
-  main p,
-  main span,
-  .stbb-tutor-bubble,
-  .stbb-tutor-messages {
-    overflow-wrap: break-word !important;
-    word-break: normal !important;
-    hyphens: manual;
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
   }
 
-  main > div {
-    min-width: 0;
-    width: 100%;
-  }
-
-  .stbb-tutor-bubble {
-    max-width: 100%;
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
