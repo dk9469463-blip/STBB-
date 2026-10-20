@@ -972,14 +972,14 @@ app.post('/api/ai/study-assist', async (req: Request, res: Response) => {
       ...fallbackCandidates,
     ])).filter(Boolean).slice(0, 5);
 
-    // Give each model its own timeout, with an overall request ceiling. If all
-    // alternatives return transient errors, make one final attempt on the
-    // configured model because high-demand 503s are often short-lived.
+    // Give each model enough time for longer school-level explanations and multi-step solutions.
+    // A separate timeout per model prevents one slow model from aborting all fallbacks.
+    // Keep a bounded overall ceiling so a temporary provider outage cannot hang the app.
     const modelsToTry = uniqueModels.length > 1
       ? [...uniqueModels, ...(configuredModel && uniqueModels.includes(configuredModel) ? [configuredModel] : [])]
       : uniqueModels;
-    const overallDeadlineAt = Date.now() + 35000;
-    const MODEL_ATTEMPT_TIMEOUT_MS = 9000;
+    const overallDeadlineAt = Date.now() + 100000;
+    const MODEL_ATTEMPT_TIMEOUT_MS = 28000;
     let shouldStop = false;
     let transientFailures = 0;
 
@@ -996,7 +996,7 @@ app.post('/api/ai/study-assist', async (req: Request, res: Response) => {
           config: {
             systemInstruction,
             temperature: 0.2,
-            maxOutputTokens: 3500,
+            maxOutputTokens: 4500,
             // Each attempt has its own budget; one slow model cannot abort all fallbacks.
             abortSignal: AbortSignal.timeout(attemptTimeoutMs),
           },
