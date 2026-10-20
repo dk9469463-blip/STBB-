@@ -539,9 +539,9 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-8.5rem)] min-h-[550px] max-w-5xl mx-auto bg-slate-900 rounded-3xl border border-slate-800 shadow-2xl overflow-hidden mb-8 relative">
+    <div className="stbb-ai-workspace flex flex-col h-[calc(100vh-8.5rem)] min-h-[550px] max-w-5xl mx-auto bg-slate-900 rounded-3xl border border-slate-800 shadow-2xl overflow-hidden mb-8 relative">
       {/* Top Header & Study Workspace Bar */}
-      <div className="bg-slate-950/90 border-b border-slate-800 p-3 sm:p-4 shrink-0 flex flex-wrap items-center justify-between gap-3">
+      <div className="stbb-ai-header bg-slate-950/90 border-b border-slate-800 p-3 sm:p-4 shrink-0 flex flex-wrap items-center justify-between gap-3">
         {/* Left: Branding & Universal Bot Badge */}
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-700 via-indigo-600 to-amber-500 text-white flex items-center justify-center shadow-md">
@@ -582,7 +582,7 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
           </button>
 
           {/* Trilingual Language Selector */}
-          <div className="flex items-center bg-slate-900 p-1 rounded-xl border border-slate-800 text-xs font-semibold">
+          <div className="stbb-ai-language-switch flex items-center bg-slate-900 p-1 rounded-xl border border-slate-800 text-xs font-semibold">
             <Languages className="w-3.5 h-3.5 text-amber-400 ml-1 mr-1.5" />
             <button
               onClick={() => handleLanguageChange('english')}
@@ -728,7 +728,7 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
       )}
 
       {/* Main Conversation Messages Scroll Area (Chronological Order) */}
-      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-6 space-y-4 scrollbar-thin">
+      <div className="stbb-ai-messages flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-6 space-y-4 scrollbar-thin">
         {messages.map((msg) => {
           const isAssistant = msg.role === 'assistant';
           const displayContent = formatStudyAnswer(msg.content);
@@ -740,7 +740,7 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
               className={`flex flex-col ${isAssistant ? 'items-start' : 'items-end'}`}
             >
               <div
-                className={`max-w-[96%] sm:max-w-[92%] rounded-2xl p-4 sm:p-5 shadow-lg space-y-3 leading-relaxed text-sm ${
+                className={`stbb-ai-message max-w-[96%] sm:max-w-[92%] rounded-2xl p-4 sm:p-5 shadow-lg space-y-3 leading-relaxed text-sm ${
                   isAssistant
                     ? msg.isError
                       ? 'bg-rose-950/80 text-rose-100 border border-rose-800/80 rounded-tl-sm'
