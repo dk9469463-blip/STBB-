@@ -620,3 +620,30 @@ main img {
     grid-template-columns: minmax(0, 1fr) !important;
   }
 }
+
+
+/* Keep normal words intact across the AI assistant and every mobile section. */
+@media (max-width: 640px) {
+  main button,
+  main a,
+  main h1,
+  main h2,
+  main h3,
+  main p,
+  main span,
+  .stbb-tutor-bubble,
+  .stbb-tutor-messages {
+    overflow-wrap: break-word !important;
+    word-break: normal !important;
+    hyphens: manual;
+  }
+
+  main > div {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .stbb-tutor-bubble {
+    max-width: 100%;
+  }
+}
