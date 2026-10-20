@@ -598,7 +598,7 @@ main img {
     gap: 0.25rem;
   }
 
-  header .max-w-7xl > .h-20 > div:last-child > div.sm\\:hidden {
+  header .max-w-7xl > .h-20 > div:last-child > div:first-child {
     width: 1.75rem;
     height: 1.75rem;
   }
@@ -610,7 +610,7 @@ main img {
 }
 
 @media (max-width: 340px) {
-  header .max-w-7xl > .h-20 > div:last-child > div.sm\\:hidden {
+  header .max-w-7xl > .h-20 > div:last-child > div:first-child {
     display: none;
   }
 
