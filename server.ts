@@ -1222,7 +1222,8 @@ app.post('/api/chat', async (req: Request, res: Response) => {
 
     const genAI = new GoogleGenAI({ apiKey: geminiApiKey });
     let lastFailure: { status: number; message: string } = { status: 0, message: 'No compatible model returned an answer.' };
-    const overallDeadlineAt = Date.now() + 30000;
+    // Longer ceiling for detailed tutoring responses; each streaming model gets up to 45 seconds.
+    const overallDeadlineAt = Date.now() + 120000;
 
     for (const modelName of modelCandidates) {
       const remainingMs = overallDeadlineAt - Date.now();
@@ -1235,8 +1236,8 @@ app.post('/api/chat', async (req: Request, res: Response) => {
           config: {
             systemInstruction,
             temperature: 0.35,
-            maxOutputTokens: 1800,
-            abortSignal: AbortSignal.timeout(Math.min(7500, remainingMs)),
+            maxOutputTokens: 3000,
+            abortSignal: AbortSignal.timeout(Math.min(45000, remainingMs)),
           },
         });
 
