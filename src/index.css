@@ -520,10 +520,6 @@ main * {
   min-width: 0;
 }
 
-main .grid {
-  grid-template-columns: repeat(1, minmax(0, 1fr));
-}
-
 main .grid > * {
   min-width: 0;
   max-width: 100%;
@@ -544,6 +540,10 @@ main img {
 }
 
 @media (max-width: 640px) {
+  main .grid:not(.grid-cols-2) {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+
   main {
     padding-left: 0.75rem !important;
     padding-right: 0.75rem !important;
