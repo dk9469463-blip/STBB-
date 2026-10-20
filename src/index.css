@@ -391,7 +391,7 @@ html {
 
 body {
   margin: 0;
-  min-width: 320px;
+  min-width: 0;
   overflow-x: hidden;
 }
 
@@ -533,29 +533,29 @@ main img {
 }
 
 /* Preserve readable book cards on all screen sizes. */
-main .grid {
-  grid-template-columns: repeat(1, minmax(0, 1fr));
+main .grid.grid-cols-1 {
+  grid-template-columns: minmax(0, 1fr);
 }
 
-main .grid > * {
+main .grid.grid-cols-1 > * {
   width: 100%;
   max-width: 100%;
 }
 
 @media (min-width: 640px) {
-  main .grid {
+  main .grid.grid-cols-1 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (min-width: 1024px) {
-  main .grid {
+  main .grid.grid-cols-1 {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
 @media (min-width: 1280px) {
-  main .grid {
+  main .grid.grid-cols-1 {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
@@ -571,7 +571,7 @@ main .grid > * {
     padding-right: 0.75rem !important;
   }
 
-  main .grid {
+  main .grid.grid-cols-1 {
     grid-template-columns: minmax(0, 1fr) !important;
     gap: 1rem;
   }
