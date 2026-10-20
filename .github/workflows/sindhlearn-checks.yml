@@ -18,9 +18,9 @@ concurrency:
 
 jobs:
   build-and-typecheck:
-    name: Build and TypeScript check
+    name: Build, TypeScript and browser tests
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
 
     steps:
       - name: Check out repository
@@ -34,8 +34,14 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
       - name: TypeScript check
         run: npm run lint
 
       - name: Production build
         run: npm run build
+
+      - name: Automated browser smoke tests
+        run: npm run test:e2e
