@@ -543,12 +543,12 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
       {/* Top Header & Study Workspace Bar */}
       <div className="stbb-ai-header bg-slate-950/90 border-b border-slate-800 p-3 sm:p-4 shrink-0 flex flex-wrap items-center justify-between gap-3">
         {/* Left: Branding & Universal Bot Badge */}
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-700 via-indigo-600 to-amber-500 text-white flex items-center justify-center shadow-md">
+        <div className="stbb-ai-brand flex items-center gap-3">
+          <div className="w-10 h-10 shrink-0 rounded-2xl bg-gradient-to-tr from-blue-700 via-indigo-600 to-amber-500 text-white flex items-center justify-center shadow-md">
             <Sparkles className="w-5 h-5 text-amber-300" />
           </div>
-          <div>
-            <div className="flex items-center gap-2">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-base sm:text-lg font-black text-white tracking-wide">
                 AI Study Assistant
               </h2>
@@ -563,7 +563,7 @@ export const AIAssistantView: React.FC<AIAssistantViewProps> = ({
         </div>
 
         {/* Right: History, Language Selector & New Chat */}
-        <div className="flex items-center gap-2">
+        <div className="stbb-ai-controls flex items-center gap-2">
           {/* Saved Chats History Drawer Button */}
           <button
             onClick={() => setShowHistoryDrawer(!showHistoryDrawer)}
