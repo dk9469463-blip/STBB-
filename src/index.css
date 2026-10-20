@@ -375,3 +375,140 @@ html[data-theme="dark"] .bg-purple-100 {
     transition: none !important;
   }
 }
+
+
+/* Global responsive safeguards for phones, tablets, and narrow embedded views. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-padding-top: 5.5rem;
+}
+
+body {
+  margin: 0;
+  min-width: 0;
+  overflow-x: clip;
+}
+
+#root,
+#root > * {
+  width: 100%;
+  min-width: 0;
+}
+
+main {
+  min-width: 0;
+}
+
+img,
+video,
+canvas,
+svg {
+  max-width: 100%;
+}
+
+input,
+select,
+textarea,
+pre,
+table {
+  max-width: 100%;
+}
+
+pre,
+code {
+  overflow-wrap: anywhere;
+}
+
+table {
+  display: block;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  touch-action: manipulation;
+}
+
+@media (max-width: 640px) {
+  html {
+    scroll-padding-top: 4.75rem;
+  }
+
+  main {
+    padding-top: 1rem !important;
+  }
+
+  /* Prevent long book names and AI answers from widening the page. */
+  h1,
+  h2,
+  h3,
+  p,
+  a,
+  button,
+  label {
+    overflow-wrap: anywhere;
+  }
+
+  /* Keep form controls comfortable to tap and prevent iOS input zoom. */
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    font-size: 16px;
+  }
+
+  .stbb-tutor-panel {
+    width: 100%;
+    max-width: 100%;
+    max-height: 100%;
+  }
+
+  .stbb-tutor-messages,
+  .stbb-tutor-bubble {
+    overflow-wrap: anywhere;
+    word-break: normal;
+  }
+}
+
+@media (max-width: 380px) {
+  /* Compact the brand row on narrow phones while keeping the main controls visible. */
+  header .max-w-7xl > .h-20 {
+    gap: 0.5rem;
+  }
+
+  header .max-w-7xl > .h-20 > div:first-child {
+    gap: 0.5rem;
+  }
+
+  header .max-w-7xl > .h-20 > div:first-child img {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+
+  header .max-w-7xl > .h-20 > div:first-child > div:last-child > span:first-child {
+    font-size: 1.125rem;
+  }
+
+  header .max-w-7xl > .h-20 > div:first-child > div:last-child > span:last-child {
+    display: none;
+  }
+
+  .stbb-tutor-launcher-label {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+}
