@@ -833,10 +833,10 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
               className={`flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-bold transition cursor-pointer shadow-sm ${isRegionSelectionMode
                 ? 'bg-sky-400 text-slate-950 ring-2 ring-sky-200'
                 : 'bg-slate-800 text-slate-200 hover:bg-slate-700'}`}
-              title={isRegionSelectionMode ? 'Turn off region selection and resume scrolling' : 'Select an area on a scanned PDF page for the chatbot'}
+              title={isRegionSelectionMode ? 'Finish area selection and resume scrolling' : 'Tap, then drag a box around text or a diagram on scanned pages'}
             >
               <Camera className="h-3.5 w-3.5" />
-              <span className="text-[10px] sm:text-xs">{isRegionSelectionMode ? 'Done' : 'Area'}</span>
+              <span className="text-[10px] sm:text-xs">{isRegionSelectionMode ? 'Done' : 'Select Area'}</span>
             </button>
 
             {/* Toggle Study Tools */}
