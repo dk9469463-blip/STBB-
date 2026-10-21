@@ -189,7 +189,7 @@ export const SubjectListView: React.FC<SubjectListViewProps> = ({
 
       {/* Books Grid */}
       <div className="space-y-6">
-        <div className="flex items-center justify-between text-sm text-slate-600">
+        <div className="stbb-book-count-row flex items-center justify-between text-sm text-slate-600">
           <span>
             Showing <strong>{displayedBooks.length}</strong> textbooks for{' '}
             <strong>Class {classNumber}</strong>
