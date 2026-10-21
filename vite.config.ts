@@ -14,7 +14,7 @@ export default defineConfig(() => {
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png', 'sindhlearn-app-icon.webp', 'government-sindh-logo.webp'],
+        includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png', 'sindhlearn-app-icon.png', 'government-sindh-logo.webp'],
         manifest: {
           id: '/',
           name: 'SindhLearn — Learn, Grow, Build Your Future',
@@ -27,9 +27,9 @@ export default defineConfig(() => {
           scope: '/',
           icons: [
             {
-              src: '/sindhlearn-app-icon.webp',
-              sizes: '256x256',
-              type: 'image/webp',
+              src: '/sindhlearn-app-icon.png',
+              sizes: '512x512',
+              type: 'image/png',
               purpose: 'any',
             },
             {
