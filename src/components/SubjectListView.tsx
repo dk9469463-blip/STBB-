@@ -126,13 +126,13 @@ export const SubjectListView: React.FC<SubjectListViewProps> = ({
       {/* Filter and Subject Selector Bar */}
       <div className="space-y-4">
         {/* Subject Pills */}
-        <div className="flex items-center justify-between">
+        <div className="stbb-subject-filter-heading flex items-center justify-between">
           <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
             <BookOpen className="w-5 h-5 text-blue-700" />
             <span>Select Subject Syllabus</span>
           </h2>
 
-          <div className="flex items-center gap-2">
+          <div className="stbb-medium-filter flex items-center gap-2">
             <span className="text-xs font-semibold text-slate-500 hidden sm:inline">Medium:</span>
             {(['All', 'English', 'Sindhi', 'Urdu'] as const).map((med) => (
               <button
