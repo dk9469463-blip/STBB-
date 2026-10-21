@@ -761,7 +761,7 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-sm p-0 sm:p-3 transition-all"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950 p-0 sm:p-3 transition-all"
       role="dialog"
       aria-modal="true"
       aria-labelledby="reader-title"
@@ -1281,7 +1281,7 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
                 left: `${Math.max(8, Math.min(window.innerWidth - Math.min(320, window.innerWidth - 16) - 8, floatingSelection.clientX - Math.min(320, window.innerWidth - 16) / 2))}px`,
                 top: `${Math.max(8, Math.min(window.innerHeight - 58, floatingSelection.clientY - 52))}px`,
                 maxWidth: 'calc(100vw - 16px)',
-                zIndex: 240,
+                zIndex: 10020,
               }}
               className="bg-slate-950 border border-slate-600 rounded-2xl shadow-2xl p-1.5 flex items-center gap-1.5 text-xs text-white backdrop-blur-xl"
             >
