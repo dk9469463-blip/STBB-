@@ -466,10 +466,20 @@ export const PDFPageItem: React.FC<PDFPageItemProps> = ({
       }
 
       const range = selection.getRangeAt(0);
-      const anchorInside = Boolean(selection.anchorNode && host.contains(selection.anchorNode));
-      const focusInside = Boolean(selection.focusNode && host.contains(selection.focusNode));
-      const commonAncestorInside = host.contains(range.commonAncestorContainer);
-      if (!anchorInside && !focusInside && !commonAncestorInside) return;
+      // Only accept selection from the actual PDF text layer. The page-number
+      // badge and reader controls are ordinary DOM text, not textbook content.
+      const textLayer = host.querySelector('.pdf-selectable-text-layer');
+      if (!textLayer) {
+        onSelectionChange(null);
+        return;
+      }
+      const anchorInside = Boolean(selection.anchorNode && textLayer.contains(selection.anchorNode));
+      const focusInside = Boolean(selection.focusNode && textLayer.contains(selection.focusNode));
+      const commonAncestorInside = textLayer.contains(range.commonAncestorContainer);
+      if (!anchorInside || !focusInside || !commonAncestorInside) {
+        onSelectionChange(null);
+        return;
+      }
 
       const rects = Array.from(range.getClientRects()).filter((rect) => rect.width > 0 && rect.height > 0);
       const rect = range.getBoundingClientRect();
@@ -648,7 +658,7 @@ export const PDFPageItem: React.FC<PDFPageItemProps> = ({
       </button>
 
       {/* Page Number Watermark Badge */}
-      <div className="absolute bottom-2 right-2 z-10 px-2 py-0.5 rounded bg-slate-900/60 backdrop-blur-xs text-[10px] font-mono text-slate-300 pointer-events-none">
+      <div className="absolute bottom-2 right-2 z-10 select-none px-2 py-0.5 rounded bg-slate-900/60 backdrop-blur-xs text-[10px] font-mono text-slate-300 pointer-events-none">
         Page {pageNumber}
       </div>
 
