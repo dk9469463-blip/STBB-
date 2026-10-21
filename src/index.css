@@ -708,3 +708,69 @@ main .grid.grid-cols-1 > * {
     transition-duration: 0.01ms !important;
   }
 }
+
+
+/* Mobile layout hotfix: keep intended no-wrap controls and prevent page overflow. */
+@media (max-width: 640px) {
+  main button.whitespace-nowrap,
+  main a.whitespace-nowrap {
+    white-space: nowrap !important;
+    overflow-wrap: normal !important;
+    word-break: keep-all !important;
+    flex-shrink: 0;
+  }
+
+  main .overflow-x-auto {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  /* Filter rows can wrap rather than forcing their children off-screen. */
+  .stbb-subject-filter-heading {
+    align-items: flex-start !important;
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+  }
+
+  .stbb-medium-filter {
+    display: flex !important;
+    width: 100%;
+    max-width: 100%;
+    flex-wrap: wrap !important;
+    gap: 0.4rem !important;
+  }
+
+  .stbb-book-count-row {
+    align-items: flex-start !important;
+    flex-direction: column !important;
+    gap: 0.35rem !important;
+  }
+
+  .stbb-book-count-row > * {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  /* Mobile reader must cover the entire available viewport, including the bottom. */
+  [role="dialog"][aria-labelledby="reader-title"] {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 1000 !important;
+    width: 100vw !important;
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+    max-height: 100dvh !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  [role="dialog"][aria-labelledby="reader-title"] > div {
+    width: 100% !important;
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+    max-height: 100dvh !important;
+    max-width: 100% !important;
+    border-radius: 0 !important;
+  }
+}
