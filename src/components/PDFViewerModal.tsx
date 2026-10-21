@@ -1322,6 +1322,20 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
               <button
                 type="button"
                 onClick={() => {
+                  // Ask about the complete page instead of the highlighted passage.
+                  handleAskAiAboutPage(floatingSelection.pageNumber);
+                  window.getSelection()?.removeAllRanges();
+                }}
+                className="px-2.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold flex items-center gap-1.5 transition cursor-pointer"
+                title="Ask the AI about the whole PDF page"
+              >
+                <BookOpen className="w-3.5 h-3.5" />
+                <span>Whole page</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
                   // Open the book-aware in-reader assistant, prefilled with only
                   // the selected passage. It can still retrieve this book when the
                   // student chooses a whole exercise or specific-question workflow.
