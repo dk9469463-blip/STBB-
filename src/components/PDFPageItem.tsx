@@ -508,7 +508,11 @@ export const PDFPageItem: React.FC<PDFPageItemProps> = ({
   }, [inspectSelection]);
 
   const handleCheckSelection = () => {
+    // Mobile browsers often finalize the native text selection after touchend.
+    // Retry briefly after the gesture so the parent can show the selection actions.
     inspectSelection();
+    window.setTimeout(() => inspectSelection(), 140);
+    window.setTimeout(() => inspectSelection(), 320);
   };
 
   // Scanned PDFs have no real text layer. Let the student drag a small rectangle
