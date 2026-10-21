@@ -744,13 +744,13 @@ export const PDFPageItem: React.FC<PDFPageItemProps> = ({
 
       {/* When the PDF has no selectable text, allow drag-to-select a crop for OCR. */}
             {/* Keep scanned-page selection opt-in so ordinary touch scrolling still works on phones. */}
-      {hasCheckedTextLayer && textItems.length === 0 && activeTool === 'cursor' && isRendered && onScannedRegionSelect && !enableScannedSelection && (
+      {activeTool === 'cursor' && isRendered && onScannedRegionSelect && !enableScannedSelection && (
         <div className="pointer-events-none absolute bottom-3 left-1/2 z-10 -translate-x-1/2 rounded-full border border-slate-400/40 bg-slate-950/80 px-3 py-1.5 text-center text-[10px] font-semibold text-slate-100 shadow-lg">
-          Scanned page — tap Select Area to choose text
+          Tap Select Area, then drag around any text or diagram
         </div>
       )}
 
-{hasCheckedTextLayer && textItems.length === 0 && activeTool === 'cursor' && isRendered && onScannedRegionSelect && enableScannedSelection && (
+{activeTool === 'cursor' && isRendered && onScannedRegionSelect && enableScannedSelection && (
         <div
           className="absolute inset-0 z-[18] cursor-crosshair select-none touch-none"
           style={{ touchAction: 'none', userSelect: 'none', WebkitUserSelect: 'none' }}
@@ -759,7 +759,7 @@ export const PDFPageItem: React.FC<PDFPageItemProps> = ({
           onPointerMove={handleScanSelectionMove}
           onPointerUp={handleScanSelectionUp}
           onPointerCancel={handleScanSelectionUp}
-          aria-label="Drag around text to select it for the AI chatbot"
+          aria-label="Drag around the content you want to ask about for the AI chatbot"
           title="Drag around a line or word to select it for the AI chatbot"
         >
           {!scanSelectionRect && (
